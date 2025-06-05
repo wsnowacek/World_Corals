@@ -1,0 +1,21 @@
+---
+title: "Data Wrangling"
+format: html
+editor: visual
+---
+
+## Packages and Data
+
+```{r}
+library(tidyverse)
+library(knitr)
+library(readxl)
+```
+
+```{r}
+Corals_raw <- read_excel("Corals_raw.xlsx")
+ITS2 <- read.csv("ITS2.csv")
+Ty_super <- read.csv("Ty_superset_data_raw_KB.csv")
+```
+
+## Data Wrangling
