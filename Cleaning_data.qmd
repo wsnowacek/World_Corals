@@ -35,24 +35,39 @@ Ty_superset_data_raw_KB <- read.csv("Ty_superset_data_raw_KB.csv")
 ```{r}
 #| label: cleaning_corals_raw
 
-# 1. Clean up host_phylum
+# Metadata fields to clean
+fields <- c(
+  "host_phylum", "host_class", "host_order",
+  "host_family", "host_genus", "host_species", "location"
+  )
+
 Corals_clean <- Corals_raw %>%
   mutate(
-    # Normalize whitespace and stray characters (like \xa0 or †)
+    # --- Clean host_phylum specifically ---
     host_phylum = str_trim(host_phylum),
     host_phylum = str_replace_all(host_phylum, "[\u00A0†]", ""),  # remove NBSP or dagger-like marks
     host_phylum = str_trim(host_phylum),
-
-   # Replace unwanted string values with NA
     host_phylum = ifelse(host_phylum %in% c("UnID", "Nan", "NA", ""), NA, host_phylum),
+    # --- Fix known location issues ---
     location = case_when(
       location == "Carmabi Arks" ~ "Carmabi",
       location == "Cura√ßao"     ~ "Curaçao",
-      str_detect(location, "Hawai") ~ "Hawaii",   # catch all variants,
-      location == "NA"           ~ NA_character_,  # handle string "NA" properly
+      str_detect(location, "Hawai") ~ "Hawaii",   # catch all variants
+      location == "NA"           ~ NA_character_,
       TRUE ~ location
-    )) %>%
-  # Drop rows where host_phylum is NA
+      )
+    ) %>%
+# --- General cleanup across all metadata fields ---
+  mutate(across(all_of(fields), ~ {
+    x <- str_trim(.)
+    x <- str_replace_all(x, "[\u00A0†]", "")   # remove NBSP and dagger
+    x <- str_replace_all(x, "\\?", "")         # remove literal question marks
+    x <- str_squish(x)                         # collapse multiple spaces
+    x <- na_if(x, "NA")                        # convert "NA" strings to NA
+    x <- na_if(x, "")                          # convert empty strings to NA
+    x
+  })) %>%
+  # Drop rows with NA phylum
   filter(!is.na(host_phylum))
 
 ```
@@ -70,36 +85,28 @@ Corals_clean %>%
 ```
 
 ```{r}
-#| label: summary_table_metadata
-
-fields <- c(
-  "host_phylum", "host_class", "host_order", "host_family", "host_genus", "host_species", "location"
-  )
-
-# Subset dataframe to relevant fields
-dt_subset <- Corals_clean %>%
-  select(all_of(fields))
-
-# Create summary table with each field as a row
-summary_table <- tibble(
-  Metadata = fields,
-  Richness = map_int(dt_subset, ~ n_distinct(.[!is.na(.)])),   # exclude NA in richness
-  Present  = map_int(dt_subset, ~ sum(!is.na(.)))              # count non-NA entries
-)
-
-print(summary_table)
+unique(Corals_clean$host_class)
 ```
 
 ```{r}
-# 2. Keep only metabolite columns (those not starting with "x")
-# Assuming metabolite columns DO start with "x"
-metabolite_data <- Corals_clean %>%
-  dplyr::select(dplyr::starts_with("x")) %>%
-  mutate(across(everything(), as.numeric))
-
+unique(Corals_clean$host_order)
 ```
 
 ```{r}
+unique(Corals_clean$host_family)
+```
+
+```{r}
+unique(Corals_clean$host_genus)
+```
+
+```{r}
+unique(Corals_clean$host_species)
+```
+
+```{r}
+#| label: nested_taxa
+
 taxonomy_list <- Corals_clean %>%
   dplyr::select(
     host_phylum, host_class, host_order,
@@ -169,6 +176,8 @@ for(p in unique(taxonomy_list$host_phylum)) {
 ```
 
 ```{r}
+#| label: making_taxa_df
+
 library(dplyr)
 
 # Build a taxonomy dataframe with all available levels
@@ -191,4 +200,62 @@ taxonomy_df <- Corals_clean %>%
     host_species
   )
 
+```
+
+## Richness of metadata
+
+```{r}
+#| label: summary_table_metadata
+
+fields <- c(
+  "host_phylum", "host_class", "host_order",
+  "host_family", "host_genus", "host_species", "location"
+)
+
+# species labels to exclude from richness
+exclude_species <- c("sp10", "sp 1", "sp4", "sp11", "sp 2", 
+                     "sp2", "sp8", "sp5", "sp 6", "sp7", 
+                     "sp1", "sp12", "sp3")
+
+summary_table <- tibble(
+  Metadata = fields,
+  Richness = map_int(fields, function(f) {
+    vals <- Corals_clean[[f]]
+    
+    # remove NA and "UnID"
+    vals <- vals[!is.na(vals) & vals != "UnID"]
+    
+    # --- field-specific cleaning ---
+    if (f == "host_class") {
+      vals <- str_replace_all(vals, "^Demospongia$", "Demospongiae")
+    }
+    
+    if (f == "host_species") {
+      vals <- str_to_lower(vals)                    # lowercase for consistency
+      vals <- str_replace_all(vals, "\\s+", " ")    # normalize spaces
+      vals <- str_replace_all(vals, "strigosa [ab]$", "strigosa")  # merge strigosa a/b
+      vals <- vals[!vals %in% exclude_species]      # drop unwanted species labels
+    }
+    
+    n_distinct(vals)
+  }),
+  Present = map_int(fields, function(f) {
+    vals <- Corals_clean[[f]]
+    sum(!is.na(vals) & vals != "UnID")
+  })
+)
+
+print(summary_table)
+```
+
+## Cleaning metabolite data
+
+```{r}
+#| label: making_cleaned_metabolite_data
+
+# Keep only metabolite columns (those not starting with "x")
+# Assuming metabolite columns DO start with "x"
+metabolite_data <- Corals_clean %>%
+  dplyr::select(dplyr::starts_with("x")) %>%
+  mutate(across(everything(), as.numeric))
 ```
