@@ -7,67 +7,95 @@ editor: visual
 ## Packages and Data
 
 ```{r}
-# install.packages("data.table")
-# install.packages("dplyr")
+#| label: install_packages
+
+install.packages("data.table")
+install.packages("tidyverse")
 ```
 
 ```{r}
+#| label: library_function 
+
 library(tidyverse)
 library(knitr)
 library(readxl)
 library(data.table)
-library(dplyr)
 ```
 
 ```{r}
+#| label: reading_datasets
+
 Corals_raw <- read_excel("Corals_raw.xlsx")
 ITS2 <- read.csv("ITS2.csv")
-Ty_super <- read.csv("Ty_superset_data_raw_KB.csv")
+Ty_superset_data_raw_KB <- read.csv("Ty_superset_data_raw_KB.csv")
 ```
 
 ## Classification Table Code
 
 ```{r}
-  
+#| label: cleaning_corals_raw
+
+# 1. Clean up host_phylum
+Corals_clean <- Corals_raw %>%
+  mutate(
+    # Normalize whitespace and stray characters (like \xa0 or †)
+    host_phylum = str_trim(host_phylum),
+    host_phylum = str_replace_all(host_phylum, "[\u00A0†]", ""),  # remove NBSP or dagger-like marks
+    host_phylum = str_trim(host_phylum),
+
+   # Replace unwanted string values with NA
+    host_phylum = ifelse(host_phylum %in% c("UnID", "Nan", "NA", ""), NA, host_phylum),
+    location = case_when(
+      location == "Carmabi Arks" ~ "Carmabi",
+      location == "Cura√ßao"     ~ "Curaçao",
+      str_detect(location, "Hawai") ~ "Hawaii",   # catch all variants,
+      location == "NA"           ~ NA_character_,  # handle string "NA" properly
+      TRUE ~ location
+    )) %>%
+  # Drop rows where host_phylum is NA
+  filter(!is.na(host_phylum))
+
+```
+
+```{r}
+#| label: checking_corals_clean
+
+unique(Corals_clean$host_phylum)
+
+unique(Corals_clean$location)
+
+Corals_clean %>%
+  count(host_phylum, sort = TRUE)
+
+```
+
+```{r}
+#| label: summary_table_metadata
+
 fields <- c(
-  "sample", "run", "plate", "dataset", "type", "location", "sample_id", "host_phylum",
-  "host_class", "host_order", "host_family", "host_genus", "host_species", "bleaching",
-  "symbiont.potential", "individual.symbiosis", "ITS2.type.profile", "X",
-  "ITS2_host_species", "ITS2_host_genus", "ITS2_phenotype", "ITS2_Tag", "ITS2Type",
-  "ITS2Type1", "ITS2Type2", "ITS2Type3", "ITS2.Letter", "ITS2Genus", "Sequences"
+  "host_phylum", "host_class", "host_order", "host_family", "host_genus", "host_species", "location"
   )
 
 # Subset dataframe to relevant fields
-dt_subset <- Ty_superset_data_raw_KB %>%
+dt_subset <- Corals_clean %>%
   select(all_of(fields))
 
 # Create summary table with each field as a row
 summary_table <- tibble(
   Metadata = fields,
-  Richness = map_int(dt_subset, ~ n_distinct(., na.rm = TRUE)),
-  Present  = map_int(dt_subset, ~ sum(!is.na(.)))
+  Richness = map_int(dt_subset, ~ n_distinct(.[!is.na(.)])),   # exclude NA in richness
+  Present  = map_int(dt_subset, ~ sum(!is.na(.)))              # count non-NA entries
 )
 
 print(summary_table)
-
 ```
 
 ```{r}
-# 1. Clean up host_phylum
-Corals_clean <- Corals_raw %>%
-  dplyr::mutate(
-    host_phylum = trimws(host_phylum),                  # remove whitespace
-    host_phylum = ifelse(host_phylum %in% c("UnID", "Nan"), NA, host_phylum) # set unwanted labels to NA
-  ) %>%
-  dplyr::filter(!is.na(host_phylum)) # drop NA rows
-
 # 2. Keep only metabolite columns (those not starting with "x")
 # Assuming metabolite columns DO start with "x"
 metabolite_data <- Corals_clean %>%
-  dplyr::select(dplyr::starts_with("x"))
-
-# 3. Make sure data is numeric
-metabolite_data <- metabolite_data %>% mutate(across(everything(), as.numeric))
+  dplyr::select(dplyr::starts_with("x")) %>%
+  mutate(across(everything(), as.numeric))
 
 ```
 
