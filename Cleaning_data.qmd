@@ -35,40 +35,121 @@ Ty_superset_data_raw_KB <- read.csv("Ty_superset_data_raw_KB.csv")
 ```{r}
 #| label: cleaning_corals_raw
 
-# Metadata fields to clean
 fields <- c(
   "host_phylum", "host_class", "host_order",
   "host_family", "host_genus", "host_species", "location"
   )
 
+# species labels to exclude → NA
+exclude_species <- c("sp10", "sp 1", "sp4", "sp11", "sp 2", 
+                     "sp2", "sp8", "sp5", "sp 6", "sp7", 
+                     "sp1", "sp12", "sp3")
+
 Corals_clean <- Corals_raw %>%
+  # --- specific taxonomy fixes ---
   mutate(
-    # --- Clean host_phylum specifically ---
-    host_phylum = str_trim(host_phylum),
-    host_phylum = str_replace_all(host_phylum, "[\u00A0†]", ""),  # remove NBSP or dagger-like marks
-    host_phylum = str_trim(host_phylum),
-    host_phylum = ifelse(host_phylum %in% c("UnID", "Nan", "NA", ""), NA, host_phylum),
-    # --- Fix known location issues ---
+    host_class = str_replace(host_class, "^Demospongia$", "Demospongiae"),
+    
+    host_order = case_when(
+      host_order == "poecilosclerida" ~ "Actiniaria",   # lowercase only
+      host_order == "Alcyonacea"     ~ "Malacalcyonacea",
+      TRUE ~ host_order
+    ),
+    
+    host_family = case_when(
+      host_family == "Anthothelidae"     ~ "Alcyoniidae",
+      host_family == "Pseudoceratinidae" ~ "Aplysinidae",
+      TRUE ~ host_family
+    ),
+    
+    host_genus = case_when(
+      host_genus == "Tubastrea"      ~ "Tubastraea",
+      host_genus == "Symphillia"     ~ "Lobophyllia",
+      host_genus == "Symphyllia"     ~ "Lobophyllia",
+      host_genus == "Porieties"      ~ "Porites",
+      host_genus == "Pseudoceratina" ~ "Aiolochroia",
+      TRUE ~ host_genus
+    ),
+    
+    host_species = case_when(
+      str_detect(host_species, "strigosa a$") ~ str_replace(host_species, "strigosa a$",
+                                                            "strigosa"),
+      str_detect(host_species, "strigosa b$") ~ str_replace(host_species, "strigosa b$",
+                                                            "strigosa"),
+      str_detect(host_species, "lutkeni$") ~ str_replace(host_species, "lutkeni$", "luetkeni"),
+      str_detect(host_species, "cyatheria$") ~ str_replace(host_species, "cyatheria$",
+                                                           "cytherea"),
+      str_detect(host_species, "mesatarina$") ~ str_replace(host_species, "mesatarina$",
+                                                            "mesenterina"),
+      str_detect(host_species, "laborynthiformis$") ~ str_replace(host_species,
+                                                                  "laborynthiformis$",
+                                                                  "labyrinthiformis"),
+      str_detect(host_species, "cylindricus$") ~ str_replace(host_species, "cylindricus$",
+                                                             "cylindrus"),
+      str_detect(host_species, "mirabilis$") ~ str_replace(host_species, "mirabilis$",
+                                                           "auretenra"),
+      str_detect(host_species, "homomalla$") ~ str_replace(host_species, "homomalla$",
+                                                           "kuekenthali"),
+      str_detect(host_species, "barbadensis$") ~ str_replace(host_species, "barbadensis$",
+                                                             "arbuscula"),
+      # --- Acropora ---
+      host_genus == "Acropora" & host_species %in% c("sp 1", "sp1")  ~ "Acropora sp1",
+      host_genus == "Acropora" & host_species %in% c("sp2", "sp 2") ~ "Acropora sp2",
+      host_genus == "Acropora" & host_species == "sp3"              ~ "Acropora sp3",
+      host_genus == "Acropora" & host_species == "sp4"              ~ "Acropora sp4",
+      host_genus == "Acropora" & host_species == "sp5"              ~ "Acropora sp5",
+      host_genus == "Acropora" & host_species == "sp 6"             ~ "Acropora sp6",
+      host_genus == "Acropora" & host_species == "sp7"              ~ "Acropora sp7",
+      host_genus == "Acropora" & host_species == "sp8"              ~ "Acropora sp8",
+      host_genus == "Acropora" & host_species == "sp10"             ~ "Acropora sp9",
+      host_genus == "Acropora" & host_species == "sp11"             ~ "Acropora sp10",
+      host_genus == "Acropora" & host_species == "sp12"             ~ "Acropora sp11",
+      
+      # --- Montipora ---
+      host_genus == "Montipora" & host_species %in% c("sp1", "sp 1") ~ "Montipora sp1",
+      
+      # --- Galaxea ---
+      host_genus == "Galaxea" & host_species == "sp1" ~ "Galaxea sp1",
+      TRUE ~ host_species
+      ),
+ 
+   # --- fix taxa for species purpurea ---
+    host_order  = if_else(str_detect(host_species, "purpurea$"), "Scleractinia", host_order),
+    host_family = if_else(str_detect(host_species, "purpurea$"), "Leptastreidae", host_family),
+    host_genus  = if_else(str_detect(host_species, "purpurea$"), "Leptastrea", host_genus), 
+
+   # --- fix taxa for species ruetzleri ---
+    host_order  = if_else(str_detect(host_species, "ruetzleri$"), "Scopalinida", host_order),
+    host_family = if_else(str_detect(host_species, "ruetzleri$"), "Scopalinidae", host_family),
+    host_genus  = if_else(str_detect(host_species, "ruetzleri$"), "Scopalina", host_genus),
+   
+   # --- fix taxa for species anchorata ---
+    host_family = if_else(str_detect(host_species, "helwigi$"), "Desmacididae", host_family),
+    host_genus  = if_else(str_detect(host_species, "helwigi$"), "Desmapsamma", host_genus),
+    host_species = if_else(str_detect(host_species, "helwigi$"), "anchorata", host_species), 
+   
+    # --- known location fixes ---
     location = case_when(
       location == "Carmabi Arks" ~ "Carmabi",
       location == "Cura√ßao"     ~ "Curaçao",
       str_detect(location, "Hawai") ~ "Hawaii",   # catch all variants
       location == "NA"           ~ NA_character_,
       TRUE ~ location
-      )
-    ) %>%
-# --- General cleanup across all metadata fields ---
+    )
+  ) %>%
+  # --- general cleanup across all metadata ---
   mutate(across(all_of(fields), ~ {
     x <- str_trim(.)
-    x <- str_replace_all(x, "[\u00A0†]", "")   # remove NBSP and dagger
-    x <- str_replace_all(x, "\\?", "")         # remove literal question marks
-    x <- str_squish(x)                         # collapse multiple spaces
-    x <- na_if(x, "NA")                        # convert "NA" strings to NA
-    x <- na_if(x, "")                          # convert empty strings to NA
+    x <- str_replace_all(x, "[\u00A0†]", "")  # remove NBSP + dagger
+    x <- str_replace_all(x, "\\?", "")        # strip stray question marks
+    x <- str_squish(x)                        # collapse multiple spaces
+    x <- na_if(x, "NA")                       # literal "NA" → NA
+    x <- na_if(x, "Nan")                      # literal "Nan" → NA
+    x <- na_if(x, "UnID")                     # literal "UnID" → NA
+    x <- na_if(x, "")                         # empty → NA
     x
   })) %>%
-  # Drop rows with NA phylum
-  filter(!is.na(host_phylum))
+  filter(!is.na(host_phylum))  # drop rows with missing phylum
 
 ```
 
@@ -105,77 +186,6 @@ unique(Corals_clean$host_species)
 ```
 
 ```{r}
-#| label: nested_taxa
-
-taxonomy_list <- Corals_clean %>%
-  dplyr::select(
-    host_phylum, host_class, host_order,
-    host_family, host_genus, host_species
-  ) %>%
-  distinct() %>%
-  arrange(
-    host_phylum, host_class, host_order,
-    host_family, host_genus, host_species
-  )
-
-# Print nested taxonomy: Phylum → Class → Order → Family → Genus → Species
-for(p in unique(taxonomy_list$host_phylum)) {
-  cat("\nPhylum:", p, "\n")
-  classes <- taxonomy_list %>%
-    filter(host_phylum == p) %>%
-    pull(host_class) %>%
-    unique() %>%
-    na.omit()
-  
-  for(c in classes) {
-    cat("  Class:", c, "\n")
-    orders <- taxonomy_list %>%
-      filter(host_phylum == p, host_class == c) %>%
-      pull(host_order) %>%
-      unique() %>%
-      na.omit()
-    
-    for(o in orders) {
-      cat("    Order:", o, "\n")
-      families <- taxonomy_list %>%
-        filter(host_phylum == p, host_class == c, host_order == o) %>%
-        pull(host_family) %>%
-        unique() %>%
-        na.omit()
-      
-      for(f in families) {
-        cat("      Family:", f, "\n")
-        genera <- taxonomy_list %>%
-          filter(host_phylum == p, host_class == c, host_order == o, host_family == f) %>%
-          pull(host_genus) %>%
-          unique() %>%
-          na.omit()
-        
-        for(g in genera) {
-          cat("        Genus:", g, "\n")
-          species <- taxonomy_list %>%
-            filter(
-              host_phylum == p, host_class == c,
-              host_order == o, host_family == f,
-              host_genus == g
-            ) %>%
-            pull(host_species) %>%
-            unique() %>%
-            na.omit()
-          
-          for(s in species) {
-            cat("          Species:", s, "\n")
-          }
-        }
-      }
-    }
-  }
-}
-
-
-```
-
-```{r}
 #| label: making_taxa_df
 
 library(dplyr)
@@ -207,45 +217,75 @@ taxonomy_df <- Corals_clean %>%
 ```{r}
 #| label: summary_table_metadata
 
+# Metadata fields of interest
 fields <- c(
   "host_phylum", "host_class", "host_order",
   "host_family", "host_genus", "host_species", "location"
 )
 
-# species labels to exclude from richness
-exclude_species <- c("sp10", "sp 1", "sp4", "sp11", "sp 2", 
-                     "sp2", "sp8", "sp5", "sp 6", "sp7", 
-                     "sp1", "sp12", "sp3")
-
+# Build summary table
 summary_table <- tibble(
   Metadata = fields,
-  Richness = map_int(fields, function(f) {
-    vals <- Corals_clean[[f]]
-    
-    # remove NA and "UnID"
-    vals <- vals[!is.na(vals) & vals != "UnID"]
-    
-    # --- field-specific cleaning ---
-    if (f == "host_class") {
-      vals <- str_replace_all(vals, "^Demospongia$", "Demospongiae")
-    }
-    
-    if (f == "host_species") {
-      vals <- str_to_lower(vals)                    # lowercase for consistency
-      vals <- str_replace_all(vals, "\\s+", " ")    # normalize spaces
-      vals <- str_replace_all(vals, "strigosa [ab]$", "strigosa")  # merge strigosa a/b
-      vals <- vals[!vals %in% exclude_species]      # drop unwanted species labels
-    }
-    
-    n_distinct(vals)
-  }),
-  Present = map_int(fields, function(f) {
-    vals <- Corals_clean[[f]]
-    sum(!is.na(vals) & vals != "UnID")
-  })
+  Richness = map_int(Corals_clean[fields], ~ n_distinct(.[!is.na(.)])),  # unique values excluding NA
+  Present  = map_int(Corals_clean[fields], ~ sum(!is.na(.)))             # non-NA entries
 )
 
 print(summary_table)
+```
+
+## Cleaning ITS2
+
+```{r}
+#| label: cleaning_ITS2_data
+
+ITS2_clean <- ITS2 %>%
+  mutate(across(c(ITS2Genus, ITS2.Letter), as.character), 
+    ITS2Genus   = na_if(as.character(ITS2Genus), ""),
+    ITS2.Letter = na_if(as.character(ITS2.Letter), ""), 
+    Species = as.character(Species), 
+    Genus = as.character(Genus)
+    )
+
+
+```
+
+```{r}
+unique(ITS2_clean$Species)
+```
+
+```{r}
+unique_genus_species <- ITS2_clean %>%
+  select(Genus, Species) %>%
+  distinct() %>%
+  arrange(Genus, Species) %>%
+  as.data.frame()
+
+# Preview
+head(unique_genus_species)
+```
+
+## Richness of ITS2
+
+```{r}
+#| label: richness_of_ITS2
+
+fields <- c("ITS2Genus", "ITS2.Letter")
+
+summary_table_ITS2 <- tibble(
+  Metadata = fields,
+  Richness = map_int(ITS2_clean[fields], ~ n_distinct(.[!is.na(.)])),  # unique non-NA values
+  Present  = map_int(ITS2_clean[fields], ~ sum(!is.na(.)))             # non-NA entries
+)
+
+print(summary_table_ITS2)
+```
+
+```{r}
+unique(ITS2_clean$ITS2Genus)
+```
+
+```{r}
+unique(ITS2_clean$ITS2.Letter)
 ```
 
 ## Cleaning metabolite data
