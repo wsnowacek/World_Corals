@@ -1,0 +1,79 @@
+---
+title: "Preliminary_graphs"
+format: html
+editor: visual
+---
+
+## Library and Data
+
+```{r}
+#| label: library_function 
+
+library(tidyverse)
+library(knitr)
+library(readxl)
+library(data.table)
+```
+
+```{r}
+#| label: read_csvs
+
+Corals_raw <- read_excel("Corals_raw.xlsx")
+ITS2 <- read.csv("ITS2.csv")
+Corals_clean <- read.csv("Corals_clean.csv")
+ITS2_clean   <- read.csv("ITS2_clean.csv")
+```
+
+## Richness Graphs 
+
+```{r}
+#| label: Overall_Species_Richness_per_Location
+
+# Overall species richness per location (exclude NA)
+location_richness <- Corals_clean %>%
+  filter(!is.na(location)) %>%
+  group_by(location) %>%
+  summarise(Richness = n_distinct(host_species), .groups = "drop")
+
+# Bar plot with styling
+ggplot(location_richness, aes(x = factor(location, 
+                                         levels = c("Hawaii", "Sri Lanka", "Curaçao")),
+                              y = Richness, fill = location)) +
+  geom_col() +
+  labs(title = "Species Richness per Location",
+       x = "Location",
+       y = "Number of Unique Species") +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
+    axis.title = element_text(size = 14),
+    axis.text  = element_text(size = 12),
+    legend.position = "none"  # hide redundant legend since bars already labeled
+  )
+```
+
+```{r}
+#| label: species_richness_per_phylum 
+
+# Overall species richness per host phylum (exclude NA)
+phylum_richness <- Corals_clean %>%
+  filter(!is.na(host_phylum)) %>%
+  group_by(host_phylum) %>%
+  summarise(Richness = n_distinct(host_species), .groups = "drop")
+
+# Bar plot, sorted by richness
+ggplot(phylum_richness, aes(x = fct_reorder(host_phylum, Richness), 
+                            y = Richness, fill = host_phylum)) +
+  geom_col() +
+  scale_fill_brewer(palette = "Dark2") +  # new distinct color palette
+  labs(title = "Species Richness per Phylum",
+       x = "Phylum",
+       y = "Number of Unique Species") +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
+    axis.title = element_text(size = 14),
+    axis.text  = element_text(size = 12),
+    legend.position = "none"
+  )
+```

@@ -30,7 +30,7 @@ ITS2 <- read.csv("ITS2.csv")
 Ty_superset_data_raw_KB <- read.csv("Ty_superset_data_raw_KB.csv")
 ```
 
-## Classification Table Code
+## Cleaning Coral Data
 
 ```{r}
 #| label: cleaning_corals_raw
@@ -130,11 +130,43 @@ Corals_clean <- Corals_raw %>%
    
     # --- known location fixes ---
     location = case_when(
-      location == "Carmabi Arks" ~ "Carmabi",
-      location == "Cura√ßao"     ~ "Curaçao",
+      location == "Carmabi Arks"   ~ "Curaçao",
+      location == "Carmabi"        ~ "Curaçao",
+      location == "Marriot"       ~ "Curaçao",
+      location == "Water Factory"  ~ "Curaçao",
+      location == "Radio Island"   ~ "Curaçao",
+      location == "Cura√ßao"       ~ "Curaçao",
       str_detect(location, "Hawai") ~ "Hawaii",   # catch all variants
-      location == "NA"           ~ NA_character_,
+      location == "NA"             ~ NA_character_,
       TRUE ~ location
+      ), 
+  
+    #fixing bleaching column
+    bleaching = as.character(bleaching),       # drop factor levels
+    bleaching = case_when(
+      bleaching == "NB/Pale" ~ "Pale",
+      bleaching %in% c("NA", "UnID") ~ NA_character_,  # keep earlier cleanup
+      TRUE ~ bleaching
+    ), 
+   
+    #fixing symbiont potential column
+    `symbiont potential` = as.character(`symbiont potential`),   # drop factor levels
+    `symbiont potential` = case_when(
+      `symbiont potential` == "Sym"          ~ "Symbiotic",
+      `symbiont potential` == "Apo"          ~ "Aposymbiotic",
+      `symbiont potential` == "Facultative"  ~ "Facultative",
+      `symbiont potential` %in% c("NA", "UnID") ~ NA_character_,
+      TRUE ~ `symbiont potential`
+    ),
+   
+   #fixing individual symbiosis column
+   `individual symbiosis` = as.character(`individual symbiosis`),   # drop factor levels
+    `individual symbiosis` = case_when(
+      `individual symbiosis` == "Sym"       ~ "Symbiotic",         # unify short form
+      `individual symbiosis` == "Symbiotic" ~ "Symbiotic",
+      `individual symbiosis` == "Aposymbiotic" ~ "Aposymbiotic",
+      `individual symbiosis` %in% c("NA", "UnID") ~ NA_character_, # convert NA strings
+      TRUE ~ `individual symbiosis`
     )
   ) %>%
   # --- general cleanup across all metadata ---
@@ -151,6 +183,9 @@ Corals_clean <- Corals_raw %>%
   })) %>%
   filter(!is.na(host_phylum))  # drop rows with missing phylum
 
+# Remove columns run, plate, and set
+Corals_clean <- Corals_clean %>%
+  select(-run, -plate, -type)
 ```
 
 ```{r}
@@ -184,6 +219,24 @@ unique(Corals_clean$host_genus)
 ```{r}
 unique(Corals_clean$host_species)
 ```
+
+```{r}
+unique(Corals_clean$bleaching)
+```
+
+```{r}
+unique(Corals_clean$`symbiont potential`)
+```
+
+```{r}
+unique(Corals_clean$`individual symbiosis`)
+```
+
+```{r}
+unique(Corals_clean$location)
+```
+
+## Classification Table Code
 
 ```{r}
 #| label: making_taxa_df
@@ -316,6 +369,19 @@ ITS2_clean <- ITS2_clean %>%
     )
   )
 
+#Cleaning Phenotype column 
+ITS2_clean <- ITS2_clean %>%
+  mutate(
+    Phenotype = as.character(Phenotype),   # remove factor levels
+    Phenotype = case_when(
+      Phenotype %in% c("Unknown", "Blank", "") ~ NA_character_,
+      Phenotype == "0"                     ~ "NB",         # 0 → NB (Not Bleached)
+      Phenotype == "BL"                    ~ "B",
+      Phenotype %in% c("pale", "Pale")     ~ "Pale",
+      TRUE ~ Phenotype
+    )
+  )
+
 ```
 
 ```{r}
@@ -336,6 +402,10 @@ unique(ITS2_clean$ITS2Genus)
 
 ```{r}
 unique(ITS2_clean$ITS2.Letter)
+```
+
+```{r}
+unique(ITS2_clean$Phenotype)
 ```
 
 ```{r}
@@ -364,14 +434,9 @@ summary_table_ITS2 <- tibble(
 print(summary_table_ITS2)
 ```
 
-## Cleaning metabolite data
+## Saving corals and ITS2 as CSV
 
 ```{r}
-#| label: making_cleaned_metabolite_data
-
-# Keep only metabolite columns (those not starting with "x")
-# Assuming metabolite columns DO start with "x"
-metabolite_data <- Corals_clean %>%
-  dplyr::select(dplyr::starts_with("x")) %>%
-  mutate(across(everything(), as.numeric))
+write.csv(ITS2_clean, "ITS2_clean.csv", row.names = FALSE)
+write.csv(Corals_clean, "Corals_clean.csv", row.names = FALSE)
 ```
