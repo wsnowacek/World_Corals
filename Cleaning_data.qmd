@@ -243,9 +243,78 @@ ITS2_clean <- ITS2 %>%
     ITS2Genus   = na_if(as.character(ITS2Genus), ""),
     ITS2.Letter = na_if(as.character(ITS2.Letter), ""), 
     Species = as.character(Species), 
-    Genus = as.character(Genus)
+    Genus = as.character(Genus), 
+    Mass.Spec.File = str_remove(Mass.Spec.File, "\\.mzXML$"), # remove only at end
+    Species = case_when(
+      Species == "Acropora_cyatheria"     ~ "cytherea",
+      Species == "Acropora_sp10"          ~ "Acropora sp9",
+      Species == "Acropora_sp11"          ~ "Acropora sp10",
+      Species == "Acropora_sp12"          ~ "Acropora sp11",
+      Species == "Acropora_sp1"           ~ "Acropora sp1",
+      Species == "Acropora_sp2"           ~ "Acropora sp2",
+      Species == "Acropora_sp3"           ~ "Acropora sp3",
+      Species == "Acropora_sp4"           ~ "Acropora sp4",
+      Species == "Acropora_sp5"           ~ "Acropora sp5",
+      Species == "Acropora_sp6"           ~ "Acropora sp6",
+      Species == "Acropora_sp7"           ~ "Acropora sp7",
+      Species == "Acropora_sp8"           ~ "Acropora sp8",
+      Species == "Montipora_sp1"          ~ "Montipora sp1",
+      Species == "Dendrogyra_cylindricus" ~ "cylindrus",
+      Species %in% c("Diploria_laborynthiformis", "Diploria_Laborynthiformis") ~ "labyrinthiformis",
+      Species == "Madracis_mirabilis"            ~ "auretenra",
+      Species == "Pseudodiploria_strigosa_a"     ~ "strigosa",
+      Species == "Pseudodiploria_strigosa_b"     ~ "strigosa",
+      TRUE ~ Species),
+    # --- Genus corrections ---
+    Genus = case_when(
+      Genus == "Symphyllia" ~ "Lobophyllia",
+      Genus == "Terbinaria" ~ "Turbinaria",
+      Genus == "Tubastrea"  ~ "Tubastraea",
+      TRUE ~ Genus
+    ), 
     )
 
+#Reorder columns 
+ITS2_clean <- ITS2_clean %>%  
+  select(ITS2.type.profile, X, Mass.Spec.File, Genus, Species, everything())
+
+#Removing Genus from Species 
+ITS2_clean <- ITS2_clean %>%
+  mutate(
+    Species = str_replace(Species, ".*_", "")   # keep only text after last "_"
+  )
+
+#Making unknown values NA
+ITS2_clean <- ITS2_clean %>%
+  mutate(
+    Species = ifelse(
+      Species %in% c(
+        "Unknown", "sp3", "sp4", "sp5", "sp6", "sp", "1", "sp1",
+        "2", "3", "4", "5", "spp", "", "sp7", "sp8", "sp9",
+        "sp10", "sp2", "Blank", "Orbicella"
+      ),
+      NA, Species
+    ), 
+    Genus = ifelse(
+      Genus %in% c("Unknown", "Blank", ""), 
+      NA, Genus
+    )
+  )
+
+#Removing levels from Location 
+ITS2_clean <- ITS2_clean %>%
+  mutate(Location = as.character(Location))
+
+#Cleaning location column 
+ITS2_clean <- ITS2_clean %>%
+  mutate(
+    Location = case_when(
+      Location %in% c("#N/A", "", "Blank") ~ NA_character_,
+      Location == "SL"  ~ "Sri Lanka",
+      Location == "CUR" ~ "Curaçao",
+      TRUE ~ Location
+    )
+  )
 
 ```
 
@@ -254,14 +323,29 @@ unique(ITS2_clean$Species)
 ```
 
 ```{r}
+unique(ITS2_clean$Genus)
+```
+
+```{r}
+unique(ITS2_clean$Location)
+```
+
+```{r}
+unique(ITS2_clean$ITS2Genus)
+```
+
+```{r}
+unique(ITS2_clean$ITS2.Letter)
+```
+
+```{r}
+#| label: made_unique_genus_species_table
 unique_genus_species <- ITS2_clean %>%
   select(Genus, Species) %>%
   distinct() %>%
   arrange(Genus, Species) %>%
   as.data.frame()
 
-# Preview
-head(unique_genus_species)
 ```
 
 ## Richness of ITS2
@@ -278,14 +362,6 @@ summary_table_ITS2 <- tibble(
 )
 
 print(summary_table_ITS2)
-```
-
-```{r}
-unique(ITS2_clean$ITS2Genus)
-```
-
-```{r}
-unique(ITS2_clean$ITS2.Letter)
 ```
 
 ## Cleaning metabolite data
