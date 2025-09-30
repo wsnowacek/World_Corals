@@ -24,7 +24,7 @@ Corals_clean <- read.csv("Corals_clean.csv")
 ITS2_clean   <- read.csv("ITS2_clean.csv")
 ```
 
-## Richness Graphs 
+## Richness Graphs
 
 ```{r}
 #| label: Overall_Species_Richness_per_Location
@@ -77,3 +77,178 @@ ggplot(phylum_richness, aes(x = fct_reorder(host_phylum, Richness),
     legend.position = "none"
   )
 ```
+
+```{r}
+#| label: Species_Richness_by_Symbiont_Potential
+
+# Overall species richness per symbiont potential (exclude NA)
+symbiont_richness <- Corals_clean %>%
+  filter(!is.na(symbiont.potential)) %>%
+  group_by(symbiont.potential) %>%
+  summarise(Richness = n_distinct(host_species), .groups = "drop")
+
+# Coral-inspired colors (warm pinks, oranges, reds)
+coral_colors <- c("#FF7F50", "#FF6347", "#E9967A")
+
+# Bar plot
+ggplot(symbiont_richness, aes(x = symbiont.potential, 
+                              y = Richness, 
+                              fill = symbiont.potential)) +
+  geom_col() +
+  scale_fill_manual(values = coral_colors) +
+  labs(title = "Species Richness by Symbiont Potential",
+       x = "Symbiont Potential",
+       y = "Number of Unique Species") +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
+    axis.title = element_text(size = 14),
+    axis.text  = element_text(size = 12),
+    legend.position = "none"
+  )
+```
+
+```{r}
+# Overall richness per bleaching status (exclude NA)
+bleaching_richness <- Corals_clean %>%
+  filter(!is.na(bleaching)) %>%
+  group_by(bleaching) %>%
+  summarise(Richness = n_distinct(host_species), .groups = "drop")
+
+# Coral-inspired palette (can expand if needed)
+bleach_colors <- c("#66C2A5", "#FC8D62", "#FFD92F")  # green = NB, orange = B, yellow = Pale
+
+# Bar plot with relabeled x-axis
+ggplot(bleaching_richness, aes(x = bleaching, 
+                               y = Richness, 
+                               fill = bleaching)) +
+  geom_col() +
+  scale_fill_manual(values = bleach_colors) +
+  scale_x_discrete(labels = c(
+    "NB"   = "Non-bleaching",
+    "B"    = "Bleaching",
+    "Pale" = "Pale"
+  )) +
+  labs(title = "Species Richness by Bleaching Status",
+       x = "Bleaching Status",
+       y = "Number of Unique Species") +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
+    axis.title = element_text(size = 14),
+    axis.text  = element_text(size = 12),
+    legend.position = "none"
+  )
+```
+
+## Entropy Graphs
+
+```{r}
+#| label: entropy_location
+
+# Shannon index function
+shannon_index <- function(counts) {
+  p <- counts / sum(counts)
+  p <- p[p > 0]
+  -sum(p * log(p))
+}
+
+# Calculate Shannon diversity per location (no sample_id)
+shannon_df <- Corals_clean %>%
+  filter(!is.na(location), !is.na(host_species)) %>%
+  group_by(location, host_species) %>%
+  summarise(Count = n(), .groups = "drop") %>%
+  group_by(location) %>%
+  summarise(Shannon = shannon_index(Count), .groups = "drop") %>%
+  ungroup()
+
+# Bar plot (one bar per location, no error bars since it's a single value)
+ggplot(shannon_df, aes(x = factor(location, levels = c("Hawaii", "Sri Lanka", "Curaçao")),
+                       y = Shannon, fill = location)) +
+  geom_col() +
+  scale_fill_brewer(palette = "Pastel1") +
+  labs(title = "Entropy by Location",
+       x = "Location",
+       y = "Shannon Diversity Index (Entropy)") +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
+    axis.title = element_text(size = 14),
+    axis.text  = element_text(size = 12),
+    legend.position = "none"
+  )
+```
+
+```{r}
+#| label: entropy_symbiont_potential
+
+# Shannon index function
+shannon_index <- function(counts) {
+  p <- counts / sum(counts)
+  p <- p[p > 0]
+  -sum(p * log(p))
+}
+
+# Calculate Shannon diversity per symbiont potential (pooled, no sample_id)
+shannon_df <- Corals_clean %>%
+  filter(!is.na(symbiont.potential), !is.na(host_species)) %>%
+  count(symbiont.potential, host_species, name = "Count") %>%
+  group_by(symbiont.potential) %>%
+  summarise(Shannon = shannon_index(Count), .groups = "drop")
+
+# Bar plot (one value per symbiont potential, no error bars since pooled)
+ggplot(shannon_df, aes(x = symbiont.potential, y = Shannon, fill = symbiont.potential)) +
+  geom_col() +
+  scale_fill_brewer(palette = "Set2") +
+  labs(title = "Entropy by Symbiont Potential",
+       x = "Symbiont Potential",
+       y = "Shannon Diversity Index (Entropy)") +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
+    axis.title = element_text(size = 14),
+    axis.text  = element_text(size = 12),
+    legend.position = "none"
+  )
+
+```
+
+```{r}
+#| label: entropy_bleaching
+
+# Shannon index function
+shannon_index <- function(counts) {
+  p <- counts / sum(counts)
+  p <- p[p > 0]
+  -sum(p * log(p))
+}
+
+# Calculate Shannon diversity per bleaching category (pooled, no sample_id)
+shannon_df <- Corals_clean %>%
+  filter(!is.na(bleaching), !is.na(host_species)) %>%
+  count(bleaching, host_species, name = "Count") %>%
+  group_by(bleaching) %>%
+  summarise(Shannon = shannon_index(Count), .groups = "drop")
+
+# Bar plot (one Shannon value per bleaching status)
+ggplot(shannon_df, aes(x = bleaching, y = Shannon, fill = bleaching)) +
+  geom_col() +
+  scale_fill_brewer(palette = "Set3") +
+  scale_x_discrete(labels = c(
+    "NB"   = "Non-bleaching",
+    "B"    = "Bleaching",
+    "Pale" = "Pale"
+  )) +
+  labs(title = "Entropy by Bleaching Status",
+       x = "Bleaching Status",
+       y = "Shannon Diversity Index (Entropy)") +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
+    axis.title = element_text(size = 14),
+    axis.text  = element_text(size = 12),
+    legend.position = "none"
+  )
+```
+
+## Evenness Graphs
