@@ -234,6 +234,51 @@ ggplot(richness_bleaching, aes(x = bleaching, y = Richness, fill = bleaching)) +
 ## Entropy Graphs
 
 ```{r}
+#| label: coral_entropy_by_location
+
+# Shannon entropy function
+shannon_index <- function(counts) {
+  counts <- counts[counts > 0]
+  total <- sum(counts)
+  p <- counts / total
+  -sum(p * log(p))   # natural log
+}
+
+# Pooled Shannon entropy per location (Hexacorallia + Octocorallia only)
+entropy_location <- Corals_clean %>%
+  filter(!is.na(location),
+         !is.na(host_species),
+         host_class %in% c("Hexacorallia", "Octocorallia")) %>%
+  count(location, host_species, name = "abundance") %>%
+  group_by(location) %>%
+  summarise(
+    Richness = n_distinct(host_species),
+    Shannon  = shannon_index(abundance),
+    .groups  = "drop"
+  ) %>%
+  mutate(location = factor(location, levels = c("Hawaii", "Sri Lanka", "Curaçao")))
+
+# Print table
+entropy_location
+
+# Bar plot
+ggplot(entropy_location, aes(x = location, y = Shannon, fill = location)) +
+  geom_col(width = 0.7) +
+  scale_fill_brewer(palette = "Pastel1") +
+  labs(title = "Coral Entropy by Location",
+       x = "Location",
+       y = "Shannon Diversity") +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
+    axis.title = element_text(size = 14),
+    axis.text  = element_text(size = 12),
+    legend.position = "none"
+  )
+
+```
+
+```{r}
 #| label: entropy_location
 
 # Shannon index function
@@ -344,126 +389,92 @@ ggplot(shannon_df, aes(x = bleaching, y = Shannon, fill = bleaching)) +
 ## Evenness Graphs
 
 ```{r}
-library(tidyverse)
+#| label: Pooled_Coral_Evenness_by_Location
 
-# --- helper functions ------------------------------------------------------
+# Shannon function
 shannon_index <- function(counts) {
-  # counts: numeric vector of abundances
-  if (length(counts) == 0) return(NA_real_)
-  p <- counts / sum(counts)
-  p <- p[p > 0]
+  counts <- counts[counts > 0]
+  total <- sum(counts)
+  p <- counts / total
   -sum(p * log(p))
 }
 
-# --- DIAGNOSTICS -----------------------------------------------------------
-# Quick checks to see what is in the raw data
-cat("Unique locations:\n"); print(sort(unique(Corals_clean$location)))
-cat("\nCounts per location (rows):\n")
-print(Corals_clean %>% count(location) %>% arrange(desc(n)))
-
-cat("\nNumber of distinct host_species per location:\n")
-print(Corals_clean %>% filter(!is.na(location), !is.na(host_species)) %>%
-        group_by(location) %>% summarise(n_species = n_distinct(host_species), n_rows = n(), .groups = "drop"))
-
-cat("\nNumber of samples per location:\n")
-print(Corals_clean %>% filter(!is.na(location)) %>% distinct(sample_id, location) %>% count(location))
-
-# --- BUILD per-sample abundance table -------------------------------------
-abund_tab <- Corals_clean %>%
-  filter(!is.na(location), !is.na(host_species)) %>%        # require both
-  count(sample_id, location, host_species, name = "abundance") %>%
-  arrange(location, sample_id)
-
-cat("\nAbundance table sample (first 10 rows):\n")
-print(head(abund_tab, 10))
-
-# --- CALCULATE per-sample Shannon & Richness & Evenness --------------------
-shannon_df <- abund_tab %>%
-  group_by(sample_id, location) %>%
-  summarise(
-    Shannon = shannon_index(abundance),
-    Richness = n_distinct(host_species),
-    total_abundance = sum(abundance),
-    .groups = "drop"
-  ) %>%
-  mutate(
-    Evenness = case_when(
-      is.na(Shannon) ~ NA_real_,
-      Richness <= 1 ~ 0,                          # define evenness = 0 when richness <= 1
-      TRUE ~ Shannon / log(Richness)
-    )
-  )
-
-cat("\nSummary of computed shannon_df:\n")
-print(shannon_df %>% group_by(location) %>%
-        summarise(n_samples = n(), mean_Shannon = mean(Shannon, na.rm = TRUE),
-                  mean_Evenness = mean(Evenness, na.rm = TRUE),
-                  .groups = "drop"))
-
-cat("\nIf shannon_df has zero rows, the problem is upstream (filtering removed all rows).\n")
-
-# --- Ensure locations are present and set factor order ---------------------
-desired_levels <- c("Hawaii", "Sri Lanka", "Curaçao")
-
-# If any desired_levels are missing in the data, print that
-missing_locs <- setdiff(desired_levels, unique(shannon_df$location))
-if (length(missing_locs) > 0) {
-  cat("\nWarning: the following requested location levels are not present in shannon_df:\n")
-  print(missing_locs)
-}
-
-# Force factor order but keep only present levels (prevents empty-factor plotting)
-present_levels <- intersect(desired_levels, unique(shannon_df$location))
-if (length(present_levels) == 0) {
-  # fallback to any locations present
-  present_levels <- sort(unique(shannon_df$location))
-}
-
-shannon_df <- shannon_df %>%
-  mutate(location = factor(location, levels = present_levels))
-
-# --- PLOTS -----------------------------------------------------------------
-# 1) Boxplot showing within-site variation of Evenness
-p_box <- ggplot(shannon_df, aes(x = location, y = Evenness, fill = location)) +
-  geom_boxplot() +
-  scale_fill_brewer(palette = "Pastel2") +
-  labs(title = "Pielou's Evenness by Location (per sample)",
-       x = "Location", y = "Evenness (J = Shannon / ln(Richness))") +
-  theme_minimal() +
-  theme(plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
-        axis.title = element_text(size = 14), axis.text = element_text(size = 12),
-        legend.position = "none")
-
-# 2) Mean ± SE bar plot with sample-size labels
-summary_loc <- shannon_df %>%
+# Pooled Shannon + Evenness per location
+evenness_pooled <- Corals_clean %>%
+  filter(!is.na(location),
+         !is.na(host_species),
+         host_class %in% c("Hexacorallia", "Octocorallia")) %>%
+  count(location, host_species, name = "abundance") %>%
   group_by(location) %>%
   summarise(
-    mean_Evenness = mean(Evenness, na.rm = TRUE),
-    se_Evenness = sd(Evenness, na.rm = TRUE) / sqrt(sum(!is.na(Evenness))),
-    n_samples = sum(!is.na(Evenness)),
-    .groups = "drop"
+    Richness = n_distinct(host_species),
+    Shannon  = shannon_index(abundance),
+    .groups  = "drop"
+  ) %>%
+  mutate(Evenness = ifelse(Richness > 1, Shannon / log(Richness), 0),
+         location = factor(location, levels = c("Hawaii", "Sri Lanka", "Curaçao")))
+
+# Print table to console
+evenness_pooled
+
+# Plot
+ggplot(evenness_pooled, aes(x = location, y = Evenness, fill = location)) +
+  geom_col(width = 0.7) +
+  scale_fill_brewer(palette = "Pastel1") +
+  labs(title = "Coral Evenness by Location",
+       x = "Location",
+       y = "Evenness (H' / ln(S))") +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
+    axis.title = element_text(size = 14),
+    axis.text  = element_text(size = 12),
+    legend.position = "none"
   )
 
-p_bar <- ggplot(summary_loc, aes(x = location, y = mean_Evenness, fill = location)) +
-  geom_col() +
-  geom_errorbar(aes(ymin = mean_Evenness - se_Evenness, ymax = mean_Evenness + se_Evenness), width = 0.2) +
-  geom_text(aes(label = paste0("n=", n_samples)), vjust = -0.5, size = 3.5) +
-  scale_fill_brewer(palette = "Pastel2") +
-  labs(title = "Mean Evenness by Location (±SE)",
-       x = "Location", y = "Mean Evenness") +
+```
+
+```{r}
+#| label: Coral_evenness_by_synbiont_potential
+
+# Shannon function
+shannon_index <- function(counts) {
+  counts <- counts[counts > 0]
+  total <- sum(counts)
+  p <- counts / total
+  -sum(p * log(p))
+}
+
+# Pooled Shannon + Evenness per symbiont.potential
+evenness_symb <- Corals_clean %>%
+  filter(!is.na(symbiont.potential),
+         !is.na(host_species),
+         host_class %in% c("Hexacorallia", "Octocorallia")) %>%
+  count(symbiont.potential, host_species, name = "abundance") %>%
+  group_by(symbiont.potential) %>%
+  summarise(
+    Richness = n_distinct(host_species),
+    Shannon  = shannon_index(abundance),
+    .groups  = "drop"
+  ) %>%
+  mutate(Evenness = ifelse(Richness > 1, Shannon / log(Richness), 0))
+
+# Print table
+evenness_symb
+
+# Plot
+ggplot(evenness_symb, aes(x = symbiont.potential, y = Evenness, fill = symbiont.potential)) +
+  geom_col(width = 0.7) +
+  scale_fill_brewer(palette = "Set2") +
+  labs(title = "Coral Evenness by Symbiont Potential",
+       x = "Symbiont Potential",
+       y = "Evenness (H' / ln(S))") +
   theme_minimal() +
-  theme(plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
-        axis.title = element_text(size = 14), axis.text = element_text(size = 12),
-        legend.position = "none")
-
-# Print plots
-print(p_box)
-print(p_bar)
-
-# --- Final diagnostics printed for you ------------------------------------
-cat("\nFinished. If plots are still empty, inspect the printed summaries above:\n")
-cat("- Check 'Counts per location' and 'Number of samples per location'.\n")
-cat("- Check 'Summary of computed shannon_df' for missing/NA Shannon or Evenness.\n")
-cat("- If all Evenness are NA or 0 for a location, verify host_species presence for that location.\n")
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
+    axis.title = element_text(size = 14),
+    axis.text  = element_text(size = 12),
+    legend.position = "none"
+  )
 
 ```
