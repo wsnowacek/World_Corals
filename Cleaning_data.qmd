@@ -134,7 +134,7 @@ Corals_clean <- Corals_raw %>%
       location == "Carmabi"        ~ "Curaçao",
       location == "Marriot"       ~ "Curaçao",
       location == "Water Factory"  ~ "Curaçao",
-      location == "Radio Island"   ~ "Curaçao",
+      location == "Radio Island"   ~ "North Carolina",
       location == "Cura√ßao"       ~ "Curaçao",
       str_detect(location, "Hawai") ~ "Hawaii",   # catch all variants
       location == "NA"             ~ NA_character_,
@@ -325,6 +325,7 @@ ITS2_clean <- ITS2 %>%
       Genus == "Tubastrea"  ~ "Tubastraea",
       TRUE ~ Genus
     ), 
+    (Location = as.character(Location))
     )
 
 #Reorder columns 

@@ -24,7 +24,7 @@ Corals_clean <- read.csv("Corals_clean.csv")
 ITS2_clean   <- read.csv("ITS2_clean.csv")
 ```
 
-## Richness Graphs
+## Unique species graphs
 
 ```{r}
 #| label: Overall_Species_Richness_per_Location
@@ -36,90 +36,59 @@ location_richness <- Corals_clean %>%
   summarise(Richness = n_distinct(host_species), .groups = "drop")
 
 # Bar plot with styling
-ggplot(location_richness, aes(x = factor(location, 
-                                         levels = c("Hawaii", "Sri Lanka", "Curaçao")),
-                              y = Richness, fill = location)) +
+ggplot(location_richness, aes(
+  x = factor(location, levels = c("Hawaii", "Sri Lanka", "Curaçao", "North Carolina")),
+  y = Richness, fill = location
+)) +
   geom_col() +
-  labs(title = "Overall Species Richness per Location",
-       x = "Location",
-       y = "Number of Unique Species") +
+  labs(
+    title = "Overall Species Richness per Location",
+    x = "Location",
+    y = "Number of Unique Species"
+  ) +
   theme_minimal() +
   theme(
     plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
     axis.title = element_text(size = 14),
     axis.text  = element_text(size = 12),
-    legend.position = "none"  # hide redundant legend since bars already labeled
+    legend.position = "none"   # hide redundant legend
   )
+
 ```
 
 ```{r}
-#| label: Corals_Species_by_Order_per_location 
+#| label: proportion_of_coral_by_species
 
-# prepare data: unique species per location × host_order (within the two classes)
+# prepare data: unique species per location × host_species (only Hexacorallia & Octocorallia)
 prop_df <- Corals_clean %>%
   filter(!is.na(location),
-         !is.na(host_order),
-         !is.na(host_species),
-         host_class %in% c("Hexacorallia", "Octocorallia")) %>%   # remove this line if you want all classes
-  group_by(location, host_order) %>%
-  summarise(n_species = n_distinct(host_species), .groups = "drop") %>%
-  # ensure the three locations are present and ordered
-  mutate(location = factor(location, levels = c("Hawaii", "Sri Lanka", "Curaçao"))) %>%
-  filter(!is.na(location)) %>%
-  group_by(location) %>%
-  mutate(prop = n_species / sum(n_species)) %>%
-  ungroup()
-
-# optional: show table to confirm proportions
-print(prop_df %>% arrange(location, desc(prop)))
-
-# 100% stacked bar chart
-ggplot(prop_df, aes(x = location, y = prop, fill = host_order)) +
-  geom_col(position = "fill", width = 0.6) +            # position="fill" makes it 100% stacked
-  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
-  scale_fill_brewer(palette = "Set3", name = "Host Order") +
-  labs(
-    title = "Proportion of Unique Corals Species by Order per location",
-    x = "Location",
-    y = "Proportion of unique species"
-  ) +
-  theme_minimal() +
-  theme(
-    plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
-    axis.title = element_text(size = 12),
-    axis.text = element_text(size = 11),
-    legend.title = element_text(size = 11),
-    legend.text = element_text(size = 10)
-  )
-```
-
-```{r}
-#| label: Corals_Species_by_Order_per_location_dark_blue
-
-# prepare data: unique species per location × host_order (within Hexacorallia & Octocorallia)
-prop_df <- Corals_clean %>%
-  filter(!is.na(location),
-         !is.na(host_order),
          !is.na(host_species),
          host_class %in% c("Hexacorallia", "Octocorallia")) %>%
-  group_by(location, host_order) %>%
-  summarise(n_species = n_distinct(host_species), .groups = "drop") %>%
-  mutate(location = factor(location, levels = c("Hawaii", "Sri Lanka", "Curaçao"))) %>%
-  filter(!is.na(location)) %>%
+  group_by(location, host_species) %>%
+  summarise(n_records = n(), .groups = "drop") %>%   # keep counts
+  mutate(location = factor(location, 
+                           levels = c("Hawaii", "Sri Lanka", "Curaçao", "North Carolina"))) %>%
   group_by(location) %>%
-  mutate(prop = n_species / sum(n_species)) %>%
+  mutate(prop = n_records / sum(n_records)) %>%
   ungroup()
 
-# expanded custom blue palette (6 shades)
-blue_palette <- c("#ebf2ff", "#c2d9ff", "#a4c2f4", "#6d9eeb", "#3c78d8", "#1c4587")
+# how many unique species?
+n_species <- n_distinct(prop_df$host_species)
 
-# 100% stacked bar chart with custom fills
-ggplot(prop_df, aes(x = location, y = prop, fill = host_order)) +
+# generate a diverse palette (enough colors for all species)
+diverse_palette <- grDevices::colorRampPalette(
+  c("#ebf2ff", "#6d9eeb", "#3c78d8",   # blues
+    "#a2d9a2", "#3fa34d", "#145214",   # greens
+    "#e0c2f2", "#9b59b6", "#4b0082")   # purples
+)(n_species)
+
+# 100% stacked bar chart filled by species
+ggplot(prop_df, aes(x = location, y = prop, fill = host_species)) +
   geom_col(position = "fill", width = 0.6) +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
-  scale_fill_manual(values = blue_palette, name = "Host Order") +
+  scale_fill_manual(values = diverse_palette) +
   labs(
-    title = "Proportion of Coral Species by Order",
+    title = "Proportion of Coral by Species",
     x = "Location",
     y = "Proportion of Unique Species"
   ) +
@@ -127,15 +96,10 @@ ggplot(prop_df, aes(x = location, y = prop, fill = host_order)) +
   theme(
     plot.background   = element_rect(fill = "#000042", color = NA),
     panel.background  = element_rect(fill = "#000042", color = NA),
-    legend.background = element_rect(fill = "#000042", color = NA),
-    legend.key        = element_rect(fill = "#000042", color = NA),
-    
-    plot.title = element_text(hjust = 0.5, size = 16, face = "bold", color = "white"), # centered
+    legend.position   = "none",   # hide legend (too many species to show clearly)
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold", color = "white"),
     axis.title = element_text(size = 14, color = "white"),
     axis.text  = element_text(size = 12, color = "white"),
-    legend.title = element_text(size = 12, color = "white"),
-    legend.text  = element_text(size = 11, color = "white"),
-    
     panel.grid.major = element_line(color = "gray40"),
     panel.grid.minor = element_line(color = "gray30")
   )
@@ -143,7 +107,7 @@ ggplot(prop_df, aes(x = location, y = prop, fill = host_order)) +
 ```
 
 ```{r}
-#| label: species_richness_per_phylum 
+#| label: species_per_phylum 
 
 # Overall species richness per host phylum (exclude NA)
 phylum_richness <- Corals_clean %>%
@@ -156,7 +120,7 @@ ggplot(phylum_richness, aes(x = fct_reorder(host_phylum, Richness),
                             y = Richness, fill = host_phylum)) +
   geom_col() +
   scale_fill_brewer(palette = "Dark2") +  # new distinct color palette
-  labs(title = "Species Richness per Phylum",
+  labs(title = "Species per Phylum",
        x = "Phylum",
        y = "Number of Unique Species") +
   theme_minimal() +
@@ -169,7 +133,7 @@ ggplot(phylum_richness, aes(x = fct_reorder(host_phylum, Richness),
 ```
 
 ```{r}
-#| label: Species_Richness_by_Symbiont_Potential
+#| label: Species_by_Symbiont_Potential
 
 # Overall species richness per symbiont potential (exclude NA)
 symbiont_richness <- Corals_clean %>%
@@ -186,7 +150,7 @@ ggplot(symbiont_richness, aes(x = symbiont.potential,
                               fill = symbiont.potential)) +
   geom_col() +
   scale_fill_manual(values = coral_colors) +
-  labs(title = "Species Richness by Symbiont Potential",
+  labs(title = "Species by Symbiont Potential",
        x = "Symbiont Potential",
        y = "Number of Unique Species") +
   theme_minimal() +
@@ -194,85 +158,6 @@ ggplot(symbiont_richness, aes(x = symbiont.potential,
     plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
     axis.title = element_text(size = 14),
     axis.text  = element_text(size = 12),
-    legend.position = "none"
-  )
-```
-
-```{r}
-#| label: Species_Richness_by_Symbiont_Potential_dark_blue
-
-library(tidyverse)
-
-# Overall species richness per symbiont potential (exclude NA)
-symbiont_richness <- Corals_clean %>%
-  filter(!is.na(symbiont.potential)) %>%
-  group_by(symbiont.potential) %>%
-  summarise(Richness = n_distinct(host_species), .groups = "drop")
-
-# Consistent blue palette (6 shades in case there are multiple categories)
-blue_palette <- c("#ebf2ff", "#c2d9ff", "#a4c2f4", "#6d9eeb", "#3c78d8", "#1c4587")
-
-# Bar plot with dark background + blue scheme
-ggplot(symbiont_richness, aes(x = symbiont.potential, 
-                              y = Richness, 
-                              fill = symbiont.potential)) +
-  geom_col(width = 0.7) +
-  scale_fill_manual(values = blue_palette) +
-  labs(title = "Species Richness by Symbiont Potential",
-       x = "Symbiont Potential",
-       y = "Number of Unique Species") +
-  theme_minimal(base_size = 14) +
-  theme(
-    plot.background   = element_rect(fill = "#000042", color = NA),
-    panel.background  = element_rect(fill = "#000042", color = NA),
-    legend.background = element_rect(fill = "#000042", color = NA),
-    legend.key        = element_rect(fill = "#000042", color = NA),
-    
-    plot.title = element_text(hjust = 0.5, size = 16, face = "bold", color = "white"), # centered
-    axis.title = element_text(size = 14, color = "white"),
-    axis.text  = element_text(size = 12, color = "white"),
-    legend.title = element_text(size = 12, color = "white"),
-    legend.text  = element_text(size = 11, color = "white"),
-    
-    panel.grid.major = element_line(color = "gray40"),
-    panel.grid.minor = element_line(color = "gray30"),
-    
-    legend.position = "none" # keep legend off if not needed
-  )
-
-```
-
-```{r}
-#| label: coral_only_symbiont_potential_richness
-
-# Pooled richness per symbiont potential (only Hexacorallia & Octocorallia)
-richness_symb <- Corals_clean %>%
-  filter(!is.na(symbiont.potential),
-         !is.na(host_class),
-         host_class %in% c("Hexacorallia", "Octocorallia"),
-         !is.na(host_species)) %>%
-  group_by(symbiont.potential) %>%
-  summarise(Richness = n_distinct(host_species), .groups = "drop") %>%
-  arrange(desc(Richness))
-
-# Order bars by richness
-richness_symb <- richness_symb %>%
-  mutate(symbiont.potential = factor(symbiont.potential, levels = richness_symb$symbiont.potential))
-
-# Bar plot
-ggplot(richness_symb, aes(x = symbiont.potential, y = Richness, fill = symbiont.potential)) +
-  geom_col(width = 0.7) +
-  scale_fill_brewer(palette = "Set2") +
-  labs(
-    title = "Coral Species Richness by Symbiont Potential",
-    x = "Symbiont Potential",
-    y = "Number of Unique Coral species"
-  ) +
-  theme_minimal() +
-  theme(
-    plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
-    axis.title  = element_text(size = 14),
-    axis.text   = element_text(size = 12),
     legend.position = "none"
   )
 ```
@@ -291,7 +176,7 @@ aposymbiotic_species
 ```
 
 ```{r}
-#| label: Species_Richness_by_Bleaching_Status
+#| label: Species_by_Bleaching_Status
 
 richness_bleaching <- Corals_clean %>%
   filter(!is.na(bleaching),
@@ -311,7 +196,7 @@ ggplot(richness_bleaching, aes(x = bleaching, y = Richness, fill = bleaching)) +
     "B"    = "Bleaching"
   )) +
   labs(
-    title = "Richness of Corals by Bleaching Status",
+    title = "Amount of Corals by Bleaching Status",
     x = "Bleaching Status",
     y = "Number of Unique Coral species"
   ) +
@@ -324,139 +209,47 @@ ggplot(richness_bleaching, aes(x = bleaching, y = Richness, fill = bleaching)) +
   )
 ```
 
-## Entropy Graphs
+## Richness graphs
 
 ```{r}
-#| label: coral_entropy_by_location
+#| label: Metabolomic_Richness_by_Phylum
 
-# Shannon entropy function
-shannon_index <- function(counts) {
-  counts <- counts[counts > 0]
-  total <- sum(counts)
-  p <- counts / total
-  -sum(p * log(p))   # natural log
-}
+# 1) Identify metabolite columns (start with "x")
+metabolite_cols <- grep("^x", names(Corals_clean), value = TRUE)
 
-# Pooled Shannon entropy per location (Hexacorallia + Octocorallia only)
-entropy_location <- Corals_clean %>%
-  filter(!is.na(location),
-         !is.na(host_species),
-         host_class %in% c("Hexacorallia", "Octocorallia")) %>%
-  count(location, host_species, name = "abundance") %>%
-  group_by(location) %>%
-  summarise(
-    Richness = n_distinct(host_species),
-    Shannon  = shannon_index(abundance),
-    .groups  = "drop"
-  ) %>%
-  mutate(location = factor(location, levels = c("Hawaii", "Sri Lanka", "Curaçao")))
-
-# Print table
-entropy_location
-
-# Bar plot
-ggplot(entropy_location, aes(x = location, y = Shannon, fill = location)) +
-  geom_col(width = 0.7) +
-  scale_fill_brewer(palette = "Pastel1") +
-  labs(title = "Coral Entropy by Location",
-       x = "Location",
-       y = "Shannon Diversity") +
-  theme_minimal() +
-  theme(
-    plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
-    axis.title = element_text(size = 14),
-    axis.text  = element_text(size = 12),
-    legend.position = "none"
-  )
-
-```
-
-```{r}
-#| label: entropy_location_all_species
-
-# Shannon index function
-shannon_index <- function(counts) {
-  p <- counts / sum(counts)
-  p <- p[p > 0]
-  -sum(p * log(p))
-}
-
-# Calculate Shannon diversity per location (no sample_id)
-shannon_df <- Corals_clean %>%
-  filter(!is.na(location), !is.na(host_species)) %>%
-  group_by(location, host_species) %>%
-  summarise(Count = n(), .groups = "drop") %>%
-  group_by(location) %>%
-  summarise(Shannon = shannon_index(Count), .groups = "drop") %>%
+# 2) Compute metabolomic richness per sample
+#    Richness = count of metabolites with intensity > 0
+richness_df <- Corals_clean %>%
+  select(sample_id, host_phylum, all_of(metabolite_cols)) %>%
+  rowwise() %>%
+  mutate(MetabolomicRichness = sum(c_across(all_of(metabolite_cols)) > 0, na.rm = TRUE)) %>%
   ungroup()
 
-# Bar plot (one bar per location, no error bars since it's a single value)
-ggplot(shannon_df, aes(x = factor(location, levels = c("Hawaii", "Sri Lanka", "Curaçao")),
-                       y = Shannon, fill = location)) +
-  geom_col() +
-  scale_fill_brewer(palette = "Pastel1") +
-  labs(title = "Entropy by Location",
-       x = "Location",
-       y = "Shannon Diversity Index (Entropy)") +
-  theme_minimal() +
-  theme(
-    plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
-    axis.title = element_text(size = 14),
-    axis.text  = element_text(size = 12),
-    legend.position = "none"
-  )
-```
+# 3) Build a distinct, readable palette sized to the # of phyla
+n_phyla <- n_distinct(na.omit(richness_df$host_phylum))
+diverse_palette <- grDevices::colorRampPalette(
+  c("#ebf2ff", "#6d9eeb", "#3c78d8",   # blues
+    "#a2d9a2", "#3fa34d", "#145214",   # greens
+    "#e0c2f2", "#9b59b6", "#4b0082")   # purples
+)(n_phyla)
 
-```{r}
-#| label: coral_entropy_per_location
-
-# Shannon entropy function
-shannon_index <- function(counts) {
-  counts <- counts[counts > 0]
-  total <- sum(counts)
-  p <- counts / total
-  -sum(p * log(p))   # natural log
-}
-
-# Pooled Shannon entropy per location (only Hexacorallia & Octocorallia)
-entropy_location <- Corals_clean %>%
-  filter(!is.na(location),
-         !is.na(host_species),
-         host_class %in% c("Hexacorallia", "Octocorallia")) %>%   # <-- filter here
-  count(location, host_species, name = "abundance") %>%
-  group_by(location) %>%
-  summarise(
-    Richness = n_distinct(host_species),
-    Shannon  = shannon_index(abundance),
-    .groups  = "drop"
-  ) %>%
-  mutate(location = factor(location, levels = c("Hawaii", "Sri Lanka", "Curaçao")))
-
-# Print numeric table
-entropy_location
-
-# Custom harmonious blue palette
-blue_palette <- c("#ebf2ff", "#c2d9ff", "#a4c2f4", "#6d9eeb", "#3c78d8", "#1c4587")
-
-# Bar plot with dark theme
-ggplot(entropy_location, aes(x = location, y = Shannon, fill = location)) +
-  geom_col(width = 0.7) +
-  scale_fill_manual(values = blue_palette) +
-  labs(title = "Coral Species Entropy by Location",
-       x = "Location",
-       y = "Diversity Index") +
+# 4) Box-and-whisker plot (dark background, clear outlines, visible outliers)
+ggplot(richness_df, aes(x = host_phylum, y = MetabolomicRichness, fill = host_phylum)) +
+  geom_boxplot(color = "white", outlier.colour = "white", outlier.shape = 16, outlier.size = 2) +
+  scale_fill_manual(values = diverse_palette) +
+  labs(
+    title = "Metabolomic Richness by Phylum",
+    x = "Phylum",
+    y = "Number of Detected Metabolites"
+  ) +
   theme_minimal(base_size = 14) +
   theme(
     plot.background   = element_rect(fill = "#000042", color = NA),
     panel.background  = element_rect(fill = "#000042", color = NA),
-    legend.background = element_rect(fill = "#000042", color = NA),
-    legend.key        = element_rect(fill = "#000042", color = NA),
-    
+    legend.position   = "none",
     plot.title = element_text(hjust = 0.5, size = 16, face = "bold", color = "white"),
     axis.title = element_text(size = 14, color = "white"),
     axis.text  = element_text(size = 12, color = "white"),
-    legend.position = "none",
-    
     panel.grid.major = element_line(color = "gray40"),
     panel.grid.minor = element_line(color = "gray30")
   )
@@ -464,207 +257,591 @@ ggplot(entropy_location, aes(x = location, y = Shannon, fill = location)) +
 ```
 
 ```{r}
-#| label: entropy_symbiont_potential
+#| label: Metabolomic_Richness_by_Symbiont_Potential
 
-# Shannon index function
-shannon_index <- function(counts) {
-  p <- counts / sum(counts)
-  p <- p[p > 0]
-  -sum(p * log(p))
-}
+# 1) Identify metabolite columns (start with "x")
+metabolite_cols <- grep("^x", names(Corals_clean), value = TRUE)
 
-# Calculate Shannon diversity per symbiont potential (pooled, no sample_id)
-shannon_df <- Corals_clean %>%
-  filter(!is.na(symbiont.potential), !is.na(host_species)) %>%
-  count(symbiont.potential, host_species, name = "Count") %>%
-  group_by(symbiont.potential) %>%
-  summarise(Shannon = shannon_index(Count), .groups = "drop")
+# 2) Compute metabolomic richness per sample
+richness_df <- Corals_clean %>%
+  select(sample_id, symbiont.potential, all_of(metabolite_cols)) %>%
+  rowwise() %>%
+  mutate(MetabolomicRichness = sum(c_across(all_of(metabolite_cols)) > 0, na.rm = TRUE)) %>%
+  ungroup()
 
-# Bar plot (one value per symbiont potential, no error bars since pooled)
-ggplot(shannon_df, aes(x = symbiont.potential, y = Shannon, fill = symbiont.potential)) +
-  geom_col() +
-  scale_fill_brewer(palette = "Set2") +
-  labs(title = "Entropy by Symbiont Potential",
-       x = "Symbiont Potential",
-       y = "Shannon Diversity Index (Entropy)") +
-  theme_minimal() +
-  theme(
-    plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
-    axis.title = element_text(size = 14),
-    axis.text  = element_text(size = 12),
-    legend.position = "none"
-  )
+# 3) Build a palette sized to the number of symbiont categories
+n_symb <- n_distinct(na.omit(richness_df$symbiont.potential))
+diverse_palette <- grDevices::colorRampPalette(
+  c("#ebf2ff", "#6d9eeb", "#3c78d8",   # blues
+    "#a2d9a2", "#3fa34d", "#145214",   # greens
+    "#e0c2f2", "#9b59b6", "#4b0082")   # purples
+)(n_symb)
 
-```
-
-```{r}
-#| label: entropy_bleaching
-
-# Shannon index function
-shannon_index <- function(counts) {
-  p <- counts / sum(counts)
-  p <- p[p > 0]
-  -sum(p * log(p))
-}
-
-# Calculate Shannon diversity per bleaching category (pooled, no sample_id)
-shannon_df <- Corals_clean %>%
-  filter(!is.na(bleaching), !is.na(host_species)) %>%
-  count(bleaching, host_species, name = "Count") %>%
-  group_by(bleaching) %>%
-  summarise(Shannon = shannon_index(Count), .groups = "drop")
-
-# Bar plot (one Shannon value per bleaching status)
-ggplot(shannon_df, aes(x = bleaching, y = Shannon, fill = bleaching)) +
-  geom_col() +
-  scale_fill_brewer(palette = "Set3") +
-  scale_x_discrete(labels = c(
-    "NB"   = "Non-bleaching",
-    "B"    = "Bleaching",
-    "Pale" = "Pale"
-  )) +
-  labs(title = "Entropy by Bleaching Status",
-       x = "Bleaching Status",
-       y = "Shannon Diversity Index (Entropy)") +
-  theme_minimal() +
-  theme(
-    plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
-    axis.title = element_text(size = 14),
-    axis.text  = element_text(size = 12),
-    legend.position = "none"
-  )
-```
-
-## Evenness Graphs
-
-```{r}
-#| label: Pooled_Coral_Evenness_by_Location
-
-# Shannon function
-shannon_index <- function(counts) {
-  counts <- counts[counts > 0]
-  total <- sum(counts)
-  p <- counts / total
-  -sum(p * log(p))
-}
-
-# Pooled Shannon + Evenness per location
-evenness_pooled <- Corals_clean %>%
-  filter(!is.na(location),
-         !is.na(host_species),
-         host_class %in% c("Hexacorallia", "Octocorallia")) %>%
-  count(location, host_species, name = "abundance") %>%
-  group_by(location) %>%
-  summarise(
-    Richness = n_distinct(host_species),
-    Shannon  = shannon_index(abundance),
-    .groups  = "drop"
-  ) %>%
-  mutate(Evenness = ifelse(Richness > 1, Shannon / log(Richness), 0),
-         location = factor(location, levels = c("Hawaii", "Sri Lanka", "Curaçao")))
-
-# Print table to console
-evenness_pooled
-
-# Plot
-ggplot(evenness_pooled, aes(x = location, y = Evenness, fill = location)) +
-  geom_col(width = 0.7) +
-  scale_fill_brewer(palette = "Pastel1") +
-  labs(title = "Coral Evenness by Location",
-       x = "Location",
-       y = "Evenness (H' / ln(S))") +
-  theme_minimal() +
-  theme(
-    plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
-    axis.title = element_text(size = 14),
-    axis.text  = element_text(size = 12),
-    legend.position = "none"
-  )
-
-```
-
-```{r}
-#| label: Coral_evenness_by_synbiont_potential
-
-# Shannon function
-shannon_index <- function(counts) {
-  counts <- counts[counts > 0]
-  total <- sum(counts)
-  p <- counts / total
-  -sum(p * log(p))
-}
-
-# Pooled Shannon + Evenness per symbiont.potential
-evenness_symb <- Corals_clean %>%
-  filter(!is.na(symbiont.potential),
-         !is.na(host_species),
-         host_class %in% c("Hexacorallia", "Octocorallia")) %>%
-  count(symbiont.potential, host_species, name = "abundance") %>%
-  group_by(symbiont.potential) %>%
-  summarise(
-    Richness = n_distinct(host_species),
-    Shannon  = shannon_index(abundance),
-    .groups  = "drop"
-  ) %>%
-  mutate(Evenness = ifelse(Richness > 1, Shannon / log(Richness), 0))
-
-# Print table
-evenness_symb
-
-# Plot
-ggplot(evenness_symb, aes(x = symbiont.potential, y = Evenness, fill = symbiont.potential)) +
-  geom_col(width = 0.7) +
-  scale_fill_brewer(palette = "Set2") +
-  labs(title = "Coral Evenness by Symbiont Potential",
-       x = "Symbiont Potential",
-       y = "Evenness (H' / ln(S))") +
-  theme_minimal() +
-  theme(
-    plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
-    axis.title = element_text(size = 14),
-    axis.text  = element_text(size = 12),
-    legend.position = "none"
-  )
-
-```
-
-```{r}
-
-# Select metabolite columns (start with "x")
-metabolite_data <- Corals_clean %>%
-  select(starts_with("x"))
-
-# Calculate ubiquity (% samples with metabolite present) and abundance (sum)
-metabolite_summary <- metabolite_data %>%
-  pivot_longer(
-    cols = everything(),
-    names_to = "metabolite",
-    values_to = "value"
-  ) %>%
-  group_by(metabolite) %>%
-  summarise(
-    ubiquity = mean(value > 0) * 100,       # % samples where present
-    abundance = sum(value, na.rm = TRUE),   # total abundance
-    .groups = "drop"
-  )
-
-# Scatter plot with log-scaled y-axis
-ggplot(metabolite_summary, aes(x = ubiquity, y = abundance)) +
-  geom_point(alpha = 0.7, size = 2) +
-  scale_y_log10() +
-  theme_minimal(base_size = 14) +
+# 4) Box-and-whisker plot
+ggplot(richness_df, aes(x = symbiont.potential, y = MetabolomicRichness, fill = symbiont.potential)) +
+  geom_boxplot(color = "white", outlier.colour = "white", outlier.shape = 16, outlier.size = 2) +
+  scale_fill_manual(values = diverse_palette) +
   labs(
-    x = "Ubiquity (% samples present)",
-    y = "Total abundance (log scale)",
-    title = "Metabolite ubiquity vs abundance"
+    title = "Metabolomic Richness by Symbiont Potential",
+    x = "Symbiont Potential",
+    y = "Number of Detected Metabolites"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.background   = element_rect(fill = "#000042", color = NA),
+    panel.background  = element_rect(fill = "#000042", color = NA),
+    legend.position   = "none",
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold", color = "white"),
+    axis.title = element_text(size = 14, color = "white"),
+    axis.text  = element_text(size = 12, color = "white"),
+    panel.grid.major = element_line(color = "gray40"),
+    panel.grid.minor = element_line(color = "gray30")
   )
 
 ```
 
 ```{r}
-library(dplyr)
-library(tidyr)
-library(ggplot2)
+#| label: Metabolomic_Richness_by_Bleaching_Status
+
+# 1) Identify metabolite columns (start with "x")
+metabolite_cols <- grep("^x", names(Corals_clean), value = TRUE)
+
+# 2) Compute metabolomic richness per sample
+richness_df <- Corals_clean %>%
+  select(sample_id, bleaching, all_of(metabolite_cols)) %>%
+  rowwise() %>%
+  mutate(MetabolomicRichness = sum(c_across(all_of(metabolite_cols)) > 0, na.rm = TRUE)) %>%
+  ungroup()
+
+# 3) Build palette sized to bleaching categories
+n_bleach <- n_distinct(na.omit(richness_df$bleaching))
+diverse_palette <- grDevices::colorRampPalette(
+  c("#ebf2ff", "#6d9eeb", "#3c78d8",   # blues
+    "#a2d9a2", "#3fa34d", "#145214",   # greens
+    "#e0c2f2", "#9b59b6", "#4b0082")   # purples
+)(n_bleach)
+
+# 4) Box-and-whisker plot
+ggplot(richness_df, aes(x = bleaching, y = MetabolomicRichness, fill = bleaching)) +
+  geom_boxplot(color = "white", outlier.colour = "white", outlier.shape = 16, outlier.size = 2) +
+  scale_fill_manual(values = diverse_palette) +
+  labs(
+    title = "Metabolomic Richness by Bleaching Status",
+    x = "Bleaching Status",
+    y = "Number of Detected Metabolites"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.background   = element_rect(fill = "#000042", color = NA),
+    panel.background  = element_rect(fill = "#000042", color = NA),
+    legend.position   = "none",   # hide legend since x-axis already labeled
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold", color = "white"),
+    axis.title = element_text(size = 14, color = "white"),
+    axis.text  = element_text(size = 12, color = "white"),
+    panel.grid.major = element_line(color = "gray40"),
+    panel.grid.minor = element_line(color = "gray30")
+  )
+
+```
+
+```{r}
+#| label: Metabolomic_Richness_by_Location
+
+# 1) Identify metabolite columns (start with "x")
+metabolite_cols <- grep("^x", names(Corals_clean), value = TRUE)
+
+# 2) Compute metabolomic richness per sample
+richness_df <- Corals_clean %>%
+  select(sample_id, location, all_of(metabolite_cols)) %>%
+  rowwise() %>%
+  mutate(MetabolomicRichness = sum(c_across(all_of(metabolite_cols)) > 0, na.rm = TRUE)) %>%
+  ungroup()
+
+# 3) Build palette sized to number of locations
+n_loc <- n_distinct(na.omit(richness_df$location))
+diverse_palette <- grDevices::colorRampPalette(
+  c("#ebf2ff", "#6d9eeb", "#3c78d8",   # blues
+    "#a2d9a2", "#3fa34d", "#145214",   # greens
+    "#e0c2f2", "#9b59b6", "#4b0082")   # purples
+)(n_loc)
+
+# 4) Box-and-whisker plot
+ggplot(richness_df, aes(x = location, y = MetabolomicRichness, fill = location)) +
+  geom_boxplot(color = "white", outlier.colour = "white", outlier.shape = 16, outlier.size = 2) +
+  scale_fill_manual(values = diverse_palette) +
+  labs(
+    title = "Metabolomic Richness by Location",
+    x = "Location",
+    y = "Number of Detected Metabolites"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.background   = element_rect(fill = "#000042", color = NA),
+    panel.background  = element_rect(fill = "#000042", color = NA),
+    legend.position   = "none",   # x-axis already labels groups
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold", color = "white"),
+    axis.title = element_text(size = 14, color = "white"),
+    axis.text  = element_text(size = 12, color = "white"),
+    panel.grid.major = element_line(color = "gray40"),
+    panel.grid.minor = element_line(color = "gray30")
+  )
+
+```
+
+## Entropy graphs
+
+```{r}
+#| label: Metabolic_Entropy_by_Phylum
+
+# Shannon entropy function
+shannon_index <- function(counts) {
+  counts <- counts[counts > 0]   # drop zeros
+  total <- sum(counts)
+  if (total == 0) return(0)      # if no metabolites detected
+  p <- counts / total
+  -sum(p * log(p))
+}
+
+# identify metabolite columns (start with "x")
+metabolite_cols <- grep("^x", names(Corals_clean), value = TRUE)
+
+# calculate metabolic entropy per sample
+entropy_df <- Corals_clean %>%
+  select(sample_id, host_phylum, all_of(metabolite_cols)) %>%
+  rowwise() %>%
+  mutate(MetabolicEntropy = shannon_index(c_across(all_of(metabolite_cols)))) %>%
+  ungroup()
+
+# how many phyla?
+n_phyla <- n_distinct(na.omit(entropy_df$host_phylum))
+
+# generate diverse palette (blues, greens, purples)
+diverse_palette <- grDevices::colorRampPalette(
+  c("#ebf2ff", "#6d9eeb", "#3c78d8",   # blues
+    "#a2d9a2", "#3fa34d", "#145214",   # greens
+    "#e0c2f2", "#9b59b6", "#4b0082")   # purples
+)(n_phyla)
+
+# Boxplot with visible outlines + outliers
+ggplot(entropy_df, aes(x = host_phylum, y = MetabolicEntropy, fill = host_phylum)) +
+  geom_boxplot(color = "white", outlier.colour = "white", outlier.shape = 16, outlier.size = 2) +
+  scale_fill_manual(values = diverse_palette) +
+  labs(
+    title = "Metabolic Entropy by Phylum",
+    x = "Phylum",
+    y = "Shannon Diversity of Metabolites"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.background   = element_rect(fill = "#000042", color = NA),
+    panel.background  = element_rect(fill = "#000042", color = NA),
+    legend.position   = "none",   # hide legend
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold", color = "white"),
+    axis.title = element_text(size = 14, color = "white"),
+    axis.text  = element_text(size = 12, color = "white"),
+    panel.grid.major = element_line(color = "gray40"),
+    panel.grid.minor = element_line(color = "gray30")
+  )
+
+
+```
+
+```{r}
+#| label: Metabolomic_Entropy_by Symbiont_Potential
+
+# Shannon entropy function
+shannon_index <- function(counts) {
+  counts <- counts[counts > 0]   # drop zeros (metabolites not detected)
+  total <- sum(counts)
+  if (total == 0) return(0)      # if no metabolites detected
+  p <- counts / total
+  -sum(p * log(p))               # Shannon entropy (natural log)
+}
+
+# 1) Identify metabolite columns (start with "x")
+metabolite_cols <- grep("^x", names(Corals_clean), value = TRUE)
+
+# 2) Compute metabolomic entropy per sample
+entropy_df <- Corals_clean %>%
+  select(sample_id, symbiont.potential, all_of(metabolite_cols)) %>%
+  rowwise() %>%
+  mutate(MetabolomicEntropy = shannon_index(c_across(all_of(metabolite_cols)))) %>%
+  ungroup()
+
+# 3) Build palette sized to symbiont potential categories
+n_symb <- n_distinct(na.omit(entropy_df$symbiont.potential))
+diverse_palette <- grDevices::colorRampPalette(
+  c("#ebf2ff", "#6d9eeb", "#3c78d8",   # blues
+    "#a2d9a2", "#3fa34d", "#145214",   # greens
+    "#e0c2f2", "#9b59b6", "#4b0082")   # purples
+)(n_symb)
+
+# 4) Box-and-whisker plot
+ggplot(entropy_df, aes(x = symbiont.potential, y = MetabolomicEntropy, fill = symbiont.potential)) +
+  geom_boxplot(color = "white", outlier.colour = "white", outlier.shape = 16, outlier.size = 2) +
+  scale_fill_manual(values = diverse_palette) +
+  labs(
+    title = "Metabolomic Entropy by Symbiont Potential",
+    x = "Symbiont Potential",
+    y = "Shannon Diversity of Metabolites"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.background   = element_rect(fill = "#000042", color = NA),
+    panel.background  = element_rect(fill = "#000042", color = NA),
+    legend.position   = "none",   # x-axis labels are enough
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold", color = "white"),
+    axis.title = element_text(size = 14, color = "white"),
+    axis.text  = element_text(size = 12, color = "white"),
+    panel.grid.major = element_line(color = "gray40"),
+    panel.grid.minor = element_line(color = "gray30")
+  )
+
+```
+
+```{r}
+#| label: Metabolomic_Entropy_by_Bleaching_Status
+
+# Shannon entropy function
+shannon_index <- function(counts) {
+  counts <- counts[counts > 0]   # drop zeros (not detected)
+  total <- sum(counts)
+  if (total == 0) return(0)      # if no metabolites detected
+  p <- counts / total
+  -sum(p * log(p))               # Shannon entropy (natural log)
+}
+
+# 1) Identify metabolite columns (start with "x")
+metabolite_cols <- grep("^x", names(Corals_clean), value = TRUE)
+
+# 2) Compute metabolomic entropy per sample
+entropy_df <- Corals_clean %>%
+  select(sample_id, bleaching, all_of(metabolite_cols)) %>%
+  rowwise() %>%
+  mutate(MetabolomicEntropy = shannon_index(c_across(all_of(metabolite_cols)))) %>%
+  ungroup()
+
+# 3) Build palette sized to bleaching categories
+n_bleach <- n_distinct(na.omit(entropy_df$bleaching))
+diverse_palette <- grDevices::colorRampPalette(
+  c("#ebf2ff", "#6d9eeb", "#3c78d8",   # blues
+    "#a2d9a2", "#3fa34d", "#145214",   # greens
+    "#e0c2f2", "#9b59b6", "#4b0082")   # purples
+)(n_bleach)
+
+# 4) Box-and-whisker plot
+ggplot(entropy_df, aes(x = bleaching, y = MetabolomicEntropy, fill = bleaching)) +
+  geom_boxplot(color = "white", outlier.colour = "white", outlier.shape = 16, outlier.size = 2) +
+  scale_fill_manual(values = diverse_palette) +
+  labs(
+    title = "Metabolomic Entropy by Bleaching Status",
+    x = "Bleaching Status",
+    y = "Shannon Diversity of Metabolites"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.background   = element_rect(fill = "#000042", color = NA),
+    panel.background  = element_rect(fill = "#000042", color = NA),
+    legend.position   = "none",   # categories already on x-axis
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold", color = "white"),
+    axis.title = element_text(size = 14, color = "white"),
+    axis.text  = element_text(size = 12, color = "white"),
+    panel.grid.major = element_line(color = "gray40"),
+    panel.grid.minor = element_line(color = "gray30")
+  )
+
+```
+
+```{r}
+#| label: Metabolomic_Entropy_by_Location
+
+# Shannon entropy function
+shannon_index <- function(counts) {
+  counts <- counts[counts > 0]   # drop zeros (not detected)
+  total <- sum(counts)
+  if (total == 0) return(0)      # if no metabolites detected
+  p <- counts / total
+  -sum(p * log(p))               # Shannon entropy (natural log)
+}
+
+# 1) Identify metabolite columns (start with "x")
+metabolite_cols <- grep("^x", names(Corals_clean), value = TRUE)
+
+# 2) Compute metabolomic entropy per sample
+entropy_df <- Corals_clean %>%
+  select(sample_id, location, all_of(metabolite_cols)) %>%
+  rowwise() %>%
+  mutate(MetabolomicEntropy = shannon_index(c_across(all_of(metabolite_cols)))) %>%
+  ungroup()
+
+# 3) Build palette sized to number of locations
+n_loc <- n_distinct(na.omit(entropy_df$location))
+diverse_palette <- grDevices::colorRampPalette(
+  c("#ebf2ff", "#6d9eeb", "#3c78d8",   # blues
+    "#a2d9a2", "#3fa34d", "#145214",   # greens
+    "#e0c2f2", "#9b59b6", "#4b0082")   # purples
+)(n_loc)
+
+# 4) Box-and-whisker plot
+ggplot(entropy_df, aes(x = location, y = MetabolomicEntropy, fill = location)) +
+  geom_boxplot(color = "white", outlier.colour = "white", outlier.shape = 16, outlier.size = 2) +
+  scale_fill_manual(values = diverse_palette) +
+  labs(
+    title = "Metabolomic Entropy by Location",
+    x = "Location",
+    y = "Shannon Diversity of Metabolites"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.background   = element_rect(fill = "#000042", color = NA),
+    panel.background  = element_rect(fill = "#000042", color = NA),
+    legend.position   = "none",   # labels already on x-axis
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold", color = "white"),
+    axis.title = element_text(size = 14, color = "white"),
+    axis.text  = element_text(size = 12, color = "white"),
+    panel.grid.major = element_line(color = "gray40"),
+    panel.grid.minor = element_line(color = "gray30")
+  )
+
+```
+
+## Evenness graphs
+
+```{r}
+#| label: Metabolomic_Evenness_by_Phylum
+
+# Shannon entropy function
+shannon_index <- function(counts) {
+  counts <- counts[counts > 0]   # drop zeros
+  total <- sum(counts)
+  if (total == 0) return(0)      # no metabolites detected
+  p <- counts / total
+  -sum(p * log(p))               # Shannon entropy (natural log)
+}
+
+# 1) Identify metabolite columns
+metabolite_cols <- grep("^x", names(Corals_clean), value = TRUE)
+
+# 2) Compute Shannon, Richness, and Evenness per sample
+evenness_df <- Corals_clean %>%
+  select(sample_id, host_phylum, all_of(metabolite_cols)) %>%
+  rowwise() %>%
+  mutate(
+    Richness = sum(c_across(all_of(metabolite_cols)) > 0, na.rm = TRUE),
+    Shannon  = shannon_index(c_across(all_of(metabolite_cols))),
+    Evenness = ifelse(Richness > 1, Shannon / log(Richness), 0)
+  ) %>%
+  ungroup()
+
+# 3) Build palette sized to number of phyla
+n_phyla <- n_distinct(na.omit(evenness_df$host_phylum))
+diverse_palette <- grDevices::colorRampPalette(
+  c("#ebf2ff", "#6d9eeb", "#3c78d8",   # blues
+    "#a2d9a2", "#3fa34d", "#145214",   # greens
+    "#e0c2f2", "#9b59b6", "#4b0082")   # purples
+)(n_phyla)
+
+# 4) Box-and-whisker plot
+ggplot(evenness_df, aes(x = host_phylum, y = Evenness, fill = host_phylum)) +
+  geom_boxplot(color = "white", outlier.colour = "white", outlier.shape = 16, outlier.size = 2) +
+  scale_fill_manual(values = diverse_palette) +
+  labs(
+    title = "Metabolomic Evenness by Phylum",
+    x = "Phylum",
+    y = "Evenness"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.background   = element_rect(fill = "#000042", color = NA),
+    panel.background  = element_rect(fill = "#000042", color = NA),
+    legend.position   = "none",   # no legend needed
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold", color = "white"),
+    axis.title = element_text(size = 14, color = "white"),
+    axis.text  = element_text(size = 12, color = "white"),
+    panel.grid.major = element_line(color = "gray40"),
+    panel.grid.minor = element_line(color = "gray30")
+  )
+
+```
+
+```{r}
+#| label: Metabolomic_Evenness_by_Symbiont_Potential
+
+# Shannon entropy function
+shannon_index <- function(counts) {
+  counts <- counts[counts > 0]   # drop zeros
+  total <- sum(counts)
+  if (total == 0) return(0)      # no metabolites detected
+  p <- counts / total
+  -sum(p * log(p))               # Shannon entropy (natural log)
+}
+
+# 1) Identify metabolite columns
+metabolite_cols <- grep("^x", names(Corals_clean), value = TRUE)
+
+# 2) Compute Shannon, Richness, and Evenness per sample
+evenness_df <- Corals_clean %>%
+  select(sample_id, symbiont.potential, all_of(metabolite_cols)) %>%
+  rowwise() %>%
+  mutate(
+    Richness = sum(c_across(all_of(metabolite_cols)) > 0, na.rm = TRUE),
+    Shannon  = shannon_index(c_across(all_of(metabolite_cols))),
+    Evenness = ifelse(Richness > 1, Shannon / log(Richness), 0)
+  ) %>%
+  ungroup()
+
+# 3) Build palette sized to symbiont categories
+n_symb <- n_distinct(na.omit(evenness_df$symbiont.potential))
+diverse_palette <- grDevices::colorRampPalette(
+  c("#ebf2ff", "#6d9eeb", "#3c78d8",   # blues
+    "#a2d9a2", "#3fa34d", "#145214",   # greens
+    "#e0c2f2", "#9b59b6", "#4b0082")   # purples
+)(n_symb)
+
+# 4) Box-and-whisker plot
+ggplot(evenness_df, aes(x = symbiont.potential, y = Evenness, fill = symbiont.potential)) +
+  geom_boxplot(color = "white", outlier.colour = "white", outlier.shape = 16, outlier.size = 2) +
+  scale_fill_manual(values = diverse_palette) +
+  labs(
+    title = "Metabolomic Evenness by Symbiont Potential",
+    x = "Symbiont Potential",
+    y = "Evenness"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.background   = element_rect(fill = "#000042", color = NA),
+    panel.background  = element_rect(fill = "#000042", color = NA),
+    legend.position   = "none",   # categories are on x-axis
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold", color = "white"),
+    axis.title = element_text(size = 14, color = "white"),
+    axis.text  = element_text(size = 12, color = "white"),
+    panel.grid.major = element_line(color = "gray40"),
+    panel.grid.minor = element_line(color = "gray30")
+  )
+
+```
+
+```{r}
+#| label: Metabolomic_Evenness_by_Bleaching_Status
+
+# Shannon entropy function
+shannon_index <- function(counts) {
+  counts <- counts[counts > 0]   # drop zeros
+  total <- sum(counts)
+  if (total == 0) return(0)      # no metabolites detected
+  p <- counts / total
+  -sum(p * log(p))               # Shannon entropy (natural log)
+}
+
+# 1) Identify metabolite columns
+metabolite_cols <- grep("^x", names(Corals_clean), value = TRUE)
+
+# 2) Compute Shannon, Richness, and Evenness per sample
+evenness_df <- Corals_clean %>%
+  select(sample_id, bleaching, all_of(metabolite_cols)) %>%
+  rowwise() %>%
+  mutate(
+    Richness = sum(c_across(all_of(metabolite_cols)) > 0, na.rm = TRUE),
+    Shannon  = shannon_index(c_across(all_of(metabolite_cols))),
+    Evenness = ifelse(Richness > 1, Shannon / log(Richness), 0)
+  ) %>%
+  ungroup()
+
+# 3) Build palette sized to bleaching categories
+n_bleach <- n_distinct(na.omit(evenness_df$bleaching))
+diverse_palette <- grDevices::colorRampPalette(
+  c("#ebf2ff", "#6d9eeb", "#3c78d8",   # blues
+    "#a2d9a2", "#3fa34d", "#145214",   # greens
+    "#e0c2f2", "#9b59b6", "#4b0082")   # purples
+)(n_bleach)
+
+# 4) Box-and-whisker plot
+ggplot(evenness_df, aes(x = bleaching, y = Evenness, fill = bleaching)) +
+  geom_boxplot(color = "white", outlier.colour = "white", outlier.shape = 16, outlier.size = 2) +
+  scale_fill_manual(values = diverse_palette) +
+  labs(
+    title = "Metabolomic Evenness by Bleaching Status",
+    x = "Bleaching Status",
+    y = "Evenness"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.background   = element_rect(fill = "#000042", color = NA),
+    panel.background  = element_rect(fill = "#000042", color = NA),
+    legend.position   = "none",   # categories are on x-axis
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold", color = "white"),
+    axis.title = element_text(size = 14, color = "white"),
+    axis.text  = element_text(size = 12, color = "white"),
+    panel.grid.major = element_line(color = "gray40"),
+    panel.grid.minor = element_line(color = "gray30")
+  )
+
+```
+
+```{r}
+#| label: Metabolomic_Evenness_by_Location
+
+# Shannon entropy function
+shannon_index <- function(counts) {
+  counts <- counts[counts > 0]   # drop zeros
+  total <- sum(counts)
+  if (total == 0) return(0)      # if no metabolites detected
+  p <- counts / total
+  -sum(p * log(p))               # Shannon entropy (natural log)
+}
+
+# 1) Identify metabolite columns
+metabolite_cols <- grep("^x", names(Corals_clean), value = TRUE)
+
+# 2) Compute Shannon, Richness, and Evenness per sample
+evenness_df <- Corals_clean %>%
+  select(sample_id, location, all_of(metabolite_cols)) %>%
+  rowwise() %>%
+  mutate(
+    Richness = sum(c_across(all_of(metabolite_cols)) > 0, na.rm = TRUE),
+    Shannon  = shannon_index(c_across(all_of(metabolite_cols))),
+    Evenness = ifelse(Richness > 1, Shannon / log(Richness), 0)
+  ) %>%
+  ungroup()
+
+# 3) Build palette sized to number of locations
+n_loc <- n_distinct(na.omit(evenness_df$location))
+diverse_palette <- grDevices::colorRampPalette(
+  c("#ebf2ff", "#6d9eeb", "#3c78d8",   # blues
+    "#a2d9a2", "#3fa34d", "#145214",   # greens
+    "#e0c2f2", "#9b59b6", "#4b0082")   # purples
+)(n_loc)
+
+# 4) Box-and-whisker plot
+ggplot(evenness_df, aes(x = location, y = Evenness, fill = location)) +
+  geom_boxplot(color = "white", 
+               outlier.colour = "white", 
+               outlier.shape = 16, 
+               outlier.size = 2) +
+  scale_fill_manual(values = diverse_palette) +
+  labs(
+    title = "Metabolomic Evenness by Location",
+    x = "Location",
+    y = "Evenness"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.background   = element_rect(fill = "#000042", color = NA),
+    panel.background  = element_rect(fill = "#000042", color = NA),
+    legend.position   = "none",   # categories already on x-axis
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold", color = "white"),
+    axis.title = element_text(size = 14, color = "white"),
+    axis.text  = element_text(size = 12, color = "white"),
+    panel.grid.major = element_line(color = "gray40"),
+    panel.grid.minor = element_line(color = "gray30")
+  )
+
+```
+
+## Ubiquity abundance graphs
+
+```{r}
+#| label: total_Ubiquity_abundance_graph
 
 # Select metabolite columns (start with "x")
 metabolite_data <- Corals_clean %>%
@@ -693,5 +870,108 @@ ggplot(metabolite_summary, aes(x = ubiquity, y = abundance)) +
     y = "Total abundance",
     title = "Metabolite ubiquity vs abundance"
   )
+
+```
+
+```{r}
+#| label: Metabolite_ubiquity_vs_average_abundance
+
+library(scales)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+
+# Select metabolite columns (start with "x")
+metabolite_data <- Corals_clean %>%
+  select(starts_with("x"))
+
+# Calculate ubiquity (% samples with metabolite present) and average abundance
+metabolite_summary <- metabolite_data %>%
+  pivot_longer(
+    cols = everything(),
+    names_to = "metabolite",
+    values_to = "value"
+  ) %>%
+  group_by(metabolite) %>%
+  summarise(
+    ubiquity = mean(value > 0) * 100,
+    avg_abundance = mean(value, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+ggplot(metabolite_summary, aes(x = ubiquity, y = avg_abundance)) +
+  geom_point(color = "#6d9eeb", alpha = 0.8, size = 2) +  # circles
+  scale_y_continuous(labels = label_number_si()) +
+  labs(
+    x = "Ubiquity (% samples present)",
+    y = "Average abundance",
+    title = "Metabolite ubiquity vs average abundance"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.background   = element_rect(fill = "#000042", color = NA),
+    panel.background  = element_rect(fill = "#000042", color = NA),
+    panel.grid.major  = element_line(color = "gray50"),
+    panel.grid.minor  = element_blank(),
+    plot.title        = element_text(hjust = 0.5, face = "bold", color = "white"),
+    axis.title        = element_text(color = "white"),
+    axis.text         = element_text(color = "white"),
+    axis.line         = element_blank(),   # removes x and y axis lines
+    legend.position   = "none"
+  )
+
+
+```
+
+```{r}
+#| label: Metabolite_ubiquity_vs_average_abundance_corals_total
+
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(scales)
+
+# Helper function
+summarize_metabolites <- function(df, group_name) {
+  df %>%
+    select(starts_with("x")) %>%
+    pivot_longer(cols = everything(),
+                 names_to = "metabolite",
+                 values_to = "value") %>%
+    group_by(metabolite) %>%
+    summarise(
+      ubiquity = mean(value > 0) * 100,
+      avg_abundance = mean(value, na.rm = TRUE),
+      .groups = "drop"
+    ) %>%
+    mutate(group = group_name)
+}
+
+# Summaries
+met_summary_all <- summarize_metabolites(Corals_clean, "All hosts")
+
+met_summary_corals <- Corals_clean %>%
+  filter(host_class %in% c("Hexacorallia", "Octocorallia")) %>%
+  summarize_metabolites("Corals")
+
+met_summary_combined <- bind_rows(met_summary_all, met_summary_corals)
+
+# Plot
+ggplot(met_summary_combined, aes(x = ubiquity, y = avg_abundance, color = group)) +
+  geom_point(alpha = 0.8, size = 2) +
+  theme_minimal(base_size = 14) +
+  scale_color_manual(values = c("Corals" = "#1f78b4", "All hosts" = "#e31a1c"), name = NULL) + # remove legend title
+  scale_y_continuous(labels = label_number_si()) +
+  scale_x_continuous(
+    limits = c(0, 100),
+    breaks = seq(0, 100, by = 20),  # fewer ticks
+    labels = as.character(seq(0, 100, by = 20)) # remove percent sign
+  ) +
+  labs(
+    x = "Ubiquity (% samples present)",
+    y = "Average abundance",
+    title = "Metabolite ubiquity vs average abundance"
+  ) +
+  theme(legend.position = "right")
 
 ```
