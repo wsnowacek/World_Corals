@@ -94,6 +94,55 @@ ggplot(prop_df, aes(x = location, y = prop, fill = host_order)) +
 ```
 
 ```{r}
+#| label: Corals_Species_by_Order_per_location_dark_blue
+
+# prepare data: unique species per location × host_order (within Hexacorallia & Octocorallia)
+prop_df <- Corals_clean %>%
+  filter(!is.na(location),
+         !is.na(host_order),
+         !is.na(host_species),
+         host_class %in% c("Hexacorallia", "Octocorallia")) %>%
+  group_by(location, host_order) %>%
+  summarise(n_species = n_distinct(host_species), .groups = "drop") %>%
+  mutate(location = factor(location, levels = c("Hawaii", "Sri Lanka", "Curaçao"))) %>%
+  filter(!is.na(location)) %>%
+  group_by(location) %>%
+  mutate(prop = n_species / sum(n_species)) %>%
+  ungroup()
+
+# expanded custom blue palette (6 shades)
+blue_palette <- c("#ebf2ff", "#c2d9ff", "#a4c2f4", "#6d9eeb", "#3c78d8", "#1c4587")
+
+# 100% stacked bar chart with custom fills
+ggplot(prop_df, aes(x = location, y = prop, fill = host_order)) +
+  geom_col(position = "fill", width = 0.6) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  scale_fill_manual(values = blue_palette, name = "Host Order") +
+  labs(
+    title = "Proportion of Coral Species by Order",
+    x = "Location",
+    y = "Proportion of Unique Species"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.background   = element_rect(fill = "#000042", color = NA),
+    panel.background  = element_rect(fill = "#000042", color = NA),
+    legend.background = element_rect(fill = "#000042", color = NA),
+    legend.key        = element_rect(fill = "#000042", color = NA),
+    
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold", color = "white"), # centered
+    axis.title = element_text(size = 14, color = "white"),
+    axis.text  = element_text(size = 12, color = "white"),
+    legend.title = element_text(size = 12, color = "white"),
+    legend.text  = element_text(size = 11, color = "white"),
+    
+    panel.grid.major = element_line(color = "gray40"),
+    panel.grid.minor = element_line(color = "gray30")
+  )
+
+```
+
+```{r}
 #| label: species_richness_per_phylum 
 
 # Overall species richness per host phylum (exclude NA)
@@ -147,6 +196,50 @@ ggplot(symbiont_richness, aes(x = symbiont.potential,
     axis.text  = element_text(size = 12),
     legend.position = "none"
   )
+```
+
+```{r}
+#| label: Species_Richness_by_Symbiont_Potential_dark_blue
+
+library(tidyverse)
+
+# Overall species richness per symbiont potential (exclude NA)
+symbiont_richness <- Corals_clean %>%
+  filter(!is.na(symbiont.potential)) %>%
+  group_by(symbiont.potential) %>%
+  summarise(Richness = n_distinct(host_species), .groups = "drop")
+
+# Consistent blue palette (6 shades in case there are multiple categories)
+blue_palette <- c("#ebf2ff", "#c2d9ff", "#a4c2f4", "#6d9eeb", "#3c78d8", "#1c4587")
+
+# Bar plot with dark background + blue scheme
+ggplot(symbiont_richness, aes(x = symbiont.potential, 
+                              y = Richness, 
+                              fill = symbiont.potential)) +
+  geom_col(width = 0.7) +
+  scale_fill_manual(values = blue_palette) +
+  labs(title = "Species Richness by Symbiont Potential",
+       x = "Symbiont Potential",
+       y = "Number of Unique Species") +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.background   = element_rect(fill = "#000042", color = NA),
+    panel.background  = element_rect(fill = "#000042", color = NA),
+    legend.background = element_rect(fill = "#000042", color = NA),
+    legend.key        = element_rect(fill = "#000042", color = NA),
+    
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold", color = "white"), # centered
+    axis.title = element_text(size = 14, color = "white"),
+    axis.text  = element_text(size = 12, color = "white"),
+    legend.title = element_text(size = 12, color = "white"),
+    legend.text  = element_text(size = 11, color = "white"),
+    
+    panel.grid.major = element_line(color = "gray40"),
+    panel.grid.minor = element_line(color = "gray30"),
+    
+    legend.position = "none" # keep legend off if not needed
+  )
+
 ```
 
 ```{r}
@@ -279,7 +372,7 @@ ggplot(entropy_location, aes(x = location, y = Shannon, fill = location)) +
 ```
 
 ```{r}
-#| label: entropy_location
+#| label: entropy_location_all_species
 
 # Shannon index function
 shannon_index <- function(counts) {
@@ -312,6 +405,62 @@ ggplot(shannon_df, aes(x = factor(location, levels = c("Hawaii", "Sri Lanka", "C
     axis.text  = element_text(size = 12),
     legend.position = "none"
   )
+```
+
+```{r}
+#| label: coral_entropy_per_location
+
+# Shannon entropy function
+shannon_index <- function(counts) {
+  counts <- counts[counts > 0]
+  total <- sum(counts)
+  p <- counts / total
+  -sum(p * log(p))   # natural log
+}
+
+# Pooled Shannon entropy per location (only Hexacorallia & Octocorallia)
+entropy_location <- Corals_clean %>%
+  filter(!is.na(location),
+         !is.na(host_species),
+         host_class %in% c("Hexacorallia", "Octocorallia")) %>%   # <-- filter here
+  count(location, host_species, name = "abundance") %>%
+  group_by(location) %>%
+  summarise(
+    Richness = n_distinct(host_species),
+    Shannon  = shannon_index(abundance),
+    .groups  = "drop"
+  ) %>%
+  mutate(location = factor(location, levels = c("Hawaii", "Sri Lanka", "Curaçao")))
+
+# Print numeric table
+entropy_location
+
+# Custom harmonious blue palette
+blue_palette <- c("#ebf2ff", "#c2d9ff", "#a4c2f4", "#6d9eeb", "#3c78d8", "#1c4587")
+
+# Bar plot with dark theme
+ggplot(entropy_location, aes(x = location, y = Shannon, fill = location)) +
+  geom_col(width = 0.7) +
+  scale_fill_manual(values = blue_palette) +
+  labs(title = "Coral Species Entropy by Location",
+       x = "Location",
+       y = "Diversity Index") +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.background   = element_rect(fill = "#000042", color = NA),
+    panel.background  = element_rect(fill = "#000042", color = NA),
+    legend.background = element_rect(fill = "#000042", color = NA),
+    legend.key        = element_rect(fill = "#000042", color = NA),
+    
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold", color = "white"),
+    axis.title = element_text(size = 14, color = "white"),
+    axis.text  = element_text(size = 12, color = "white"),
+    legend.position = "none",
+    
+    panel.grid.major = element_line(color = "gray40"),
+    panel.grid.minor = element_line(color = "gray30")
+  )
+
 ```
 
 ```{r}
@@ -475,6 +624,74 @@ ggplot(evenness_symb, aes(x = symbiont.potential, y = Evenness, fill = symbiont.
     axis.title = element_text(size = 14),
     axis.text  = element_text(size = 12),
     legend.position = "none"
+  )
+
+```
+
+```{r}
+
+# Select metabolite columns (start with "x")
+metabolite_data <- Corals_clean %>%
+  select(starts_with("x"))
+
+# Calculate ubiquity (% samples with metabolite present) and abundance (sum)
+metabolite_summary <- metabolite_data %>%
+  pivot_longer(
+    cols = everything(),
+    names_to = "metabolite",
+    values_to = "value"
+  ) %>%
+  group_by(metabolite) %>%
+  summarise(
+    ubiquity = mean(value > 0) * 100,       # % samples where present
+    abundance = sum(value, na.rm = TRUE),   # total abundance
+    .groups = "drop"
+  )
+
+# Scatter plot with log-scaled y-axis
+ggplot(metabolite_summary, aes(x = ubiquity, y = abundance)) +
+  geom_point(alpha = 0.7, size = 2) +
+  scale_y_log10() +
+  theme_minimal(base_size = 14) +
+  labs(
+    x = "Ubiquity (% samples present)",
+    y = "Total abundance (log scale)",
+    title = "Metabolite ubiquity vs abundance"
+  )
+
+```
+
+```{r}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+
+# Select metabolite columns (start with "x")
+metabolite_data <- Corals_clean %>%
+  select(starts_with("x"))
+
+# Calculate ubiquity (% samples with metabolite present) and abundance (sum)
+metabolite_summary <- metabolite_data %>%
+  pivot_longer(
+    cols = everything(),
+    names_to = "metabolite",
+    values_to = "value"
+  ) %>%
+  group_by(metabolite) %>%
+  summarise(
+    ubiquity = mean(value > 0) * 100,   # percent of samples where present
+    abundance = sum(value, na.rm = TRUE),  # total abundance
+    .groups = "drop"
+  )
+
+# Scatter plot
+ggplot(metabolite_summary, aes(x = ubiquity, y = abundance)) +
+  geom_point(alpha = 0.7) +
+  theme_minimal(base_size = 14) +
+  labs(
+    x = "Ubiquity (% samples present)",
+    y = "Total abundance",
+    title = "Metabolite ubiquity vs abundance"
   )
 
 ```
