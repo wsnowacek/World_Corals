@@ -924,54 +924,117 @@ ggplot(metabolite_summary, aes(x = ubiquity, y = avg_abundance)) +
 ```
 
 ```{r}
-#| label: Metabolite_ubiquity_vs_average_abundance_corals_total
-
+library(scales)
 library(dplyr)
 library(tidyr)
 library(ggplot2)
-library(scales)
 
-# Helper function
-summarize_metabolites <- function(df, group_name) {
-  df %>%
-    select(starts_with("x")) %>%
-    pivot_longer(cols = everything(),
-                 names_to = "metabolite",
-                 values_to = "value") %>%
-    group_by(metabolite) %>%
-    summarise(
-      ubiquity = mean(value > 0) * 100,
-      avg_abundance = mean(value, na.rm = TRUE),
-      .groups = "drop"
-    ) %>%
-    mutate(group = group_name)
-}
+# --- Compute presence / ubiquity overall and within coral samples ---
+met_presence_long <- Corals_clean %>%
+  pivot_longer(
+    cols = starts_with("x"),
+    names_to = "metabolite",
+    values_to = "value"
+  ) %>%
+  mutate(present = value > 0)
 
-# Summaries
-met_summary_all <- summarize_metabolites(Corals_clean, "All hosts")
+ubiquity_overall <- met_presence_long %>%
+  group_by(metabolite) %>%
+  summarise(ubiquity_all = mean(present) * 100, .groups = "drop")
 
-met_summary_corals <- Corals_clean %>%
-  filter(host_class %in% c("Hexacorallia", "Octocorallia")) %>%
-  summarize_metabolites("Corals")
+ubiquity_corals <- met_presence_long %>%
+  filter(host_order == "Scleractinia") %>%
+  group_by(metabolite) %>%
+  summarise(ubiquity_coral = mean(present) * 100, .groups = "drop")
 
-met_summary_combined <- bind_rows(met_summary_all, met_summary_corals)
+met_summary <- ubiquity_overall %>%
+  left_join(ubiquity_corals, by = "metabolite") %>%
+  mutate(ubiquity_coral = ifelse(is.na(ubiquity_coral), 0, ubiquity_coral))
 
-# Plot
-ggplot(met_summary_combined, aes(x = ubiquity, y = avg_abundance, color = group)) +
-  geom_point(alpha = 0.8, size = 2) +
-  theme_minimal(base_size = 14) +
-  scale_color_manual(values = c("Corals" = "#1f78b4", "All hosts" = "#e31a1c"), name = NULL) + # remove legend title
+coral_present <- met_presence_long %>%
+  filter(host_order == "Scleractinia", present) %>%
+  distinct(metabolite)
+
+noncoral_present <- met_presence_long %>%
+  filter(host_order != "Scleractinia", present) %>%
+  distinct(metabolite)
+
+coral_only <- setdiff(coral_present$metabolite, noncoral_present$metabolite)
+
+met_summary <- met_summary %>%
+  left_join(
+    met_presence_long %>%
+      group_by(metabolite) %>%
+      summarise(avg_abundance = mean(value, na.rm = TRUE), .groups = "drop"),
+    by = "metabolite"
+  ) %>%
+  mutate(category = ifelse(metabolite %in% coral_only, "Coral-only", "Other"))
+
+# --- compute x position for vertical line (max overall ubiquity among coral-only mets) ---
+x_vline_pos <- met_summary %>%
+  filter(category == "Coral-only") %>%
+  pull(ubiquity_all) %>%
+  { if(length(.) == 0) NA_real_ else max(., na.rm = TRUE) }
+
+# --- Plot: map fill to category so legend is generated; use override.aes to force legend key fills ---
+ggplot(met_summary, aes(x = ubiquity_all, y = avg_abundance, fill = category)) +
+  geom_point(
+    data = subset(met_summary, category == "Other"),
+    aes(x = ubiquity_all, y = avg_abundance),
+    shape = 21, size = 2.8, color = "white",
+    alpha = 0.55, stroke = 0.3, show.legend = TRUE
+  ) +
+  geom_point(
+    data = subset(met_summary, category == "Coral-only"),
+    aes(x = ubiquity_all, y = avg_abundance),
+    shape = 21, size = 2.8, color = "white",
+    alpha = 0.6, stroke = 0.35, show.legend = TRUE
+  ) +
+  { if (!is.na(x_vline_pos)) geom_vline(xintercept = x_vline_pos, color = "white", linetype = "dashed", linewidth = 0.6) else NULL } +
+  scale_fill_manual(
+    values = c("Coral-only" = "red", "Other" = "white"),
+    breaks = c("Coral-only", "Other"),
+    labels = c("Coral-only (Scleractinia)", "Other")
+  ) +
+  guides(
+    fill = guide_legend(
+      override.aes = list(
+        fill = c("red", "white"),       # <-- forces legend key fills: first = Coral-only, second = Other
+        color = "white",
+        shape = 21,
+        size = 4,
+        alpha = c(0.6, 0.55),
+        stroke = 0.35
+      )
+    )
+  ) +
   scale_y_continuous(labels = label_number_si()) +
   scale_x_continuous(
     limits = c(0, 100),
-    breaks = seq(0, 100, by = 20),  # fewer ticks
-    labels = as.character(seq(0, 100, by = 20)) # remove percent sign
+    breaks = seq(0, 100, by = 20),
+    labels = as.character(seq(0, 100, by = 20))
   ) +
   labs(
     x = "Ubiquity (% samples present)",
     y = "Average abundance",
     title = "Metabolite ubiquity vs average abundance"
   ) +
-  theme(legend.position = "right")
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.background   = element_rect(fill = "#000042", color = NA),
+    panel.background  = element_rect(fill = "#000042", color = NA),
+    panel.grid.major  = element_line(color = "gray40"),
+    panel.grid.minor  = element_blank(),
+    plot.title        = element_text(hjust = 0.5, face = "bold", color = "white"),
+    axis.title        = element_text(color = "white"),
+    axis.text         = element_text(color = "white"),
+    axis.line         = element_blank(),
+    legend.position   = "bottom",
+    legend.title      = element_blank(),
+    legend.text       = element_text(color = "white"),
+    legend.background = element_rect(fill = "#000042", color = NA),
+    legend.key        = element_rect(fill = "#000042", color = NA)
+  )
+
 
 ```
