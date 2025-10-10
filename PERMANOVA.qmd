@@ -1,0 +1,228 @@
+---
+title: "PERMANOVA"
+format: html
+---
+
+## Library and Data
+
+```{r}
+#| label: library_load
+
+library(tidyverse)
+library(knitr)
+library(readxl)
+library(data.table)
+library(vegan)
+```
+
+```{r}
+#| label: read_csvs
+
+Corals_raw <- read_excel("Corals_raw.xlsx")
+ITS2 <- read.csv("ITS2.csv")
+Corals_clean <- read.csv("Corals_clean.csv")
+ITS2_clean   <- read.csv("ITS2_clean.csv")
+met_summary_coral_only <- read.csv("met_summary_coral_only.csv")
+```
+
+## PERMANOVA
+
+```{r}
+library(dplyr)
+library(cluster)
+library(vegan)
+
+# 1. Create the grouping variable based on host_order
+Corals_clean <- Corals_clean %>%
+  mutate(Coral_vs_Non = ifelse(host_order == "Scleractinia", "Coral", "Non-Coral"))
+
+# 2. Choose relevant metadata columns (you can expand this list if you want)
+metadata_cols <- Corals_clean %>%
+  select(location, host_class, host_family, host_species)
+
+# 3. Convert characters to factors (important for Gower)
+metadata_cols <- metadata_cols %>%
+  mutate(across(where(is.character), as.factor))
+
+# 4. Remove rows with missing grouping
+Corals_final <- Corals_clean %>% filter(!is.na(Coral_vs_Non))
+
+# 5. Compute Gower distance (handles mixed data + NAs)
+gower_dist <- daisy(metadata_cols, metric = "gower")
+
+# 6. Check how many samples per group
+table(Corals_final$Coral_vs_Non)
+
+# 7. Run PERMANOVA
+permanova_result <- adonis2(gower_dist ~ Coral_vs_Non, data = Corals_final, permutations = 999)
+print(permanova_result)
+
+```
+
+```{r}
+library(dplyr)
+library(cluster)  # daisy()
+library(vegan)    # adonis2
+library(ggplot2)  # plotting
+
+# ---- choose fix method: "impute" or "drop_rows" ----
+fix_method <- "impute"    # or "drop_rows"
+
+# 0) ensure grouping is correct (using host_order)
+Corals_clean <- Corals_clean %>%
+  mutate(Coral_vs_Non = ifelse(host_order == "Scleractinia", "Coral", "Non-Coral"))
+
+# 1) choose metadata columns (edit as desired)
+metadata_cols <- Corals_clean %>%
+  select(location, host_class, host_family, host_species)
+
+# 2) make a helper that converts characters to factors (keep NAs for now)
+metadata_factors <- metadata_cols %>%
+  mutate(across(where(is.character), as.factor),
+         across(where(is.logical), as.factor))
+
+# 3) Subset rows we intend to use (non-missing grouping)
+rows_use <- which(!is.na(Corals_clean$Coral_vs_Non))
+meta_sub <- metadata_factors[rows_use, , drop = FALSE]
+Corals_final <- Corals_clean[rows_use, , drop = FALSE] %>%
+  mutate(Coral_vs_Non = droplevels(as.factor(Coral_vs_Non)))
+
+cat("Samples to analyze:", nrow(meta_sub), "\n")
+print(table(Corals_final$Coral_vs_Non, useNA = "ifany"))
+
+# 4) Quick diagnostic: count NA per column and per row
+na_per_col <- sapply(meta_sub, function(x) sum(is.na(x)))
+na_per_row <- apply(meta_sub, 1, function(r) sum(is.na(r)))
+cat("NAs per column:\n"); print(na_per_col)
+cat("Summary of NAs per row:\n"); print(summary(na_per_row))
+
+# 5) Try to compute Gower distance and inspect NA in distance matrix
+gower_try <- tryCatch(daisy(meta_sub, metric = "gower"), error = function(e) { message("daisy error: ", e$message); NULL })
+
+if (!is.null(gower_try)) {
+  mat <- as.matrix(gower_try)
+  na_count <- sum(is.na(mat))/2   # symmetric; count unique NA pairs roughly
+  cat("Number of NA entries in distance matrix (upper triangle approx):", na_count, "\n")
+} else {
+  cat("Initial daisy() failed. Proceeding to fix method.\n")
+  mat <- NULL
+  na_count <- NA
+}
+
+# 6) If there are NAs or daisy failed, apply chosen fix
+if (is.null(mat) || na_count > 0 || any(is.na(as.vector(mat)))) {
+  if (fix_method == "drop_rows") {
+    # Drop rows with too many NAs (e.g., > half of metadata columns missing)
+    cutoff <- ncol(meta_sub) / 2
+    keep_idx <- which(na_per_row <= cutoff)
+    cat("Dropping rows with >", cutoff, "NAs. Keeping", length(keep_idx), "rows.\n")
+    if (length(keep_idx) < 3) stop("Too few rows after dropping -> cannot run PERMANOVA/PCoA.")
+    meta_sub2 <- meta_sub[keep_idx, , drop = FALSE]
+    Corals_final2 <- Corals_final[keep_idx, , drop = FALSE]
+    gower <- daisy(meta_sub2, metric = "gower")
+    # confirm no NAs
+    if (sum(is.na(as.matrix(gower))) > 0) stop("Still NA distances after dropping rows.")
+    # update for downstream
+    meta_sub <- meta_sub2
+    Corals_final <- Corals_final2
+    gower_dist <- gower
+  } else if (fix_method == "impute") {
+    # Impute: factors -> "Unknown", numeric -> median
+    meta_imp <- meta_sub
+    for (cn in names(meta_imp)) {
+      col <- meta_imp[[cn]]
+      if (is.factor(col) || is.character(col)) {
+        # replace NA with an explicit level "Unknown"
+        col_chr <- as.character(col)
+        col_chr[is.na(col_chr)] <- "Unknown"
+        meta_imp[[cn]] <- as.factor(col_chr)
+      } else if (is.numeric(col)) {
+        med <- median(col, na.rm = TRUE)
+        col[is.na(col)] <- med
+        meta_imp[[cn]] <- col
+      } else if (is.logical(col)) {
+        col[is.na(col)] <- FALSE
+        meta_imp[[cn]] <- as.factor(col)
+      } else {
+        # fallback: coerce to character and impute Unknown
+        col_chr <- as.character(col)
+        col_chr[is.na(col_chr)] <- "Unknown"
+        meta_imp[[cn]] <- as.factor(col_chr)
+      }
+    }
+    # recompute Gower on imputed metadata
+    gower_dist <- daisy(meta_imp, metric = "gower")
+    if (sum(is.na(as.matrix(gower_dist))) > 0) stop("NA distances remain after imputation.")
+    # also replace meta_sub with imputed for plotting if desired
+    meta_sub <- meta_imp
+  } else {
+    stop("Unknown fix_method. Choose 'impute' or 'drop_rows'.")
+  }
+} else {
+  # If no NA originally, use the computed one
+  gower_dist <- gower_try
+}
+
+# 7) Final checks: size alignment
+if (attr(gower_dist, "Size") != nrow(Corals_final)) stop("Distance matrix size mismatch vs Corals_final rows. Abort.")
+
+# 8) Run PERMANOVA
+permanova_result <- adonis2(gower_dist ~ Coral_vs_Non, data = Corals_final, permutations = 999)
+print(permanova_result)
+
+# 9) Optional: test homogeneity of dispersion
+bd <- betadisper(gower_dist, Corals_final$Coral_vs_Non)
+print(anova(bd))
+print(permutest(bd))
+
+# 10) PCoA (only if no NAs in distance matrix)
+if (sum(is.na(as.matrix(gower_dist))) == 0) {
+  pcoa <- cmdscale(gower_dist, k = 2, eig = TRUE)
+  pcoa_df <- data.frame(Axis1 = pcoa$points[,1], Axis2 = pcoa$points[,2], Group = Corals_final$Coral_vs_Non)
+  ggplot(pcoa_df, aes(x = Axis1, y = Axis2, color = Group)) +
+    geom_point(size = 3, alpha = 0.8) +
+    theme_minimal() +
+    labs(title = "PCoA of metadata (Gower)", x = "Axis1", y = "Axis2")
+} else {
+  cat("PCoA skipped because distance matrix contains NA entries.\n")
+}
+
+```
+
+```{r}
+# Store PERMANOVA results manually (or extract programmatically)
+permanova_summary <- data.frame(
+  Term = c("Model", "Residual", "Total"),
+  Df = c(1, 591, 592),
+  SumOfSqs = c(25.309, 124.239, 149.548),
+  R2 = c(0.16923, 0.83077, 1.00000),
+  F = c(120.39, NA, NA),
+  `Pr(>F)` = c(0.001, NA, NA)
+)
+```
+
+```{r}
+install.packages("gt")
+```
+
+```{r}
+
+library(gt)
+
+# Create the PERMANOVA summary data frame with clean column names
+permanova_summary <- data.frame(
+  Term = c("Model", "Residual", "Total"),
+  Df = c(1, 591, 592),
+  SumOfSqs = c(25.309, 124.239, 149.548),
+  R2 = c(0.16923, 0.83077, 1.00000),
+  F = c(120.39, NA, NA),
+  p_value = c(0.001, NA, NA)   # renamed from Pr(>F)
+)
+
+# Create the formatted gt table
+permanova_summary %>%
+  gt() %>%
+  tab_header(title = "PERMANOVA Results (Coral vs Non-Coral)") %>%
+  fmt_number(columns = c(SumOfSqs, R2, F, p_value), decimals = 5)
+
+```

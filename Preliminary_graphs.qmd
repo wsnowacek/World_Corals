@@ -7,6 +7,12 @@ editor: visual
 ## Library and Data
 
 ```{r}
+# install.packages("randomForest")
+# install.packages("vegan")
+library(vegan)
+```
+
+```{r}
 #| label: library_function 
 
 library(tidyverse)
@@ -881,6 +887,15 @@ library(dplyr)
 library(tidyr)
 library(ggplot2)
 
+# helper: choose a y-axis label function compatible with the installed 'scales' version
+y_labels_fn <- if (packageVersion("scales") >= "1.2.0") {
+  # new API (scales >= 1.2.0)
+  label_number(scale_cut = cut_short_scale())
+} else {
+  # fallback for older scales
+  label_number_si()
+}
+
 # Select metabolite columns (start with "x")
 metabolite_data <- Corals_clean %>%
   select(starts_with("x"))
@@ -901,7 +916,7 @@ metabolite_summary <- metabolite_data %>%
 
 ggplot(metabolite_summary, aes(x = ubiquity, y = avg_abundance)) +
   geom_point(color = "#6d9eeb", alpha = 0.8, size = 2) +  # circles
-  scale_y_continuous(labels = label_number_si()) +
+  scale_y_continuous(labels = y_labels_fn) +
   labs(
     x = "Ubiquity (% samples present)",
     y = "Average abundance",
@@ -924,6 +939,8 @@ ggplot(metabolite_summary, aes(x = ubiquity, y = avg_abundance)) +
 ```
 
 ```{r}
+#| label: Metabolite_ubiquity_vs_average_abundance_corals
+
 library(scales)
 library(dplyr)
 library(tidyr)
@@ -999,7 +1016,7 @@ ggplot(met_summary, aes(x = ubiquity_all, y = avg_abundance, fill = category)) +
   guides(
     fill = guide_legend(
       override.aes = list(
-        fill = c("red", "white"),       # <-- forces legend key fills: first = Coral-only, second = Other
+        fill = c("red", "white"),
         color = "white",
         shape = 21,
         size = 4,
@@ -1008,7 +1025,8 @@ ggplot(met_summary, aes(x = ubiquity_all, y = avg_abundance, fill = category)) +
       )
     )
   ) +
-  scale_y_continuous(labels = label_number_si()) +
+  # <-- REPLACED LINE: use label_number with scale_cut instead of deprecated label_number_si()
+  scale_y_continuous(labels = label_number(scale_cut = cut_short_scale())) +
   scale_x_continuous(
     limits = c(0, 100),
     breaks = seq(0, 100, by = 20),
@@ -1036,5 +1054,100 @@ ggplot(met_summary, aes(x = ubiquity_all, y = avg_abundance, fill = category)) +
     legend.key        = element_rect(fill = "#000042", color = NA)
   )
 
+```
+
+```{r}
+#| label: dataset_with_coral_metabolites
+
+library(dplyr)
+library(tidyr)
+
+# 1) Long-format presence/values for all samples
+met_presence_long <- Corals_clean %>%
+  pivot_longer(
+    cols = starts_with("x"),
+    names_to = "metabolite",
+    values_to = "value"
+  ) %>%
+  mutate(present = value > 0)
+
+# 2) Ubiquity overall (all samples) and ubiquity in corals (Scleractinia)
+ubiquity_overall <- met_presence_long %>%
+  group_by(metabolite) %>%
+  summarise(ubiquity_overall = mean(present) * 100, .groups = "drop")
+
+ubiquity_in_corals <- met_presence_long %>%
+  filter(host_order == "Scleractinia") %>%
+  group_by(metabolite) %>%
+  summarise(
+    percent_in_corals = mean(present) * 100,  # percent of coral samples metabolite is found in
+    n_corals_present = sum(present),          # number of coral samples with metabolite
+    n_corals_total = n(),                     # total coral samples used for denominator
+    .groups = "drop"
+  )
+
+# 3) Identify metabolites present in non-coral samples
+met_in_noncoral <- met_presence_long %>%
+  filter(host_order != "Scleractinia", present) %>%
+  distinct(metabolite) %>%
+  pull(metabolite)
+
+# 4) Coral-specific metabolites = those present in corals and NOT present in non-coral samples
+#    (i.e., present at least once in corals AND absent from all non-coral samples)
+coral_specific_mets <- ubiquity_in_corals %>%
+  filter(percent_in_corals > 0) %>%      # present at least once in corals
+  filter(!metabolite %in% met_in_noncoral) %>%
+  pull(metabolite)
+
+# 5) Build metabolite-level summary for coral-specific metabolites, ranked by percent_in_corals
+met_summary_coral_only <- ubiquity_in_corals %>%
+  filter(metabolite %in% coral_specific_mets) %>%
+  # add overall ubiquity and average abundance (across all samples)
+  left_join(ubiquity_overall, by = "metabolite") %>%
+  left_join(
+    met_presence_long %>%
+      group_by(metabolite) %>%
+      summarise(avg_abundance = mean(value, na.rm = TRUE), .groups = "drop"),
+    by = "metabolite"
+  ) %>%
+  # order by percent_in_corals (most -> least)
+  arrange(desc(percent_in_corals), desc(avg_abundance)) %>%
+  # make percent_in_corals the first column (already is), keep useful columns
+  select(percent_in_corals, metabolite, ubiquity_overall, avg_abundance, n_corals_present, n_corals_total)
+
+# 6) Sample-level dataset: all metadata columns for coral samples, plus only the coral-specific metabolite columns
+#    (this keeps original Corals_clean metadata intact)
+coral_samples_with_coralonly_mets <- Corals_clean %>%
+  filter(host_order == "Scleractinia") %>%
+  # keep all metadata columns plus only the coral-specific metabolite columns
+  select(
+    # keep everything that is NOT a metabolite first (assumes metabolite columns start with 'x')
+    -starts_with("x"),
+    # then add the coral-specific metabolite columns (if any)
+    all_of(coral_specific_mets)
+  )
+
+# 7) Optional: write outputs to CSV for downstream use
+# write.csv(met_summary_coral_only, "met_summary_coral_only.csv", row.names = FALSE)
+# write.csv(coral_samples_with_coralonly_mets, "coral_samples_coralonly_mets.csv", row.names = FALSE)
+
+# 8) Inspect the results
+message("Number of coral-specific metabolites found: ", length(coral_specific_mets))
+met_summary_coral_only   # metabolite-level table, ranked by percent_in_corals
+# coral_samples_with_coralonly_mets  # sample-level table (uncomment to view)
+
+```
+
+```{r}
+#| label: metabolite_csv
+
+# Save coral-specific metabolite summary as a CSV file
+write.csv(
+  met_summary_coral_only,
+  file = "met_summary_coral_only.csv",
+  row.names = FALSE
+)
+
+message("✅ File saved: met_summary_coral_only.csv")
 
 ```
