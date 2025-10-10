@@ -27,325 +27,16 @@ met_summary_coral_only <- read.csv("met_summary_coral_only.csv")
 
 ## PERMANOVA
 
-```{r}
-library(dplyr)
-library(cluster)
-library(vegan)
+```{r[0]}
 
-# 1. Create the grouping variable based on host_order
-Corals_clean <- Corals_clean %>%
-  mutate(Coral_vs_Non = ifelse(host_order == "Scleractinia", "Coral", "Non-Coral"))
-
-# 2. Choose relevant metadata columns (you can expand this list if you want)
-metadata_cols <- Corals_clean %>%
-  select(location, host_class, host_family, host_species)
-
-# 3. Convert characters to factors (important for Gower)
-metadata_cols <- metadata_cols %>%
-  mutate(across(where(is.character), as.factor))
-
-# 4. Remove rows with missing grouping
-Corals_final <- Corals_clean %>% filter(!is.na(Coral_vs_Non))
-
-# 5. Compute Gower distance (handles mixed data + NAs)
-gower_dist <- daisy(metadata_cols, metric = "gower")
-
-# 6. Check how many samples per group
-table(Corals_final$Coral_vs_Non)
-
-# 7. Run PERMANOVA
-permanova_result <- adonis2(gower_dist ~ Coral_vs_Non, data = Corals_final, permutations = 999)
-print(permanova_result)
-
-```
-
-```{r}
-library(dplyr)
-library(cluster)  # daisy()
-library(vegan)    # adonis2
-library(ggplot2)  # plotting
-
-# ---- choose fix method: "impute" or "drop_rows" ----
-fix_method <- "impute"    # or "drop_rows"
-
-# 0) ensure grouping is correct (using host_order)
-Corals_clean <- Corals_clean %>%
-  mutate(Coral_vs_Non = ifelse(host_order == "Scleractinia", "Coral", "Non-Coral"))
-
-# 1) choose metadata columns (edit as desired)
-metadata_cols <- Corals_clean %>%
-  select(location, host_class, host_family, host_species)
-
-# 2) make a helper that converts characters to factors (keep NAs for now)
-metadata_factors <- metadata_cols %>%
-  mutate(across(where(is.character), as.factor),
-         across(where(is.logical), as.factor))
-
-# 3) Subset rows we intend to use (non-missing grouping)
-rows_use <- which(!is.na(Corals_clean$Coral_vs_Non))
-meta_sub <- metadata_factors[rows_use, , drop = FALSE]
-Corals_final <- Corals_clean[rows_use, , drop = FALSE] %>%
-  mutate(Coral_vs_Non = droplevels(as.factor(Coral_vs_Non)))
-
-cat("Samples to analyze:", nrow(meta_sub), "\n")
-print(table(Corals_final$Coral_vs_Non, useNA = "ifany"))
-
-# 4) Quick diagnostic: count NA per column and per row
-na_per_col <- sapply(meta_sub, function(x) sum(is.na(x)))
-na_per_row <- apply(meta_sub, 1, function(r) sum(is.na(r)))
-cat("NAs per column:\n"); print(na_per_col)
-cat("Summary of NAs per row:\n"); print(summary(na_per_row))
-
-# 5) Try to compute Gower distance and inspect NA in distance matrix
-gower_try <- tryCatch(daisy(meta_sub, metric = "gower"), error = function(e) { message("daisy error: ", e$message); NULL })
-
-if (!is.null(gower_try)) {
-  mat <- as.matrix(gower_try)
-  na_count <- sum(is.na(mat))/2   # symmetric; count unique NA pairs roughly
-  cat("Number of NA entries in distance matrix (upper triangle approx):", na_count, "\n")
-} else {
-  cat("Initial daisy() failed. Proceeding to fix method.\n")
-  mat <- NULL
-  na_count <- NA
-}
-
-# 6) If there are NAs or daisy failed, apply chosen fix
-if (is.null(mat) || na_count > 0 || any(is.na(as.vector(mat)))) {
-  if (fix_method == "drop_rows") {
-    # Drop rows with too many NAs (e.g., > half of metadata columns missing)
-    cutoff <- ncol(meta_sub) / 2
-    keep_idx <- which(na_per_row <= cutoff)
-    cat("Dropping rows with >", cutoff, "NAs. Keeping", length(keep_idx), "rows.\n")
-    if (length(keep_idx) < 3) stop("Too few rows after dropping -> cannot run PERMANOVA/PCoA.")
-    meta_sub2 <- meta_sub[keep_idx, , drop = FALSE]
-    Corals_final2 <- Corals_final[keep_idx, , drop = FALSE]
-    gower <- daisy(meta_sub2, metric = "gower")
-    # confirm no NAs
-    if (sum(is.na(as.matrix(gower))) > 0) stop("Still NA distances after dropping rows.")
-    # update for downstream
-    meta_sub <- meta_sub2
-    Corals_final <- Corals_final2
-    gower_dist <- gower
-  } else if (fix_method == "impute") {
-    # Impute: factors -> "Unknown", numeric -> median
-    meta_imp <- meta_sub
-    for (cn in names(meta_imp)) {
-      col <- meta_imp[[cn]]
-      if (is.factor(col) || is.character(col)) {
-        # replace NA with an explicit level "Unknown"
-        col_chr <- as.character(col)
-        col_chr[is.na(col_chr)] <- "Unknown"
-        meta_imp[[cn]] <- as.factor(col_chr)
-      } else if (is.numeric(col)) {
-        med <- median(col, na.rm = TRUE)
-        col[is.na(col)] <- med
-        meta_imp[[cn]] <- col
-      } else if (is.logical(col)) {
-        col[is.na(col)] <- FALSE
-        meta_imp[[cn]] <- as.factor(col)
-      } else {
-        # fallback: coerce to character and impute Unknown
-        col_chr <- as.character(col)
-        col_chr[is.na(col_chr)] <- "Unknown"
-        meta_imp[[cn]] <- as.factor(col_chr)
-      }
-    }
-    # recompute Gower on imputed metadata
-    gower_dist <- daisy(meta_imp, metric = "gower")
-    if (sum(is.na(as.matrix(gower_dist))) > 0) stop("NA distances remain after imputation.")
-    # also replace meta_sub with imputed for plotting if desired
-    meta_sub <- meta_imp
-  } else {
-    stop("Unknown fix_method. Choose 'impute' or 'drop_rows'.")
-  }
-} else {
-  # If no NA originally, use the computed one
-  gower_dist <- gower_try
-}
-
-# 7) Final checks: size alignment
-if (attr(gower_dist, "Size") != nrow(Corals_final)) stop("Distance matrix size mismatch vs Corals_final rows. Abort.")
-
-# 8) Run PERMANOVA
-permanova_result <- adonis2(gower_dist ~ Coral_vs_Non, data = Corals_final, permutations = 999)
-print(permanova_result)
-
-# 9) Optional: test homogeneity of dispersion
-bd <- betadisper(gower_dist, Corals_final$Coral_vs_Non)
-print(anova(bd))
-print(permutest(bd))
-
-# 10) PCoA (only if no NAs in distance matrix)
-if (sum(is.na(as.matrix(gower_dist))) == 0) {
-  pcoa <- cmdscale(gower_dist, k = 2, eig = TRUE)
-  pcoa_df <- data.frame(Axis1 = pcoa$points[,1], Axis2 = pcoa$points[,2], Group = Corals_final$Coral_vs_Non)
-  ggplot(pcoa_df, aes(x = Axis1, y = Axis2, color = Group)) +
-    geom_point(size = 3, alpha = 0.8) +
-    theme_minimal() +
-    labs(title = "PCoA of metadata (Gower)", x = "Axis1", y = "Axis2")
-} else {
-  cat("PCoA skipped because distance matrix contains NA entries.\n")
-}
-
-```
-
-```{r}
-# Store PERMANOVA results manually (or extract programmatically)
-permanova_summary <- data.frame(
-  Term = c("Model", "Residual", "Total"),
-  Df = c(1, 591, 592),
-  SumOfSqs = c(25.309, 124.239, 149.548),
-  R2 = c(0.16923, 0.83077, 1.00000),
-  F = c(120.39, NA, NA),
-  `Pr(>F)` = c(0.001, NA, NA)
-)
-```
-
-```{r}
-install.packages("gt")
-```
-
-```{r}
-
-library(gt)
-
-# Create the PERMANOVA summary data frame with clean column names
-permanova_summary <- data.frame(
-  Term = c("Model", "Residual", "Total"),
-  Df = c(1, 591, 592),
-  SumOfSqs = c(25.309, 124.239, 149.548),
-  R2 = c(0.16923, 0.83077, 1.00000),
-  F = c(120.39, NA, NA),
-  p_value = c(0.001, NA, NA)   # renamed from Pr(>F)
-)
-
-# Create the formatted gt table
-permanova_summary %>%
-  gt() %>%
-  tab_header(title = "PERMANOVA Results (Coral vs Non-Coral)") %>%
-  fmt_number(columns = c(SumOfSqs, R2, F, p_value), decimals = 5)
-
-```
-
-```{r}
+# Required packages
+if (!requireNamespace("vegan", quietly = TRUE)) install.packages("vegan")
+if (!requireNamespace("dplyr", quietly = TRUE)) install.packages("dplyr")
 library(dplyr)
 library(vegan)
 
-# define coral_status
-Corals_clean <- Corals_clean %>%
-  mutate(coral_status = ifelse(grepl("Scleractinia", host_order, ignore.case = TRUE),
-                               "Coral", "Non-coral"),
-         coral_status = factor(coral_status))
-
-metadata_cols <- c("location", "host_phylum", "host_class", "host_order",
-                   "host_genus", "host_species", "bleaching", "symbiont.potential")
-
-# community columns heuristic (adjust if needed)
-num_cols <- names(Corals_clean)[sapply(Corals_clean, is.numeric)]
-community_cols <- setdiff(num_cols, metadata_cols)
-community_mat_all <- Corals_clean %>% select(all_of(community_cols)) %>% as.matrix()
-
-# build metadata df that includes coral_status
-metadata_all <- Corals_clean %>% select(all_of(metadata_cols)) %>% 
-  mutate(coral_status = Corals_clean$coral_status)
-
-# Create a logical mask keeping rows without NA in any tested columns
-keep_mask <- complete.cases(metadata_all)  # TRUE when no NA across metadata_all
-
-cat("Samples before filtering:", nrow(Corals_clean), "\n")
-cat("Samples retained (no NAs in metadata):", sum(keep_mask), "\n")
-cat("Samples removed:", sum(!keep_mask), "\n")
-
-# Subset both community and metadata to the same rows
-community_mat <- community_mat_all[keep_mask, , drop = FALSE]
-metadata_df <- metadata_all[keep_mask, , drop = FALSE]
-
-# run Bray-Curtis and PERMANOVA (coral_status example)
-bc_dist <- vegdist(community_mat, method = "bray")
-set.seed(42)
-adonis_res <- adonis2(community_mat ~ coral_status, data = metadata_df, permutations = 999, method = "bray")
-print(adonis_res)
-
-# -------------------- additional checks & extended analyses --------------------
-
-# sanity checks
-if (ncol(community_mat) == 0) stop("No community columns found after selecting numeric columns. Check community_cols selection.")
-if (nrow(community_mat) < 3) stop("Too few samples after filtering to run PERMANOVA.")
-
-cat("Community matrix dimensions (samples x features):", dim(community_mat), "\n")
-cat("Coral status counts:\n")
-print(table(metadata_df$coral_status))
-
-# check for zero-sum rows (vegdist/Bray requires some non-zero content)
-row_sums <- rowSums(community_mat, na.rm = TRUE)
-if (any(row_sums == 0)) {
-  warning(sum(row_sums == 0), " samples have zero total abundance. Consider removing them or verifying data.")
-}
-
-# 1) Check multivariate dispersion (PERMDISP) for coral_status
-bd <- betadisper(bc_dist, metadata_df$coral_status)
-cat("\nBetadisper object summary:\n")
-print(bd)
-cat("\nPermutation test for betadisper (999 perms):\n")
-print(permutest(bd, permutations = 999))
-
-# Optional plotting (comment/uncomment as needed)
-# plot(bd, main = "Betadisper: Coral vs Non-coral")
-# boxplot(bd, main = "Distances to group centroid by coral_status")
-
-# 2) PERMANOVA for each metadata term separately (to build a summary table)
-vars_to_test <- c("coral_status", metadata_cols)
-permanova_results <- lapply(vars_to_test, function(v) {
-  fmla <- as.formula(paste("community_mat ~", v))
-  # we pass data=metadata_df which must contain v
-  res <- adonis2(fmla, data = metadata_df, permutations = 999, method = "bray")
-  term_row <- res[1, , drop = FALSE]
-  data.frame(
-    term = v,
-    Df = as.numeric(term_row$Df),
-    SumOfSqs = as.numeric(term_row$SumOfSqs),
-    R2 = as.numeric(term_row$R2),
-    F = as.numeric(term_row$F),
-    Pr = as.numeric(term_row$`Pr(>F)`),
-    stringsAsFactors = FALSE
-  )
-})
-
-permanova_table <- do.call(rbind, permanova_results)
-rownames(permanova_table) <- NULL
-cat("\nPERMANOVA results (each variable separately):\n")
-print(permanova_table)
-
-# write results
-write.csv(permanova_table, "permanova_each_term_results.csv", row.names = FALSE)
-cat("Saved per-term PERMANOVA results to 'permanova_each_term_results.csv'\n")
-
-# 3) Full model: coral_status + all metadata
-# NOTE: host_order contains "Scleractinia" -> coral_status is derived from host_order.
-# Consider removing host_order from the full model to avoid collinearity if needed.
-full_terms <- c("coral_status", metadata_cols)
-full_formula <- as.formula(paste("community_mat ~", paste(full_terms, collapse = " + ")))
-cat("\nRunning full-model PERMANOVA (coral_status + all metadata). Interpret with caution if collinearity exists.\n")
-set.seed(42)
-adonis_full <- adonis2(full_formula, data = metadata_df, permutations = 999, method = "bray")
-print(adonis_full)
-
-# 4) Optional: Hellinger transform and re-run PERMANOVA if you prefer (recommended for abundance data)
-# (Uncomment to run)
-# community_mat_hell <- decostand(community_mat, method = "hellinger")
-# set.seed(42)
-# adonis_coral_hell <- adonis2(community_mat_hell ~ coral_status, data = metadata_df, permutations = 999, method = "bray")
-# print(adonis_coral_hell)
-
-cat("\nDone. Interpret results together with betadisper output: if dispersion differs between groups (significant permutest), PERMANOVA can be influenced by that heterogeneity.\n")
-
-```
-
-```{r}
-library(dplyr)
-library(vegan)
-
-# ---- Ensure coral_status, community_mat_all, metadata_all exist ----
+# -------------------- 1) Setup coral_status and metadata --------------------
+# create coral_status if not present
 if (!("coral_status" %in% names(Corals_clean))) {
   Corals_clean <- Corals_clean %>%
     mutate(coral_status = ifelse(grepl("Scleractinia", host_order, ignore.case = TRUE),
@@ -353,163 +44,210 @@ if (!("coral_status" %in% names(Corals_clean))) {
            coral_status = factor(coral_status))
 }
 
-# metadata columns you want to test
 metadata_cols <- c("location", "host_phylum", "host_class", "host_order",
                    "host_genus", "host_species", "bleaching", "symbiont.potential")
 
-# Build community matrix (heuristic: numeric columns not in metadata)
-num_cols <- names(Corals_clean)[sapply(Corals_clean, is.numeric)]
-community_cols <- setdiff(num_cols, metadata_cols)
+# -------------------- 2) Select metabolite columns (those starting with "x") ----
+metabolite_cols <- grep("^x", names(Corals_clean), value = TRUE)
+cat("Found", length(metabolite_cols), "metabolite columns (starting with 'x').\n")
+if (length(metabolite_cols) == 0) stop("No metabolite columns starting with 'x' found. Check naming.")
 
-if (length(community_cols) == 0) stop("No numeric community columns found. Adjust the community_cols selection.")
+# ensure metabolite columns are numeric
+for (mc in metabolite_cols) {
+  if (!is.numeric(Corals_clean[[mc]])) {
+    Corals_clean[[mc]] <- as.numeric(as.character(Corals_clean[[mc]]))
+  }
+}
 
-community_mat_all <- Corals_clean %>% select(all_of(community_cols)) %>% as.matrix()
-# optional: set rownames if sample_id exists
-if ("sample_id" %in% names(Corals_clean)) rownames(community_mat_all) <- Corals_clean$sample_id
+# full raw metabolite matrix (samples x features)
+met_mat_raw <- as.matrix(Corals_clean %>% select(all_of(metabolite_cols)))
 
-# Build metadata dataframe with coral_status
-metadata_all <- Corals_clean %>% select(all_of(metadata_cols)) %>% 
-  mutate(coral_status = Corals_clean$coral_status)
+# -------------------- 3) Build abundance (Hellinger) and presence/absence matrices ----
+# Hellinger transform (recommended for many zero-heavy abundance matrices)
+# decostand requires community matrix with non-negative entries
+if (any(met_mat_raw < 0, na.rm = TRUE)) stop("Negative values in metabolite matrix — check data.")
+met_mat_hell <- decostand(met_mat_raw, method = "hellinger")  # Hellinger
 
-# ---- Loop: for each metadata variable run adonis2 on samples non-NA for coral_status & that var ----
-results_list <- list()
+# Presence/absence matrix (ubiquity)
+met_mat_pa <- (met_mat_raw > 0) * 1  # 0/1
 
-for (v in metadata_cols) {
-  message("Testing variable: ", v)
-  # Keep rows that are complete for coral_status and v
+cat("Metabolite matrix dims (samples x metabolites):", dim(met_mat_raw), "\n")
+cat("Hellinger matrix dims:", dim(met_mat_hell), "\n")
+cat("Presence/absence matrix dims:", dim(met_mat_pa), "\n")
+
+# optional: set rownames from sample_id if present
+if ("sample_id" %in% names(Corals_clean)) {
+  rownames(met_mat_raw) <- rownames(met_mat_hell) <- rownames(met_mat_pa) <- Corals_clean$sample_id
+}
+
+# Build metadata_all (used for subsetting)
+metadata_all <- Corals_clean %>% select(all_of(metadata_cols)) %>% mutate(coral_status = Corals_clean$coral_status)
+
+# -------------------- 4) Overall betadisper checks (on full sets, not subsetted) ----
+# Bray-Curtis distance on Hellinger data (abundance)
+bc_full <- vegdist(met_mat_hell, method = "bray")
+# Jaccard distance on presence/absence (ubiquity)
+jac_full <- vegdist(met_mat_pa, method = "jaccard")
+
+cat("\nOverall Coral status counts:\n"); print(table(metadata_all$coral_status))
+
+# Betadisper for abundance (Hellinger -> Bray)
+if (length(unique(metadata_all$coral_status)) > 1) {
+  bd_abund <- betadisper(bc_full, metadata_all$coral_status)
+  cat("\nBetadisper (abundance; Bray) summary:\n"); print(bd_abund)
+  cat("\nBetadisper permutation test (abundance):\n"); print(permutest(bd_abund, permutations = 999))
+}
+
+# Betadisper for ubiquity (presence -> Jaccard)
+if (length(unique(metadata_all$coral_status)) > 1) {
+  bd_pa <- betadisper(jac_full, metadata_all$coral_status)
+  cat("\nBetadisper (presence; Jaccard) summary:\n"); print(bd_pa)
+  cat("\nBetadisper permutation test (presence):\n"); print(permutest(bd_pa, permutations = 999))
+}
+
+# -------------------- 5) Loop per variable: run PERMANOVA on max samples per test ----
+vars_to_test <- metadata_cols
+
+abund_results <- list()
+pa_results <- list()
+
+for (v in vars_to_test) {
+  message("\n--- Testing variable: ", v, " ---")
+  # subset only on coral_status and the tested variable
   keep_mask <- complete.cases(metadata_all[, c("coral_status", v), drop = FALSE])
-  
-  n_before <- nrow(Corals_clean)
   n_keep <- sum(keep_mask)
-  message("  samples used for this test: ", n_keep, " (dropped ", n_before - n_keep, ")")
+  message("Samples used for this test: ", n_keep, " (dropped ", nrow(Corals_clean) - n_keep, ")")
   if (n_keep < 3) {
-    warning("  Too few samples for variable ", v, " — skipping.")
+    warning("Too few samples for variable ", v, " — skipping both tests.")
     next
   }
   
-  comm_sub <- community_mat_all[keep_mask, , drop = FALSE]
-  meta_sub <- metadata_all[keep_mask, , drop = FALSE]
+  # subset matrices and metadata
+  met_abund_sub <- met_mat_hell[keep_mask, , drop = FALSE]
+  met_pa_sub    <- met_mat_pa[keep_mask, , drop = FALSE]
+  meta_sub      <- metadata_all[keep_mask, , drop = FALSE]
   
-  # Make sure coral_status is a factor in subset (and the tested var is suitable)
+  # ensure coral_status is factor
   meta_sub$coral_status <- factor(meta_sub$coral_status)
-  
-  # Convert tested column to factor if character (optional)
+  # coerce tested var to factor if character
   if (is.character(meta_sub[[v]])) meta_sub[[v]] <- factor(meta_sub[[v]])
   
-  # Check that there is more than one level for coral_status and for v
-  if (length(unique(meta_sub$coral_status)) < 2) {
-    warning("  coral_status has <2 levels in the subset (variable ", v, ") — skipping.")
-    next
-  }
+  # skip if tested var has <2 levels in subset
   if (is.factor(meta_sub[[v]]) && length(levels(meta_sub[[v]])) < 2) {
-    warning("  variable ", v, " has <2 levels in the subset — skipping.")
+    warning("Variable ", v, " has <2 levels after subsetting — skipping.")
     next
   }
   
-  # run Bray-Curtis adonis2 with coral_status + variable
+  # ---------- Abundance-based PERMANOVA (Hellinger -> Bray) ----------
   set.seed(42)
-  fmla <- as.formula(paste("comm_sub ~ coral_status +", v))
-  ad <- tryCatch({
-    adonis2(fmla, data = meta_sub, permutations = 999, method = "bray")
+  fmla_abund <- as.formula(paste("met_abund_sub ~ coral_status +", v))
+  ad_abund <- tryCatch({
+    adonis2(fmla_abund, data = meta_sub, permutations = 999, method = "bray")
   }, error = function(e) {
-    warning("  adonis2 failed for variable ", v, ": ", conditionMessage(e))
-    return(NULL)
+    warning("adonis2 (abundance) failed for ", v, ": ", conditionMessage(e)); return(NULL)
   })
-  if (is.null(ad)) next
-  
-  # convert adonis2 output to data.frame and capture rows
-  ad_df <- as.data.frame(ad)
-  # ad_df usually has rownames like "coral_status", v, "Residual"
-  rn <- rownames(ad_df)
-  
-  # Extract coral_status row (if present)
-  if ("coral_status" %in% rn) {
-    r <- ad_df["coral_status", , drop = FALSE]
-    results_list[[length(results_list) + 1]] <- data.frame(
-      tested_variable = v,
-      term = "coral_status",
-      Df = as.numeric(r$Df),
-      SumOfSqs = as.numeric(r$SumOfSqs),
-      R2 = as.numeric(r$R2),
-      F = as.numeric(r$F),
-      Pr = as.numeric(r$`Pr(>F)`),
-      stringsAsFactors = FALSE
-    )
-  }
-  # Extract tested variable row (if present)
-  if (v %in% rn) {
-    r2 <- ad_df[v, , drop = FALSE]
-    results_list[[length(results_list) + 1]] <- data.frame(
-      tested_variable = v,
-      term = v,
-      Df = as.numeric(r2$Df),
-      SumOfSqs = as.numeric(r2$SumOfSqs),
-      R2 = as.numeric(r2$R2),
-      F = as.numeric(r2$F),
-      Pr = as.numeric(r2$`Pr(>F)`),
-      stringsAsFactors = FALSE
-    )
-  } else {
-    # Sometimes rowname differs (e.g., backticks). Fallback: take the non-Residual row(s) besides coral_status.
-    other_rows <- setdiff(rn, c("coral_status", "Residual", "Total"))
-    for (or in other_rows) {
-      r_or <- ad_df[or, , drop = FALSE]
-      results_list[[length(results_list) + 1]] <- data.frame(
-        tested_variable = v,
-        term = or,
-        Df = as.numeric(r_or$Df),
-        SumOfSqs = as.numeric(r_or$SumOfSqs),
-        R2 = as.numeric(r_or$R2),
-        F = as.numeric(r_or$F),
-        Pr = as.numeric(r_or$`Pr(>F)`),
+  if (!is.null(ad_abund)) {
+    ad_df <- as.data.frame(ad_abund)
+    rn <- rownames(ad_df)
+    # extract coral_status row if present
+    if ("coral_status" %in% rn) {
+      r <- ad_df["coral_status", , drop = FALSE]
+      abund_results[[length(abund_results) + 1]] <- data.frame(
+        tested_variable = v, term = "coral_status",
+        Df = as.numeric(r$Df), SumOfSqs = as.numeric(r$SumOfSqs),
+        R2 = as.numeric(r$R2), F = as.numeric(r$F), Pr = as.numeric(r$`Pr(>F)`),
         stringsAsFactors = FALSE
       )
+    }
+    # extract tested variable row (or fallback to other non-residual rows)
+    if (v %in% rn) {
+      r2 <- ad_df[v, , drop = FALSE]
+      abund_results[[length(abund_results) + 1]] <- data.frame(
+        tested_variable = v, term = v,
+        Df = as.numeric(r2$Df), SumOfSqs = as.numeric(r2$SumOfSqs),
+        R2 = as.numeric(r2$R2), F = as.numeric(r2$F), Pr = as.numeric(r2$`Pr(>F)`),
+        stringsAsFactors = FALSE
+      )
+    } else {
+      other_rows <- setdiff(rn, c("coral_status", "Residual", "Total"))
+      for (or in other_rows) {
+        r_or <- ad_df[or, , drop = FALSE]
+        abund_results[[length(abund_results) + 1]] <- data.frame(
+          tested_variable = v, term = or,
+          Df = as.numeric(r_or$Df), SumOfSqs = as.numeric(r_or$SumOfSqs),
+          R2 = as.numeric(r_or$R2), F = as.numeric(r_or$F), Pr = as.numeric(r_or$`Pr(>F)`),
+          stringsAsFactors = FALSE
+        )
+      }
+    }
+  }
+  
+  # ---------- Ubiquity-based PERMANOVA (presence/absence -> Jaccard) ----------
+  set.seed(42)
+  fmla_pa <- as.formula(paste("met_pa_sub ~ coral_status +", v))
+  ad_pa <- tryCatch({
+    adonis2(fmla_pa, data = meta_sub, permutations = 999, method = "jaccard")
+  }, error = function(e) {
+    warning("adonis2 (presence/absence) failed for ", v, ": ", conditionMessage(e)); return(NULL)
+  })
+  if (!is.null(ad_pa)) {
+    ad_df2 <- as.data.frame(ad_pa)
+    rn2 <- rownames(ad_df2)
+    if ("coral_status" %in% rn2) {
+      r <- ad_df2["coral_status", , drop = FALSE]
+      pa_results[[length(pa_results) + 1]] <- data.frame(
+        tested_variable = v, term = "coral_status",
+        Df = as.numeric(r$Df), SumOfSqs = as.numeric(r$SumOfSqs),
+        R2 = as.numeric(r$R2), F = as.numeric(r$F), Pr = as.numeric(r$`Pr(>F)`),
+        stringsAsFactors = FALSE
+      )
+    }
+    if (v %in% rn2) {
+      r2 <- ad_df2[v, , drop = FALSE]
+      pa_results[[length(pa_results) + 1]] <- data.frame(
+        tested_variable = v, term = v,
+        Df = as.numeric(r2$Df), SumOfSqs = as.numeric(r2$SumOfSqs),
+        R2 = as.numeric(r2$R2), F = as.numeric(r2$F), Pr = as.numeric(r2$`Pr(>F)`),
+        stringsAsFactors = FALSE
+      )
+    } else {
+      other_rows <- setdiff(rn2, c("coral_status", "Residual", "Total"))
+      for (or in other_rows) {
+        r_or <- ad_df2[or, , drop = FALSE]
+        pa_results[[length(pa_results) + 1]] <- data.frame(
+          tested_variable = v, term = or,
+          Df = as.numeric(r_or$Df), SumOfSqs = as.numeric(r_or$SumOfSqs),
+          R2 = as.numeric(r_or$R2), F = as.numeric(r_or$F), Pr = as.numeric(r_or$`Pr(>F)`),
+          stringsAsFactors = FALSE
+        )
+      }
     }
   }
 }
 
-# Combine results and write out
-permanova_per_var <- do.call(rbind, results_list)
-# Order for readability
-permanova_per_var <- permanova_per_var %>%
-  arrange(tested_variable, desc(term == "coral_status"))
+# -------------------- 6) Combine & save results --------------------
+abund_table <- if (length(abund_results) > 0) do.call(rbind, abund_results) else data.frame()
+pa_table    <- if (length(pa_results) > 0)    do.call(rbind, pa_results)    else data.frame()
 
-print(permanova_per_var)
-write.csv(permanova_per_var, "permanova_coral_plus_each_metadata_results.csv", row.names = FALSE)
-message("Saved results to 'permanova_coral_plus_each_metadata_results.csv'")
+# tidy ordering
+if (nrow(abund_table) > 0) abund_table <- abund_table %>% arrange(tested_variable, desc(term == "coral_status"))
+if (nrow(pa_table) > 0)    pa_table    <- pa_table %>% arrange(tested_variable, desc(term == "coral_status"))
 
-# ---- OPTIONAL: run single-term PERMANOVA for each variable separately (no coral_status) ----
-single_term_results <- list()
-for (v in metadata_cols) {
-  keep_mask <- complete.cases(metadata_all[, v, drop = FALSE])
-  comm_sub <- community_mat_all[keep_mask, , drop = FALSE]
-  meta_sub <- metadata_all[keep_mask, , drop = FALSE]
-  if (nrow(comm_sub) < 3) next
-  if (is.character(meta_sub[[v]])) meta_sub[[v]] <- factor(meta_sub[[v]])
-  if (is.factor(meta_sub[[v]]) && length(levels(meta_sub[[v]])) < 2) next
-  
-  set.seed(42)
-  fmla <- as.formula(paste("comm_sub ~", v))
-  ad <- tryCatch(adonis2(fmla, data = meta_sub, permutations = 999, method = "bray"),
-                 error = function(e) NULL)
-  if (is.null(ad)) next
-  ad_df <- as.data.frame(ad)
-  rn <- rownames(ad_df)
-  if (v %in% rn) {
-    r <- ad_df[v, , drop = FALSE]
-    single_term_results[[length(single_term_results) + 1]] <- data.frame(
-      term = v,
-      Df = as.numeric(r$Df),
-      SumOfSqs = as.numeric(r$SumOfSqs),
-      R2 = as.numeric(r$R2),
-      F = as.numeric(r$F),
-      Pr = as.numeric(r$`Pr(>F)`),
-      stringsAsFactors = FALSE
-    )
-  }
-}
-single_term_table <- do.call(rbind, single_term_results)
-write.csv(single_term_table, "permanova_single_term_each_metadata.csv", row.names = FALSE)
-message("Saved single-term results to 'permanova_single_term_each_metadata.csv'")
+write.csv(abund_table, "permanova_abundance_hellinger_bray_results.csv", row.names = FALSE)
+write.csv(pa_table,    "permanova_ubiquity_presence_jaccard_results.csv", row.names = FALSE)
+
+cat("\nSaved abundance results to 'permanova_abundance_hellinger_bray_results.csv'\n")
+cat("Saved ubiquity (presence/absence) results to 'permanova_ubiquity_presence_jaccard_results.csv'\n")
+
+# Print short previews
+cat("\nAbundance-based results (top rows):\n"); print(head(abund_table))
+cat("\nUbiquity-based results (top rows):\n"); print(head(pa_table))
+
+# -------------------- 7) Notes (printed) ------------------------------------
+cat("\nNotes:\n")
+cat("- Abundance test: Hellinger transform -> Bray–Curtis distance (good for abundance + many zeros).\n")
+cat("- Ubiquity test: presence/absence -> Jaccard distance (asks whether presence/absence of metabolites differs).\n")
+cat("- Each test uses maximum samples for that variable by only dropping rows missing coral_status or that variable.\n")
+cat("- Check betadisper outputs above: if dispersion differs between groups, interpret PERMANOVA p-values cautiously.\n")
 
 ```
