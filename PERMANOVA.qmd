@@ -226,3 +226,290 @@ permanova_summary %>%
   fmt_number(columns = c(SumOfSqs, R2, F, p_value), decimals = 5)
 
 ```
+
+```{r}
+library(dplyr)
+library(vegan)
+
+# define coral_status
+Corals_clean <- Corals_clean %>%
+  mutate(coral_status = ifelse(grepl("Scleractinia", host_order, ignore.case = TRUE),
+                               "Coral", "Non-coral"),
+         coral_status = factor(coral_status))
+
+metadata_cols <- c("location", "host_phylum", "host_class", "host_order",
+                   "host_genus", "host_species", "bleaching", "symbiont.potential")
+
+# community columns heuristic (adjust if needed)
+num_cols <- names(Corals_clean)[sapply(Corals_clean, is.numeric)]
+community_cols <- setdiff(num_cols, metadata_cols)
+community_mat_all <- Corals_clean %>% select(all_of(community_cols)) %>% as.matrix()
+
+# build metadata df that includes coral_status
+metadata_all <- Corals_clean %>% select(all_of(metadata_cols)) %>% 
+  mutate(coral_status = Corals_clean$coral_status)
+
+# Create a logical mask keeping rows without NA in any tested columns
+keep_mask <- complete.cases(metadata_all)  # TRUE when no NA across metadata_all
+
+cat("Samples before filtering:", nrow(Corals_clean), "\n")
+cat("Samples retained (no NAs in metadata):", sum(keep_mask), "\n")
+cat("Samples removed:", sum(!keep_mask), "\n")
+
+# Subset both community and metadata to the same rows
+community_mat <- community_mat_all[keep_mask, , drop = FALSE]
+metadata_df <- metadata_all[keep_mask, , drop = FALSE]
+
+# run Bray-Curtis and PERMANOVA (coral_status example)
+bc_dist <- vegdist(community_mat, method = "bray")
+set.seed(42)
+adonis_res <- adonis2(community_mat ~ coral_status, data = metadata_df, permutations = 999, method = "bray")
+print(adonis_res)
+
+# -------------------- additional checks & extended analyses --------------------
+
+# sanity checks
+if (ncol(community_mat) == 0) stop("No community columns found after selecting numeric columns. Check community_cols selection.")
+if (nrow(community_mat) < 3) stop("Too few samples after filtering to run PERMANOVA.")
+
+cat("Community matrix dimensions (samples x features):", dim(community_mat), "\n")
+cat("Coral status counts:\n")
+print(table(metadata_df$coral_status))
+
+# check for zero-sum rows (vegdist/Bray requires some non-zero content)
+row_sums <- rowSums(community_mat, na.rm = TRUE)
+if (any(row_sums == 0)) {
+  warning(sum(row_sums == 0), " samples have zero total abundance. Consider removing them or verifying data.")
+}
+
+# 1) Check multivariate dispersion (PERMDISP) for coral_status
+bd <- betadisper(bc_dist, metadata_df$coral_status)
+cat("\nBetadisper object summary:\n")
+print(bd)
+cat("\nPermutation test for betadisper (999 perms):\n")
+print(permutest(bd, permutations = 999))
+
+# Optional plotting (comment/uncomment as needed)
+# plot(bd, main = "Betadisper: Coral vs Non-coral")
+# boxplot(bd, main = "Distances to group centroid by coral_status")
+
+# 2) PERMANOVA for each metadata term separately (to build a summary table)
+vars_to_test <- c("coral_status", metadata_cols)
+permanova_results <- lapply(vars_to_test, function(v) {
+  fmla <- as.formula(paste("community_mat ~", v))
+  # we pass data=metadata_df which must contain v
+  res <- adonis2(fmla, data = metadata_df, permutations = 999, method = "bray")
+  term_row <- res[1, , drop = FALSE]
+  data.frame(
+    term = v,
+    Df = as.numeric(term_row$Df),
+    SumOfSqs = as.numeric(term_row$SumOfSqs),
+    R2 = as.numeric(term_row$R2),
+    F = as.numeric(term_row$F),
+    Pr = as.numeric(term_row$`Pr(>F)`),
+    stringsAsFactors = FALSE
+  )
+})
+
+permanova_table <- do.call(rbind, permanova_results)
+rownames(permanova_table) <- NULL
+cat("\nPERMANOVA results (each variable separately):\n")
+print(permanova_table)
+
+# write results
+write.csv(permanova_table, "permanova_each_term_results.csv", row.names = FALSE)
+cat("Saved per-term PERMANOVA results to 'permanova_each_term_results.csv'\n")
+
+# 3) Full model: coral_status + all metadata
+# NOTE: host_order contains "Scleractinia" -> coral_status is derived from host_order.
+# Consider removing host_order from the full model to avoid collinearity if needed.
+full_terms <- c("coral_status", metadata_cols)
+full_formula <- as.formula(paste("community_mat ~", paste(full_terms, collapse = " + ")))
+cat("\nRunning full-model PERMANOVA (coral_status + all metadata). Interpret with caution if collinearity exists.\n")
+set.seed(42)
+adonis_full <- adonis2(full_formula, data = metadata_df, permutations = 999, method = "bray")
+print(adonis_full)
+
+# 4) Optional: Hellinger transform and re-run PERMANOVA if you prefer (recommended for abundance data)
+# (Uncomment to run)
+# community_mat_hell <- decostand(community_mat, method = "hellinger")
+# set.seed(42)
+# adonis_coral_hell <- adonis2(community_mat_hell ~ coral_status, data = metadata_df, permutations = 999, method = "bray")
+# print(adonis_coral_hell)
+
+cat("\nDone. Interpret results together with betadisper output: if dispersion differs between groups (significant permutest), PERMANOVA can be influenced by that heterogeneity.\n")
+
+```
+
+```{r}
+library(dplyr)
+library(vegan)
+
+# ---- Ensure coral_status, community_mat_all, metadata_all exist ----
+if (!("coral_status" %in% names(Corals_clean))) {
+  Corals_clean <- Corals_clean %>%
+    mutate(coral_status = ifelse(grepl("Scleractinia", host_order, ignore.case = TRUE),
+                                 "Coral", "Non-coral"),
+           coral_status = factor(coral_status))
+}
+
+# metadata columns you want to test
+metadata_cols <- c("location", "host_phylum", "host_class", "host_order",
+                   "host_genus", "host_species", "bleaching", "symbiont.potential")
+
+# Build community matrix (heuristic: numeric columns not in metadata)
+num_cols <- names(Corals_clean)[sapply(Corals_clean, is.numeric)]
+community_cols <- setdiff(num_cols, metadata_cols)
+
+if (length(community_cols) == 0) stop("No numeric community columns found. Adjust the community_cols selection.")
+
+community_mat_all <- Corals_clean %>% select(all_of(community_cols)) %>% as.matrix()
+# optional: set rownames if sample_id exists
+if ("sample_id" %in% names(Corals_clean)) rownames(community_mat_all) <- Corals_clean$sample_id
+
+# Build metadata dataframe with coral_status
+metadata_all <- Corals_clean %>% select(all_of(metadata_cols)) %>% 
+  mutate(coral_status = Corals_clean$coral_status)
+
+# ---- Loop: for each metadata variable run adonis2 on samples non-NA for coral_status & that var ----
+results_list <- list()
+
+for (v in metadata_cols) {
+  message("Testing variable: ", v)
+  # Keep rows that are complete for coral_status and v
+  keep_mask <- complete.cases(metadata_all[, c("coral_status", v), drop = FALSE])
+  
+  n_before <- nrow(Corals_clean)
+  n_keep <- sum(keep_mask)
+  message("  samples used for this test: ", n_keep, " (dropped ", n_before - n_keep, ")")
+  if (n_keep < 3) {
+    warning("  Too few samples for variable ", v, " — skipping.")
+    next
+  }
+  
+  comm_sub <- community_mat_all[keep_mask, , drop = FALSE]
+  meta_sub <- metadata_all[keep_mask, , drop = FALSE]
+  
+  # Make sure coral_status is a factor in subset (and the tested var is suitable)
+  meta_sub$coral_status <- factor(meta_sub$coral_status)
+  
+  # Convert tested column to factor if character (optional)
+  if (is.character(meta_sub[[v]])) meta_sub[[v]] <- factor(meta_sub[[v]])
+  
+  # Check that there is more than one level for coral_status and for v
+  if (length(unique(meta_sub$coral_status)) < 2) {
+    warning("  coral_status has <2 levels in the subset (variable ", v, ") — skipping.")
+    next
+  }
+  if (is.factor(meta_sub[[v]]) && length(levels(meta_sub[[v]])) < 2) {
+    warning("  variable ", v, " has <2 levels in the subset — skipping.")
+    next
+  }
+  
+  # run Bray-Curtis adonis2 with coral_status + variable
+  set.seed(42)
+  fmla <- as.formula(paste("comm_sub ~ coral_status +", v))
+  ad <- tryCatch({
+    adonis2(fmla, data = meta_sub, permutations = 999, method = "bray")
+  }, error = function(e) {
+    warning("  adonis2 failed for variable ", v, ": ", conditionMessage(e))
+    return(NULL)
+  })
+  if (is.null(ad)) next
+  
+  # convert adonis2 output to data.frame and capture rows
+  ad_df <- as.data.frame(ad)
+  # ad_df usually has rownames like "coral_status", v, "Residual"
+  rn <- rownames(ad_df)
+  
+  # Extract coral_status row (if present)
+  if ("coral_status" %in% rn) {
+    r <- ad_df["coral_status", , drop = FALSE]
+    results_list[[length(results_list) + 1]] <- data.frame(
+      tested_variable = v,
+      term = "coral_status",
+      Df = as.numeric(r$Df),
+      SumOfSqs = as.numeric(r$SumOfSqs),
+      R2 = as.numeric(r$R2),
+      F = as.numeric(r$F),
+      Pr = as.numeric(r$`Pr(>F)`),
+      stringsAsFactors = FALSE
+    )
+  }
+  # Extract tested variable row (if present)
+  if (v %in% rn) {
+    r2 <- ad_df[v, , drop = FALSE]
+    results_list[[length(results_list) + 1]] <- data.frame(
+      tested_variable = v,
+      term = v,
+      Df = as.numeric(r2$Df),
+      SumOfSqs = as.numeric(r2$SumOfSqs),
+      R2 = as.numeric(r2$R2),
+      F = as.numeric(r2$F),
+      Pr = as.numeric(r2$`Pr(>F)`),
+      stringsAsFactors = FALSE
+    )
+  } else {
+    # Sometimes rowname differs (e.g., backticks). Fallback: take the non-Residual row(s) besides coral_status.
+    other_rows <- setdiff(rn, c("coral_status", "Residual", "Total"))
+    for (or in other_rows) {
+      r_or <- ad_df[or, , drop = FALSE]
+      results_list[[length(results_list) + 1]] <- data.frame(
+        tested_variable = v,
+        term = or,
+        Df = as.numeric(r_or$Df),
+        SumOfSqs = as.numeric(r_or$SumOfSqs),
+        R2 = as.numeric(r_or$R2),
+        F = as.numeric(r_or$F),
+        Pr = as.numeric(r_or$`Pr(>F)`),
+        stringsAsFactors = FALSE
+      )
+    }
+  }
+}
+
+# Combine results and write out
+permanova_per_var <- do.call(rbind, results_list)
+# Order for readability
+permanova_per_var <- permanova_per_var %>%
+  arrange(tested_variable, desc(term == "coral_status"))
+
+print(permanova_per_var)
+write.csv(permanova_per_var, "permanova_coral_plus_each_metadata_results.csv", row.names = FALSE)
+message("Saved results to 'permanova_coral_plus_each_metadata_results.csv'")
+
+# ---- OPTIONAL: run single-term PERMANOVA for each variable separately (no coral_status) ----
+single_term_results <- list()
+for (v in metadata_cols) {
+  keep_mask <- complete.cases(metadata_all[, v, drop = FALSE])
+  comm_sub <- community_mat_all[keep_mask, , drop = FALSE]
+  meta_sub <- metadata_all[keep_mask, , drop = FALSE]
+  if (nrow(comm_sub) < 3) next
+  if (is.character(meta_sub[[v]])) meta_sub[[v]] <- factor(meta_sub[[v]])
+  if (is.factor(meta_sub[[v]]) && length(levels(meta_sub[[v]])) < 2) next
+  
+  set.seed(42)
+  fmla <- as.formula(paste("comm_sub ~", v))
+  ad <- tryCatch(adonis2(fmla, data = meta_sub, permutations = 999, method = "bray"),
+                 error = function(e) NULL)
+  if (is.null(ad)) next
+  ad_df <- as.data.frame(ad)
+  rn <- rownames(ad_df)
+  if (v %in% rn) {
+    r <- ad_df[v, , drop = FALSE]
+    single_term_results[[length(single_term_results) + 1]] <- data.frame(
+      term = v,
+      Df = as.numeric(r$Df),
+      SumOfSqs = as.numeric(r$SumOfSqs),
+      R2 = as.numeric(r$R2),
+      F = as.numeric(r$F),
+      Pr = as.numeric(r$`Pr(>F)`),
+      stringsAsFactors = FALSE
+    )
+  }
+}
+single_term_table <- do.call(rbind, single_term_results)
+write.csv(single_term_table, "permanova_single_term_each_metadata.csv", row.names = FALSE)
+message("Saved single-term results to 'permanova_single_term_each_metadata.csv'")
+
+```
