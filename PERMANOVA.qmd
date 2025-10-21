@@ -27,8 +27,16 @@ met_summary_coral_only <- read.csv("met_summary_coral_only.csv")
 
 ## PERMANOVA
 
-```{r[0]}
+\`\`\`{r\[0\]}
 
+# Required packages
+
+```{r}
+library(dplyr)
+library(vegan)
+```
+
+```{r}
 # Required packages
 if (!requireNamespace("vegan", quietly = TRUE)) install.packages("vegan")
 if (!requireNamespace("dplyr", quietly = TRUE)) install.packages("dplyr")
@@ -249,5 +257,67 @@ cat("- Abundance test: Hellinger transform -> Bray–Curtis distance (good for a
 cat("- Ubiquity test: presence/absence -> Jaccard distance (asks whether presence/absence of metabolites differs).\n")
 cat("- Each test uses maximum samples for that variable by only dropping rows missing coral_status or that variable.\n")
 cat("- Check betadisper outputs above: if dispersion differs between groups, interpret PERMANOVA p-values cautiously.\n")
+
+```
+
+```{r}
+# -------------------- 8) Per-metabolite ubiquity summary --------------------
+
+# Check that the metabolite matrix exists
+if (!exists("met_mat_raw")) {
+  stop("met_mat_raw (metabolite matrix) not found. Run the PERMANOVA setup first.")
+}
+
+# presence/absence matrix (already defined earlier)
+met_pa <- (met_mat_raw > 0) * 1  # 0/1
+
+# Make sure group variable exists and matches the same rows
+coral_status_vec <- Corals_clean$coral_status
+if (is.null(coral_status_vec)) stop("coral_status column missing in Corals_clean.")
+
+# Get counts of coral vs non-coral samples
+n_coral <- sum(coral_status_vec == "Coral", na.rm = TRUE)
+n_non   <- sum(coral_status_vec == "Non-coral", na.rm = TRUE)
+cat("Coral samples:", n_coral, "  Non-coral samples:", n_non, "\n")
+
+# Compute per-metabolite ubiquity (% presence in group)
+ubiq_df <- data.frame(
+  metabolite = metabolite_cols,
+  coral_present = colSums(met_pa[coral_status_vec == "Coral", , drop = FALSE], na.rm = TRUE),
+  noncoral_present = colSums(met_pa[coral_status_vec == "Non-coral", , drop = FALSE], na.rm = TRUE)
+)
+
+ubiq_df <- ubiq_df %>%
+  mutate(
+    coral_percent = 100 * coral_present / n_coral,
+    noncoral_percent = 100 * noncoral_present / n_non,
+    total_present = coral_present + noncoral_present,
+    total_percent = 100 * total_present / (n_coral + n_non),
+    coral_minus_noncoral = coral_percent - noncoral_percent
+  ) %>%
+  arrange(desc(coral_minus_noncoral))  # rank by coral-specificity
+
+# write CSV
+write.csv(ubiq_df, "metabolite_ubiquity_summary.csv", row.names = FALSE)
+cat("\nSaved per-metabolite ubiquity summary to 'metabolite_ubiquity_summary.csv'\n")
+
+# preview top and bottom metabolites
+cat("\nTop 10 coral-specific metabolites:\n")
+print(head(ubiq_df, 10))
+
+cat("\nTop 10 non-coral-specific metabolites:\n")
+print(tail(ubiq_df, 10))
+
+```
+
+```{r}
+library(ggplot2)
+
+ggplot(ubiq_df, aes(x = coral_minus_noncoral)) +
+  geom_histogram(bins = 60, fill = "steelblue") +
+  theme_minimal(base_size = 14) +
+  labs(title = "Distribution of Coral vs Non-coral Metabolite Specificity",
+       x = "Coral - Non-coral ubiquity difference (%)",
+       y = "Number of metabolites")
 
 ```
