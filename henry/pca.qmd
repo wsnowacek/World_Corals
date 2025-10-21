@@ -1,0 +1,60 @@
+```{r}
+setwd("/Users/henrysun_1/Desktop/Duke/PhD 2025-2026/World_Corals")
+## update file path
+df <- read.csv("Corals_clean.csv")
+
+```
+
+```{r}
+library(tidyverse)
+library(readr)
+library(broom)
+library(cowplot)
+library(caret)
+
+```
+
+```{r}
+set.seed(111)
+df_filtered <- df[df$host_phylum != "Cnidaria", ]
+
+pca_fit <- df %>% 
+  select(where(is.numeric)) %>% # retain only numeric columns
+  prcomp() # do PCA
+
+```
+
+```{r}
+pca_fit %>%
+  augment(df) %>% # add original dataset back in
+  ggplot(aes(.fittedPC1, .fittedPC2, color = host_phylum)) + 
+  geom_point(size = 1.5) +
+  theme_half_open(12) + background_grid()
+
+```
+```{r}
+pca_fit %>%
+  tidy(matrix = "rotation")
+
+```
+
+```{r}
+pca_fit %>%
+  tidy(matrix = "eigenvalues")
+
+```
+```{r}
+pca_fit %>%
+  tidy(matrix = "eigenvalues") %>%
+  ggplot(aes(PC, percent)) +
+  geom_col(fill = "#56B4E9", alpha = 0.8) +
+  scale_x_continuous(breaks = 1:9) +
+  scale_y_continuous(
+    labels = scales::percent_format(),
+    expand = expansion(mult = c(0, 0.01))
+  ) +
+  theme_minimal_hgrid(12)
+
+
+```
+
