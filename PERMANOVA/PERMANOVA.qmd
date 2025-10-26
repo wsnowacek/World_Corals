@@ -1,0 +1,177 @@
+---
+title: "PERMANOVA"
+format: html
+---
+
+## Library and Data
+
+```{r}
+#| label: library_load
+
+library(tidyverse)
+library(knitr)
+library(readxl)
+library(data.table)
+library(vegan)
+```
+
+```{r}
+#| label: read_csvs
+
+Corals_raw <- read_excel("Corals_raw.xlsx")
+ITS2 <- read.csv("ITS2.csv")
+Corals_clean <- read.csv("Corals_clean.csv")
+ITS2_clean   <- read.csv("ITS2_clean.csv")
+met_summary_coral_only <- read.csv("met_summary_coral_only.csv")
+```
+
+## PERMANOVA
+
+```{r}
+
+library(vegan)
+library(dplyr)
+
+df <- as.data.frame(Corals_clean)  # work on a local copy
+
+# --------------------- 1) Create group: Hexacorallia/Octocorallia vs Other ----
+df$group_hexocto <- ifelse(df$host_class %in% c("Hexacorallia", "Octocorallia"),
+                           "HexOcto", "Other")
+df$group_hexocto <- factor(df$group_hexocto, levels = c("HexOcto", "Other"))
+
+# Drop samples where host_class is NA (so group cannot be assigned)
+na_group_idx <- is.na(df$group_hexocto)
+if (any(na_group_idx)) {
+  message("Dropping ", sum(na_group_idx), " samples with NA host_class (cannot assign group).")
+  df <- df[!na_group_idx, , drop = FALSE]
+}
+
+# --------------------- 2) Select metabolite columns starting with "x" -------
+metabolite_cols <- grep("^x", names(df), value = TRUE)
+if (length(metabolite_cols) == 0) stop("No metabolite columns starting with 'x' found in Corals_clean.")
+
+# Ensure metabolite cols are numeric
+df[metabolite_cols] <- lapply(df[metabolite_cols], function(col) as.numeric(as.character(col)))
+
+# --------------------- 3) Create presence/absence (prevalence) matrix -------
+met_pa <- as.data.frame((df[metabolite_cols] > 0) * 1)
+
+# Remove samples with zero detected metabolites (Jaccard would be NA)
+row_sums <- rowSums(met_pa, na.rm = TRUE)
+zero_samples <- which(row_sums == 0)
+if (length(zero_samples) > 0) {
+  message("Dropping ", length(zero_samples), " samples with zero detected metabolites (all zeros).")
+  met_pa <- met_pa[-zero_samples, , drop = FALSE]
+  df <- df[-zero_samples, , drop = FALSE]
+}
+
+# --------------------- 4) Compute Jaccard distance (presence/absence) ------
+jaccard_dist <- vegdist(met_pa, method = "jaccard")
+
+# --------------------- 5) Betadisper (check dispersion) --------------------
+if (length(unique(df$group_hexocto)) > 1) {
+  bd <- betadisper(jaccard_dist, df$group_hexocto)
+  cat("\nBetadisper summary:\n"); print(bd)
+  cat("\nBetadisper permutation test (999 perms):\n"); print(permutest(bd, permutations = 999))
+} else {
+  warning("Only one level in group_hexocto after filtering; cannot run betadisper or PERMANOVA.")
+}
+
+# --------------------- 6) PERMANOVA (adonis2) --------------------------------
+set.seed(42)
+# using distance object on left-hand side: adonis2(distance ~ predictors, data=)
+permanova_result <- adonis2(jaccard_dist ~ group_hexocto, data = df, permutations = 999, by = "margin")
+
+cat("\nPERMANOVA result (presence/absence, Jaccard) comparing HexOcto vs Other:\n")
+print(permanova_result)
+
+# Save outputs
+write.csv(as.data.frame(permanova_result), "permanova_hexocto_vs_other_presence_jaccard.csv", row.names = TRUE)
+message("Saved PERMANOVA results to 'permanova_hexocto_vs_other_presence_jaccard.csv'")
+
+# --------------------- 7) Quick diagnostics/summary -------------------------
+cat("\nSample counts by group (after filtering):\n"); print(table(df$group_hexocto))
+cat("\nNumber of metabolites used (columns starting with 'x'):", ncol(met_pa), "\n")
+cat("Number of samples used:", nrow(met_pa), "\n")
+
+```
+
+```{r}
+# PCoA plot based on Jaccard distances
+library(ggplot2)
+pcoa <- cmdscale(jaccard_dist, eig = TRUE, k = 2)
+plot_df <- data.frame(
+  Axis1 = pcoa$points[,1],
+  Axis2 = pcoa$points[,2],
+  group = df$group_hexocto
+)
+
+ggplot(plot_df, aes(x = Axis1, y = Axis2, color = group)) +
+  geom_point(size = 3, alpha = 0.7) +
+  theme_minimal(base_size = 14) +
+  labs(title = "PCoA of Metabolite Presence (Jaccard)",
+       subtitle = "Hexacorallia + Octocorallia vs Other",
+       x = "PCoA Axis 1", y = "PCoA Axis 2")
+
+```
+
+```{r}
+# Minimal abundance-based PERMANOVA (Hellinger -> Bray) using Corals_clean
+library(vegan)
+
+df <- as.data.frame(Corals_clean)
+df$group_hexocto <- factor(ifelse(df$host_class %in% c("Hexacorallia","Octocorallia"), "HexOcto","Other"))
+
+# select metabolite columns starting with "x"
+met_cols <- grep("^x", names(df), value = TRUE)
+met_mat <- as.matrix(df[met_cols])
+mode(met_mat) <- "numeric"
+
+# drop samples with all-zero metabolites
+keep <- rowSums(met_mat, na.rm = TRUE) > 0
+met_mat <- met_mat[keep, , drop = FALSE]
+df_sub <- df[keep, , drop = FALSE]
+
+# Hellinger transform then Bray-Curtis distance
+met_hell <- decostand(met_mat, method = "hellinger")
+bc_dist <- vegdist(met_hell, method = "bray")
+
+# dispersion check and PERMANOVA
+bd <- betadisper(bc_dist, df_sub$group_hexocto); print(permutest(bd, permutations = 999))
+set.seed(42)
+res_abund <- adonis2(bc_dist ~ group_hexocto, data = df_sub, permutations = 999, by = "margin")
+print(res_abund)
+write.csv(as.data.frame(res_abund), "permanova_abundance_hellinger_bray_hexocto_vs_other.csv", row.names = TRUE)
+
+```
+
+```{r}
+# PCoA plot of metabolite abundances (Hellinger + Bray–Curtis)
+library(ggplot2)
+
+# PCoA on Bray–Curtis distance
+pcoa <- cmdscale(bc_dist, eig = TRUE, k = 2)
+
+# Build plotting dataframe
+plot_df <- data.frame(
+  Axis1 = pcoa$points[, 1],
+  Axis2 = pcoa$points[, 2],
+  group = df_sub$group_hexocto
+)
+
+# Percent variance explained by first two axes
+var_expl <- round(100 * pcoa$eig[1:2] / sum(pcoa$eig[pcoa$eig > 0]), 1)
+
+# Plot
+ggplot(plot_df, aes(x = Axis1, y = Axis2, color = group)) +
+  geom_point(size = 3, alpha = 0.8) +
+  theme_minimal(base_size = 14) +
+  labs(
+    title = "PCoA of Metabolite Abundances (Bray–Curtis)",
+    x = paste0("PCoA1 (", var_expl[1], "%)"),
+    y = paste0("PCoA2 (", var_expl[2], "%)"),
+    color = "Group"
+  ) +
+  stat_ellipse(level = 0.95, linetype = "dashed")
+
+```
