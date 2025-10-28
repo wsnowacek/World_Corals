@@ -175,3 +175,56 @@ ggplot(plot_df, aes(x = Axis1, y = Axis2, color = group)) +
   stat_ellipse(level = 0.95, linetype = "dashed")
 
 ```
+
+```{r}
+# Fix for "contrasts can be applied only to factors with 2 or more levels"
+library(vegan)
+
+df <- as.data.frame(Corals_clean)
+df$scl_status <- factor(ifelse(df$host_order == "Scleractinia", "Scleractinia", "Other"))
+
+meta_cols <- c("host_phylum","host_class","host_order","host_family",
+               "host_genus","host_species","bleaching","symbiont.potential","location")
+
+# metabolite prevalence matrix
+met_cols <- grep("^x", names(df), value = TRUE)
+met_pa <- (as.matrix(df[met_cols]) > 0) * 1
+
+# drop samples with no detected metabolites
+keep0 <- rowSums(met_pa, na.rm = TRUE) > 0
+df0 <- df[keep0, , drop = FALSE]
+met_pa0 <- met_pa[keep0, , drop = FALSE]
+
+# choose metadata columns that have >=2 non-NA unique levels in df0
+valid_meta <- vapply(meta_cols, function(v) length(unique(na.omit(df0[[v]]))) >= 2, logical(1))
+valid_cols <- meta_cols[valid_meta]
+if (length(valid_cols) == 0) stop("No metadata columns with >=2 levels available after filtering.")
+
+# ensure no NAs in the columns used for the model (scl_status + valid_cols)
+keep <- complete.cases(df0[, c("scl_status", valid_cols), drop = FALSE])
+df_sub <- df0[keep, , drop = FALSE]
+met_pa_sub <- met_pa0[keep, , drop = FALSE]
+
+# After final subsetting, drop any metadata columns that now have <2 levels
+final_meta <- valid_cols[vapply(valid_cols, function(v) length(unique(df_sub[[v]])) >= 2, logical(1))]
+if (length(final_meta) == 0) stop("After subsetting, no metadata columns remain with >=2 levels.")
+
+# ensure scl_status has 2+ levels
+if (length(unique(df_sub$scl_status)) < 2) stop("scl_status has fewer than 2 levels after filtering; cannot run model.")
+
+# coerce final metadata to factors
+for (v in final_meta) df_sub[[v]] <- factor(df_sub[[v]])
+
+# Bray-Curtis on prevalence (prevalence as requested)
+bc_dist <- vegdist(met_pa_sub, method = "bray")
+
+# build nested terms: scl_status + scl_status:meta1 + scl_status:meta2 + ...
+terms <- paste(c("scl_status", paste0("scl_status:", final_meta)), collapse = " + ")
+fmla <- as.formula(paste("bc_dist ~", terms))
+
+set.seed(42)
+res_nested <- adonis2(fmla, data = df_sub, permutations = 999, method = "bray", by = "margin")
+print(res_nested)
+write.csv(as.data.frame(res_nested), "permanova_nested_scleractinia_by_metadata.csv", row.names = TRUE)
+
+```
