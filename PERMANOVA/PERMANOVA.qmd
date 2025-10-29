@@ -28,6 +28,7 @@ met_summary_coral_only <- read.csv("met_summary_coral_only.csv")
 ## PERMANOVA
 
 ```{r}
+#| label: checking_data_before_permanova
 
 library(vegan)
 library(dplyr)
@@ -77,6 +78,11 @@ if (length(unique(df$group_hexocto)) > 1) {
   warning("Only one level in group_hexocto after filtering; cannot run betadisper or PERMANOVA.")
 }
 
+```
+
+```{r}
+#| label: running_permanova
+
 # --------------------- 6) PERMANOVA (adonis2) --------------------------------
 set.seed(42)
 # using distance object on left-hand side: adonis2(distance ~ predictors, data=)
@@ -93,12 +99,11 @@ message("Saved PERMANOVA results to 'permanova_hexocto_vs_other_presence_jaccard
 cat("\nSample counts by group (after filtering):\n"); print(table(df$group_hexocto))
 cat("\nNumber of metabolites used (columns starting with 'x'):", ncol(met_pa), "\n")
 cat("Number of samples used:", nrow(met_pa), "\n")
-
 ```
 
 ```{r}
-# PCoA plot based on Jaccard distances
-library(ggplot2)
+#| label: PCoA_plot_based_on_Jaccard_distances
+
 pcoa <- cmdscale(jaccard_dist, eig = TRUE, k = 2)
 plot_df <- data.frame(
   Axis1 = pcoa$points[,1],
@@ -226,5 +231,10 @@ set.seed(42)
 res_nested <- adonis2(fmla, data = df_sub, permutations = 999, method = "bray", by = "margin")
 print(res_nested)
 write.csv(as.data.frame(res_nested), "permanova_nested_scleractinia_by_metadata.csv", row.names = TRUE)
+
+```
+
+```{r}
+kruskal.test(weight ~ group, data = Corals_clean)
 
 ```

@@ -1133,7 +1133,7 @@ ggplot(met_summary, aes(x = ubiquity_all, y = avg_abundance, fill = category)) +
 ```
 
 ```{r}
-#| label: dataset_with_coral_metabolites
+#| label: dataset_with_Scleractinia_metabolites
 
 library(dplyr)
 library(tidyr)
@@ -1215,7 +1215,7 @@ met_summary_coral_only   # metabolite-level table, ranked by percent_in_corals
 ```
 
 ```{r}
-#| label: metabolite_csv
+#| label: metabolite_for_sclerictinia_csv
 
 # Save coral-specific metabolite summary as a CSV file
 write.csv(
@@ -1231,11 +1231,14 @@ message("✅ File saved: met_summary_coral_only.csv")
 ## Need ID
 
 ```{r}
-install.packages("openxlsx")
+#| label: install_openlsx
 
+install.packages("openxlsx")
 ```
 
 ```{r}
+#| label: excel_for_missing_values_in_raw_data
+
 library(dplyr)
 library(stringr)
 library(openxlsx)
@@ -1271,7 +1274,9 @@ out_df <- problematic_rows %>%
 # write to Excel
 openxlsx::write.xlsx(out_df, "problematic_taxonomy_rows.xlsx", overwrite = TRUE)
 
-cat("✅ Excel file 'problematic_taxonomy_rows.xlsx' created in:", getwd(), "\n")
-cat("Rows exported:", nrow(out_df), "\n")
+```
 
+```{r}
+#| label: excel_for_ubiquitous_scleractinia
+openxlsx::write.xlsx(met_summary_coral_only, "ubiquitous_scleractinia_metabolites.xlsx")
 ```
