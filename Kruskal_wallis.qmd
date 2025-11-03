@@ -1,0 +1,85 @@
+---
+title: "Kruskal_wallis"
+format: html
+---
+
+## Library and Data
+
+```{r}
+#| label: load_packages
+
+install.packages("tidyverse")
+install.packages("rstatix")
+install.packages("ggpubr")
+```
+
+```{r}
+#| lable: library
+
+library(tidyverse)
+library(rstatix)
+library(ggpubr)
+library(knitr)
+library(readxl)
+library(data.table)
+library(vegan)
+```
+
+```{r}
+#| label: read_csvs
+
+Corals_clean <- read.csv("/Users/ellaandonov/World_Corals/Cleaned data CSVs/Corals_clean.csv")
+ITS2_clean   <- read.csv("/Users/ellaandonov/World_Corals/Cleaned data CSVs/ITS2_clean.csv")
+met_summary_coral_only <- read.csv("/Users/ellaandonov/World_Corals/Metabolite Summary Data/met_summary_coral_only.csv")
+```
+
+## **Kruskal wallis test Richness:**
+
+```{r}
+#| label: set_up_richness_metric
+
+#Identify metabolite columns (start with "x")
+metabolite_cols <- grep("^x", names(Corals_clean), value = TRUE)
+
+# Compute metabolomic richness per sample
+# Richness = count of metabolites with intensity > 0
+kw_richness <- Corals_clean %>%
+  select(sample_id, host_phylum, location, bleaching, symbiont.potential, all_of(metabolite_cols)) %>%
+  rowwise() %>%
+  mutate(MetabolomicRichness = sum(c_across(all_of(metabolite_cols)) > 0, na.rm = TRUE)) %>%
+  ungroup()
+
+#brought richness column to front for vizualization 
+kw_richness <- kw_richness %>% select(MetabolomicRichness, everything())
+
+```
+
+```{r}
+#| label: kw_test_richness_by_phylum
+
+kruskal.test(host_phylum ~ MetabolomicRichness, data = kw_richness)
+```
+
+```{r}
+#| label: kw_test_richness_by_location
+
+kruskal.test(location ~ MetabolomicRichness, data = kw_richness)
+```
+
+```{r}
+#| label: kw_test_richness_by_bleaching
+
+kruskal.test(bleaching ~ MetabolomicRichness, data = kw_richness)
+```
+
+```{r}
+#| label: kw_test_richness_by_symbiont_potential
+
+kruskal.test(symbiont.potential ~ MetabolomicRichness, data = kw_richness)
+```
+
+-   **Results:** No significant difference was found in the metabolomic richness (number of metabolites present) between different phyla, locations, corals with different bleaching status, or their symbiont.
+
+-   **Null hypothesis (H₀):** The distributions of the dependent variables are the same across all groups meaning the population medians are equal.
+
+    -   p-value \> 0.05, failed to reject H₀ → no evidence that groups differ.
