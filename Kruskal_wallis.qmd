@@ -33,7 +33,7 @@ ITS2_clean   <- read.csv("/Users/ellaandonov/World_Corals/Cleaned data CSVs/ITS2
 met_summary_coral_only <- read.csv("/Users/ellaandonov/World_Corals/Metabolite Summary Data/met_summary_coral_only.csv")
 ```
 
-## **Kruskal wallis test Richness:**
+## **Richness Kruskal wallis test:**
 
 ```{r}
 #| label: set_up_richness_metric
@@ -80,6 +80,135 @@ kruskal.test(symbiont.potential ~ MetabolomicRichness, data = kw_richness)
 
 -   **Results:** No significant difference was found in the metabolomic richness (number of metabolites present) between different phyla, locations, corals with different bleaching status, or their symbiont.
 
--   **Null hypothesis (H₀):** The distributions of the dependent variables are the same across all groups meaning the population medians are equal.
+-   **Null hypothesis (H₀):** The number of metabolites are not significantly different across metadata groups, meaning the population medians are not significantly different.
 
     -   p-value \> 0.05, failed to reject H₀ → no evidence that groups differ.
+
+## **Entropy Kruskal wallis test:**
+
+```{r}
+#| label: entropy_formula_setup
+
+shannon_index <- function(counts, assume_proportions = FALSE, log_base = exp(1)) {
+  # remove NAs and non-positive values
+  counts <- counts[!is.na(counts) & counts > 0]
+  if (length(counts) == 0) return(0)
+
+  if (!assume_proportions) {
+    total <- sum(counts)
+    if (total == 0) return(0)
+    p <- counts / total
+  } else {
+    p <- counts / sum(counts)  # if already proportions, this will still normalize safely
+  }
+
+  -sum(p * log(p, base = log_base))
+  }
+
+# identify metabolite columns (start with "x")
+metabolite_cols <- grep("^x", names(Corals_clean), value = TRUE)
+
+# calculate metabolic entropy per sample
+kw_entropy <- Corals_clean %>%
+  select(sample_id, host_phylum, location, bleaching, symbiont.potential, all_of (metabolite_cols)) %>%
+  rowwise() %>%
+  mutate(MetabolicEntropy = shannon_index(c_across(all_of(metabolite_cols)))) %>%
+  ungroup()
+
+#brought richness column to front for vizualization 
+kw_entropy <- kw_entropy %>% select(MetabolicEntropy, everything())
+```
+
+```{r}
+#| label: kw_test_entropy_by_phylum
+
+kruskal.test(host_phylum ~ MetabolicEntropy, data = kw_entropy)
+```
+
+```{r}
+#| label: kw_test_entropy_by_location
+
+kruskal.test(location ~ MetabolicEntropy, data = kw_entropy)
+```
+
+```{r}
+#| label: kw_test_entropy_by_bleaching
+
+kruskal.test(bleaching ~ MetabolicEntropy, data = kw_entropy)
+```
+
+```{r}
+#| label: kw_test_entropy_by_symbiont_potential
+
+kruskal.test(symbiont.potential ~ MetabolicEntropy, data = kw_entropy)
+```
+
+-   **Results:** No significant difference was found in the metabolomic entropy between different phyla, locations, corals with different bleaching status, or their symbiont.
+
+-   **Null hypothesis (H₀):** The diversity of metabolites are not significantly different across metadata groups, meaning the population medians are not significantly different.
+
+    -   p-value \> 0.05, failed to reject H₀ → no evidence that groups differ.
+
+## **Evenness Kruskal wallis test:**
+
+```{r}
+#| label: evenness_formula_setup
+
+shannon_index <- function(counts, assume_proportions = FALSE, log_base = exp(1)) {
+  # remove NAs and non-positive values
+  counts <- counts[!is.na(counts) & counts > 0]
+  if (length(counts) == 0) return(0)
+
+  if (!assume_proportions) {
+    total <- sum(counts)
+    if (total == 0) return(0)
+    p <- counts / total
+  } else {
+    p <- counts / sum(counts)  # if already proportions, this will still normalize safely
+  }
+
+  -sum(p * log(p, base = log_base))
+  }
+
+# 1) Identify metabolite columns
+metabolite_cols <- grep("^x", names(Corals_clean), value = TRUE)
+
+# 2) Compute Shannon, Richness, and Evenness per sample
+kw_evenness <- Corals_clean %>%
+  select(sample_id, host_phylum, location, bleaching, symbiont.potential, all_of(metabolite_cols)) %>%
+  rowwise() %>%
+  mutate(
+    Richness = sum(c_across(all_of(metabolite_cols)) > 0, na.rm = TRUE),
+    Shannon  = shannon_index(c_across(all_of(metabolite_cols))),
+    Evenness = ifelse(Richness > 1, Shannon / log(Richness), 0)
+  ) %>%
+  ungroup()
+
+
+#brought richness column to front for vizualization 
+kw_evenness <- kw_evenness %>% select(Evenness, everything())
+```
+
+```{r}
+#| label: kw_test_evenness_by_phylum
+
+kruskal.test(host_phylum ~ Evenness, data = kw_evenness)
+```
+
+```{r}
+#| label: kw_test_evenness_by_location
+
+kruskal.test(location ~ Evenness, data = kw_evenness)
+```
+
+```{r}
+#| label: kw_test_evenness_by_bleaching
+
+kruskal.test(bleaching ~ Evenness, data = kw_evenness)
+```
+
+```{r}
+#| label: kw_test_evenness_by_symbiont_potential
+
+kruskal.test(symbiont.potential ~ Evenness, data = kw_evenness)
+```
