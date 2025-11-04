@@ -75,7 +75,9 @@ ggplot(pcoa_points_phylum, aes(x = PCoA1, y = PCoA2, color = host_phylum)) +
   labs(
     x = paste0("PCoA 1 (", var_explained[1], "%)"),
     y = paste0("PCoA 2 (", var_explained[2], "%)"),
-    title = "PCoA of Bray–Curtis Dissimilarity by Phylum"
+    title = "PCoA of Bray–Curtis Dissimilarity by Phylum", 
+    color = "Phylum", 
+    fill = "Phylum"
   ) +
   theme_minimal(base_size = 14) +
   theme(legend.position = "right")
@@ -109,27 +111,29 @@ print(phylum_permanova_result)
 #| label: PCoA_location
 
 #  PCoA (Principal Coordinates Analysis)
-pcoa_result <- cmdscale(bray_curtis, eig = TRUE, k = 2)
+pcoa_location_result <- cmdscale(bray_curtis, eig = TRUE, k = 2)
 
 # Extract coordinates
-pcoa_points <- as.data.frame(pcoa_result$points)
-colnames(pcoa_points) <- c("PCoA1", "PCoA2")
+pcoa_location <- as.data.frame(pcoa_location_result$points)
+colnames(pcoa_location) <- c("PCoA1", "PCoA2")
 
 # Combine coordinates with metadata
-pcoa_points <- cbind(pcoa_points, meta_data)
+pcoa_location <- cbind(pcoa_location, meta_data)
 
 # Percent variance explained by first two axes
-pos_eig <- pcoa_result$eig[pcoa_result$eig > 0]
-var_explained <- round(100 * pcoa_result$eig[1:2] / sum(pos_eig), 1)
+pos_eig <- pcoa_location_result$eig[pcoa_location_result$eig > 0]
+var_explained <- round(100 * pcoa_location_result$eig[1:2] / sum(pos_eig), 1)
 
 #  Plot with 95% confidence ellipses
-ggplot(pcoa_points, aes(x = PCoA1, y = PCoA2, color = location, fill = location)) +
+ggplot(pcoa_location, aes(x = PCoA1, y = PCoA2, color = location, fill = location)) +
   geom_point(size = 3, alpha = 0.8) +
   stat_ellipse(geom = "polygon", alpha = 0.15, level = 0.95, type = "t", colour = NA) +
   labs(
     title = "PCoA of Bray–Curtis Dissimilarity by Location",
     x = paste0("PCoA 1 (", var_explained[1], "%)"),
-    y = paste0("PCoA 2 (", var_explained[2], "%)")
+    y = paste0("PCoA 2 (", var_explained[2], "%)"), 
+    color = "Location", 
+    fill = "Location"
   ) +
   theme_minimal(base_size = 14) +
   theme(
@@ -336,7 +340,7 @@ colnames(coords) <- c("Axis1", "Axis2")
 pcoa_df <- data.frame(Sample = sample_ids,
                       Axis1 = coords$Axis1,
                       Axis2 = coords$Axis2,
-                      host_family = as.factor(Scleractinia_only[sample_ids, "host_genus"]),
+                      host_genus = as.factor(Scleractinia_only[sample_ids, "host_genus"]),
                       row.names = sample_ids)
 
 # % variance explained (use positive eigenvalues)
