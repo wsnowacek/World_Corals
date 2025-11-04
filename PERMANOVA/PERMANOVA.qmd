@@ -25,81 +25,339 @@ ITS2_clean   <- read.csv("ITS2_clean.csv")
 met_summary_coral_only <- read.csv("met_summary_coral_only.csv")
 ```
 
-## PERMANOVA
+## PERMANOVAs and PCoAs per metadata
 
 ```{r}
-#| label: checking_data_before_permanova
+#| label: permanova_phylum
 
-library(vegan)
-library(dplyr)
+# Select only numeric metabolite columns
+permanova_numeric_data <- Corals_clean[, sapply(Corals_clean, is.numeric)]
 
-df <- as.data.frame(Corals_clean)  # work on a local copy
+# Compute Bray-Curtis distance
+bray_curtis <- vegdist(permanova_numeric_data, method = "bray")
 
-# --------------------- 1) Create group: Hexacorallia/Octocorallia vs Other ----
-df$group_hexocto <- ifelse(df$host_class %in% c("Hexacorallia", "Octocorallia"),
-                           "HexOcto", "Other")
-df$group_hexocto <- factor(df$group_hexocto, levels = c("HexOcto", "Other"))
+# Run PERMANOVA
+phylum_permanova_result <- adonis2(bray_curtis ~ host_phylum, data = Corals_clean, permutations = 999)
 
-# Drop samples where host_class is NA (so group cannot be assigned)
-na_group_idx <- is.na(df$group_hexocto)
-if (any(na_group_idx)) {
-  message("Dropping ", sum(na_group_idx), " samples with NA host_class (cannot assign group).")
-  df <- df[!na_group_idx, , drop = FALSE]
+# Display results
+print(phylum_permanova_result)
+```
+
+```{r}
+#| label: PCoA_phylum_confidence_ellipses
+
+# helper to compute ellipse points from covariance matrix
+veganCovEllipse <- function (cov, center, scale = 1, npoints = 100) {
+  theta <- (0:npoints) * 2 * pi / npoints
+  circle <- cbind(cos(theta), sin(theta))
+  # scale by eigen decomposition of covariance
+  ed <- eigen(cov)
+  vect <- ed$vectors %*% diag(sqrt(ed$values)) %*% t(circle) * scale
+  t(vect + center)
 }
 
-# --------------------- 2) Select metabolite columns starting with "x" -------
-metabolite_cols <- grep("^x", names(df), value = TRUE)
-if (length(metabolite_cols) == 0) stop("No metabolite columns starting with 'x' found in Corals_clean.")
+# compute group-specific ellipses
+groups <- unique(pcoa_points_phylum$host_phylum)
+ellipses_df <- do.call(rbind, lapply(groups, function(g) {
+  pts <- subset(pcoa_points_phylum, host_phylum == g)[, c("PCoA1", "PCoA2")]
+  if(nrow(pts) < 3) return(NULL)  # can't compute covariance with <3 pts
+  cov_mat <- cov(pts)
+  center <- colMeans(pts)
+  el <- veganCovEllipse(cov_mat, center, scale = sqrt(qchisq(0.95, df = 2)), npoints = 200)
+  data.frame(PCoA1 = el[,1], PCoA2 = el[,2], host_phylum = g)
+}))
 
-# Ensure metabolite cols are numeric
-df[metabolite_cols] <- lapply(df[metabolite_cols], function(col) as.numeric(as.character(col)))
+# Plot points + ellipses (vegan style)
+ggplot(pcoa_points_phylum, aes(x = PCoA1, y = PCoA2, color = host_phylum)) +
+  geom_point(size = 3, alpha = 0.8) +
+  geom_polygon(data = ellipses_df, aes(x = PCoA1, y = PCoA2, fill = host_phylum),
+               alpha = 0.15, colour = NA) +
+  labs(
+    x = paste0("PCoA 1 (", var_explained[1], "%)"),
+    y = paste0("PCoA 2 (", var_explained[2], "%)"),
+    title = "PCoA of Bray–Curtis Dissimilarity by Phylum"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(legend.position = "right")
+```
 
-# --------------------- 3) Create presence/absence (prevalence) matrix -------
-met_pa <- as.data.frame((df[metabolite_cols] > 0) * 1)
+```{r}
+#| label: permanova_location
 
-# Remove samples with zero detected metabolites (Jaccard would be NA)
-row_sums <- rowSums(met_pa, na.rm = TRUE)
-zero_samples <- which(row_sums == 0)
-if (length(zero_samples) > 0) {
-  message("Dropping ", length(zero_samples), " samples with zero detected metabolites (all zeros).")
-  met_pa <- met_pa[-zero_samples, , drop = FALSE]
-  df <- df[-zero_samples, , drop = FALSE]
-}
+# 1) select numeric columns (metabolites)
+permanova_numeric_data <- Corals_clean[, sapply(Corals_clean, is.numeric)]
 
-# --------------------- 4) Compute Jaccard distance (presence/absence) ------
-jaccard_dist <- vegdist(met_pa, method = "jaccard")
+# 2) find rows with non-missing location AND non-missing numeric values
+keep_rows <- !is.na(Corals_clean$location) &
+             apply(permanova_numeric_data, 1, function(x) !any(is.na(x)))
 
-# --------------------- 5) Betadisper (check dispersion) --------------------
-if (length(unique(df$group_hexocto)) > 1) {
-  bd <- betadisper(jaccard_dist, df$group_hexocto)
-  cat("\nBetadisper summary:\n"); print(bd)
-  cat("\nBetadisper permutation test (999 perms):\n"); print(permutest(bd, permutations = 999))
-} else {
-  warning("Only one level in group_hexocto after filtering; cannot run betadisper or PERMANOVA.")
-}
+# 3) subset both data objects
+permanova_numeric_data2 <- permanova_numeric_data[keep_rows, , drop = FALSE]
+meta2 <- Corals_clean[keep_rows, , drop = FALSE]
+
+# 4) compute Bray-Curtis on the filtered numeric table
+bray_curtis2 <- vegdist(permanova_numeric_data2, method = "bray")
+
+# 5) run PERMANOVA with matching metadata
+phylum_permanova_result <- adonis2(bray_curtis2 ~ location, data = meta2, permutations = 999)
+
+# 6) show result
+print(phylum_permanova_result)
+```
+
+```{r}
+#| label: PCoA_location
+
+#  PCoA (Principal Coordinates Analysis)
+pcoa_result <- cmdscale(bray_curtis, eig = TRUE, k = 2)
+
+# Extract coordinates
+pcoa_points <- as.data.frame(pcoa_result$points)
+colnames(pcoa_points) <- c("PCoA1", "PCoA2")
+
+# Combine coordinates with metadata
+pcoa_points <- cbind(pcoa_points, meta_data)
+
+# Percent variance explained by first two axes
+pos_eig <- pcoa_result$eig[pcoa_result$eig > 0]
+var_explained <- round(100 * pcoa_result$eig[1:2] / sum(pos_eig), 1)
+
+#  Plot with 95% confidence ellipses
+ggplot(pcoa_points, aes(x = PCoA1, y = PCoA2, color = location, fill = location)) +
+  geom_point(size = 3, alpha = 0.8) +
+  stat_ellipse(geom = "polygon", alpha = 0.15, level = 0.95, type = "t", colour = NA) +
+  labs(
+    title = "PCoA of Bray–Curtis Dissimilarity by Location",
+    x = paste0("PCoA 1 (", var_explained[1], "%)"),
+    y = paste0("PCoA 2 (", var_explained[2], "%)")
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    legend.position = "right",
+    panel.grid = element_blank(),
+    plot.title = element_text(face = "bold")
+  )
+```
+
+```{r}
+#| label: permanova_bleaching
+
+# Select only numeric columns (assumed metabolites)
+permanova_numeric_data <- Corals_clean[, sapply(Corals_clean, is.numeric)]
+
+# Build logical mask: non-missing bleaching, no NA in numeric data, and not all zeros
+mask_non_missing_meta <- !is.na(Corals_clean$bleaching)
+mask_no_numeric_NA <- apply(permanova_numeric_data, 1, function(x) !any(is.na(x)))
+mask_not_all_zero <- rowSums(permanova_numeric_data, na.rm = TRUE) > 0
+
+keep_rows <- mask_non_missing_meta & mask_no_numeric_NA & mask_not_all_zero
+
+# Subset numeric table and metadata to matching rows
+permanova_numeric_data2 <- permanova_numeric_data[keep_rows, , drop = FALSE]
+meta2 <- Corals_clean[keep_rows, , drop = FALSE]
+
+# Compute Bray–Curtis distance on filtered numeric data
+bray_curtis2 <- vegdist(permanova_numeric_data2, method = "bray")
+
+# Run PERMANOVA (bleaching)
+bleaching_permanova_result <- adonis2(bray_curtis2 ~ bleaching, data = meta2, permutations = 999)
+
+print(bleaching_permanova_result)
+```
+
+```{r}
+#| label: PCoA_bleaching
+
+# PCoA (cmdscale) and percent variance explained
+pcoa_result <- cmdscale(bray_curtis2, eig = TRUE, k = 2)
+pcoa_points <- as.data.frame(pcoa_result$points)
+colnames(pcoa_points) <- c("PCoA1", "PCoA2")
+pcoa_points <- bind_cols(pcoa_points, meta2)
+
+pos_eig <- pcoa_result$eig[pcoa_result$eig > 0]
+var_explained <- round(100 * pcoa_result$eig[1:2] / sum(pos_eig), 1)
+
+# Plot with 95% confidence ellipses
+p <- ggplot(pcoa_points, aes(x = PCoA1, y = PCoA2, color = bleaching, fill = bleaching)) +
+  geom_point(size = 3, alpha = 0.8) +
+  stat_ellipse(geom = "polygon", alpha = 0.15, level = 0.95, type = "t", colour = NA) +
+  labs(
+    title = "PCoA of Bray–Curtis Dissimilarity by Bleaching Status",
+    x = paste0("PCoA1 (", var_explained[1], "%)"),
+    y = paste0("PCoA2 (", var_explained[2], "%)")
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(legend.position = "right")
+
+print(p)
+```
+
+```{r}
+#| label: permanova_symbiont_potential
+
+# Select numeric columns (assumed metabolites)
+permanova_numeric_data <- Corals_clean[, sapply(Corals_clean, is.numeric)]
+
+# Build mask: non-missing predictor, no NA in numeric columns, not all zeros
+mask_non_missing_predictor <- !is.na(Corals_clean$symbiont.potential)
+mask_no_numeric_NA <- apply(permanova_numeric_data, 1, function(x) !any(is.na(x)))
+mask_not_all_zero <- rowSums(permanova_numeric_data, na.rm = TRUE) > 0
+
+keep_rows <- mask_non_missing_predictor & mask_no_numeric_NA & mask_not_all_zero
+
+# Subset numeric table and metadata (ensure same order)
+permanova_numeric_data2 <- permanova_numeric_data[keep_rows, , drop = FALSE]
+meta2 <- Corals_clean[keep_rows, , drop = FALSE]
+
+# Compute Bray–Curtis on filtered numeric data
+bray_curtis2 <- vegdist(permanova_numeric_data2, method = "bray")
+
+# Run PERMANOVA (symbiont.potential)
+symbiont_permanova_result <- adonis2(bray_curtis2 ~ symbiont.potential, data = meta2, permutations = 999)
+
+print(symbiont_permanova_result)
+```
+
+```{r}
+#| label: PCoA_symbiont_potential
+
+# PCoA and 95% confidence ellipses for visualization
+pcoa_result <- cmdscale(bray_curtis2, eig = TRUE, k = 2)
+pcoa_points <- as.data.frame(pcoa_result$points)
+colnames(pcoa_points) <- c("PCoA1", "PCoA2")
+pcoa_points <- bind_cols(pcoa_points, meta2)
+
+# positive eigenvalues for % variance
+pos_eig <- pcoa_result$eig[pcoa_result$eig > 0]
+var_explained <- round(100 * pcoa_result$eig[1:2] / sum(pos_eig), 1)
+
+ggplot(pcoa_points, aes(x = PCoA1, y = PCoA2, color = symbiont.potential, fill = symbiont.potential)) +
+  geom_point(size = 3, alpha = 0.8) +
+  stat_ellipse(geom = "polygon", alpha = 0.15, level = 0.95, type = "t", colour = NA) +
+  labs(
+    title = "PCoA of Bray–Curtis by symbiont.potential",
+    x = paste0("PCoA1 (", var_explained[1], "%)"),
+    y = paste0("PCoA2 (", var_explained[2], "%)")
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(legend.position = "right")
+```
+
+## PERMANOVA for Scleractinia 
+
+```{r}
+#| label: Scleractinia_only_df
+
+Scleractinia_only <- Corals_clean[Corals_clean$host_order == "Scleractinia", ]
+```
+
+```{r}
+#| label: Scleractinia_family_PERMANOVA
+
+# Remove rows with any NA values in numeric columns
+permanova_scl_numeric_data <- na.omit(permanova_scl_numeric_data)
+
+# Recompute Bray-Curtis distance
+bray_curtis <- vegdist(permanova_scl_numeric_data, method = "bray")
+
+# Make sure host_family matches the remaining rows
+family_permanova_result <- adonis2(
+  bray_curtis ~ host_family,
+  data = Scleractinia_only[rownames(permanova_scl_numeric_data), ],
+  permutations = 999
+)
+
+print(family_permanova_result)
+```
+
+```{r}
+#| label: PCoA_family
+
+# Perform PCoA 
+pcoa_res <- cmdscale(as.dist(bray_curtis), eig = TRUE, k = 2)
+
+# Build plotting dataframe (assumes distance matrix has rownames matching Scleractinia_only)
+sample_ids <- rownames(as.matrix(bray_curtis))
+coords <- as.data.frame(pcoa_res$points[, 1:2])
+colnames(coords) <- c("Axis1", "Axis2")
+pcoa_df <- data.frame(Sample = sample_ids,
+                      Axis1 = coords$Axis1,
+                      Axis2 = coords$Axis2,
+                      host_family = as.factor(Scleractinia_only[sample_ids, "host_family"]),
+                      row.names = sample_ids)
+
+# % variance explained (use positive eigenvalues)
+eig <- pcoa_res$eig
+pos_sum <- sum(eig[eig > 0])
+var_explained <- if (pos_sum > 0) round(100 * eig / pos_sum, 1) else round(100 * eig / sum(abs(eig)), 1)
+
+# Plot
+ggplot(pcoa_df, aes(x = Axis1, y = Axis2, color = host_family, fill = host_family)) +
+  geom_point(size = 3) +
+  stat_ellipse(type = "t", level = 0.95, alpha = 0.2) +
+  labs(
+    title = "PCoA (Bray-Curtis) — Scleractinia samples",
+    x = paste0("PCoA1 (", var_explained[1], "%)"),
+    y = paste0("PCoA2 (", var_explained[2], "%)")
+  ) +
+  theme_minimal()
 
 ```
 
 ```{r}
-#| label: running_permanova
+#| label: Scleractinia_genus_PERMANOVA
 
-# --------------------- 6) PERMANOVA (adonis2) --------------------------------
-set.seed(42)
-# using distance object on left-hand side: adonis2(distance ~ predictors, data=)
-permanova_result <- adonis2(jaccard_dist ~ group_hexocto, data = df, permutations = 999, by = "margin")
+# Remove rows with any NA values in numeric columns
+permanova_scl_numeric_data <- na.omit(permanova_scl_numeric_data)
 
-cat("\nPERMANOVA result (presence/absence, Jaccard) comparing HexOcto vs Other:\n")
-print(permanova_result)
+# Recompute Bray-Curtis distance
+bray_curtis <- vegdist(permanova_scl_numeric_data, method = "bray")
 
-# Save outputs
-write.csv(as.data.frame(permanova_result), "permanova_hexocto_vs_other_presence_jaccard.csv", row.names = TRUE)
-message("Saved PERMANOVA results to 'permanova_hexocto_vs_other_presence_jaccard.csv'")
+# Make sure host_family matches the remaining rows
+family_permanova_result <- adonis2(
+  bray_curtis ~ host_genus,
+  data = Scleractinia_only[rownames(permanova_scl_numeric_data), ],
+  permutations = 999
+)
 
-# --------------------- 7) Quick diagnostics/summary -------------------------
-cat("\nSample counts by group (after filtering):\n"); print(table(df$group_hexocto))
-cat("\nNumber of metabolites used (columns starting with 'x'):", ncol(met_pa), "\n")
-cat("Number of samples used:", nrow(met_pa), "\n")
+print(family_permanova_result)
 ```
+
+```{r}
+#| label: PCoA_genus
+
+# Perform PCoA 
+pcoa_res <- cmdscale(as.dist(bray_curtis), eig = TRUE, k = 2)
+
+# Build plotting dataframe (assumes distance matrix has rownames matching Scleractinia_only)
+sample_ids <- rownames(as.matrix(bray_curtis))
+coords <- as.data.frame(pcoa_res$points[, 1:2])
+colnames(coords) <- c("Axis1", "Axis2")
+pcoa_df <- data.frame(Sample = sample_ids,
+                      Axis1 = coords$Axis1,
+                      Axis2 = coords$Axis2,
+                      host_family = as.factor(Scleractinia_only[sample_ids, "host_genus"]),
+                      row.names = sample_ids)
+
+# % variance explained (use positive eigenvalues)
+eig <- pcoa_res$eig
+pos_sum <- sum(eig[eig > 0])
+var_explained <- if (pos_sum > 0) round(100 * eig / pos_sum, 1) else round(100 * eig / sum(abs(eig)), 1)
+
+# Plot
+ggplot(pcoa_df, aes(x = Axis1, y = Axis2, color = host_genus, fill = host_genus)) +
+  geom_point(size = 3) +
+  stat_ellipse(type = "t", level = 0.95, alpha = 0.2) +
+  labs(
+    title = "PCoA (Bray-Curtis) — Scleractinia samples",
+    x = paste0("PCoA1 (", var_explained[1], "%)"),
+    y = paste0("PCoA2 (", var_explained[2], "%)")
+  ) +
+  theme_minimal()
+
+```
+
+## General PERMANOVA for Corals vs other
 
 ```{r}
 #| label: PCoA_plot_based_on_Jaccard_distances
@@ -117,36 +375,6 @@ ggplot(plot_df, aes(x = Axis1, y = Axis2, color = group)) +
   labs(title = "PCoA of Metabolite Presence (Jaccard)",
        subtitle = "Hexacorallia + Octocorallia vs Other",
        x = "PCoA Axis 1", y = "PCoA Axis 2")
-
-```
-
-```{r}
-# Minimal abundance-based PERMANOVA (Hellinger -> Bray) using Corals_clean
-library(vegan)
-
-df <- as.data.frame(Corals_clean)
-df$group_hexocto <- factor(ifelse(df$host_class %in% c("Hexacorallia","Octocorallia"), "HexOcto","Other"))
-
-# select metabolite columns starting with "x"
-met_cols <- grep("^x", names(df), value = TRUE)
-met_mat <- as.matrix(df[met_cols])
-mode(met_mat) <- "numeric"
-
-# drop samples with all-zero metabolites
-keep <- rowSums(met_mat, na.rm = TRUE) > 0
-met_mat <- met_mat[keep, , drop = FALSE]
-df_sub <- df[keep, , drop = FALSE]
-
-# Hellinger transform then Bray-Curtis distance
-met_hell <- decostand(met_mat, method = "hellinger")
-bc_dist <- vegdist(met_hell, method = "bray")
-
-# dispersion check and PERMANOVA
-bd <- betadisper(bc_dist, df_sub$group_hexocto); print(permutest(bd, permutations = 999))
-set.seed(42)
-res_abund <- adonis2(bc_dist ~ group_hexocto, data = df_sub, permutations = 999, by = "margin")
-print(res_abund)
-write.csv(as.data.frame(res_abund), "permanova_abundance_hellinger_bray_hexocto_vs_other.csv", row.names = TRUE)
 
 ```
 
@@ -178,63 +406,5 @@ ggplot(plot_df, aes(x = Axis1, y = Axis2, color = group)) +
     color = "Group"
   ) +
   stat_ellipse(level = 0.95, linetype = "dashed")
-
-```
-
-```{r}
-# Fix for "contrasts can be applied only to factors with 2 or more levels"
-library(vegan)
-
-df <- as.data.frame(Corals_clean)
-df$scl_status <- factor(ifelse(df$host_order == "Scleractinia", "Scleractinia", "Other"))
-
-meta_cols <- c("host_phylum","host_class","host_order","host_family",
-               "host_genus","host_species","bleaching","symbiont.potential","location")
-
-# metabolite prevalence matrix
-met_cols <- grep("^x", names(df), value = TRUE)
-met_pa <- (as.matrix(df[met_cols]) > 0) * 1
-
-# drop samples with no detected metabolites
-keep0 <- rowSums(met_pa, na.rm = TRUE) > 0
-df0 <- df[keep0, , drop = FALSE]
-met_pa0 <- met_pa[keep0, , drop = FALSE]
-
-# choose metadata columns that have >=2 non-NA unique levels in df0
-valid_meta <- vapply(meta_cols, function(v) length(unique(na.omit(df0[[v]]))) >= 2, logical(1))
-valid_cols <- meta_cols[valid_meta]
-if (length(valid_cols) == 0) stop("No metadata columns with >=2 levels available after filtering.")
-
-# ensure no NAs in the columns used for the model (scl_status + valid_cols)
-keep <- complete.cases(df0[, c("scl_status", valid_cols), drop = FALSE])
-df_sub <- df0[keep, , drop = FALSE]
-met_pa_sub <- met_pa0[keep, , drop = FALSE]
-
-# After final subsetting, drop any metadata columns that now have <2 levels
-final_meta <- valid_cols[vapply(valid_cols, function(v) length(unique(df_sub[[v]])) >= 2, logical(1))]
-if (length(final_meta) == 0) stop("After subsetting, no metadata columns remain with >=2 levels.")
-
-# ensure scl_status has 2+ levels
-if (length(unique(df_sub$scl_status)) < 2) stop("scl_status has fewer than 2 levels after filtering; cannot run model.")
-
-# coerce final metadata to factors
-for (v in final_meta) df_sub[[v]] <- factor(df_sub[[v]])
-
-# Bray-Curtis on prevalence (prevalence as requested)
-bc_dist <- vegdist(met_pa_sub, method = "bray")
-
-# build nested terms: scl_status + scl_status:meta1 + scl_status:meta2 + ...
-terms <- paste(c("scl_status", paste0("scl_status:", final_meta)), collapse = " + ")
-fmla <- as.formula(paste("bc_dist ~", terms))
-
-set.seed(42)
-res_nested <- adonis2(fmla, data = df_sub, permutations = 999, method = "bray", by = "margin")
-print(res_nested)
-write.csv(as.data.frame(res_nested), "permanova_nested_scleractinia_by_metadata.csv", row.names = TRUE)
-
-```
-
-```{r}
-kruskal.test(weight ~ group, data = Corals_clean)
 
 ```
