@@ -110,30 +110,25 @@ print(phylum_permanova_result)
 ```{r}
 #| label: PCoA_location
 
-#  PCoA (Principal Coordinates Analysis)
-pcoa_location_result <- cmdscale(bray_curtis, eig = TRUE, k = 2)
+# PCoA (cmdscale) and percent variance explained
+pcoa_result <- cmdscale(bray_curtis2, eig = TRUE, k = 2)
+pcoa_points <- as.data.frame(pcoa_result$points)
+colnames(pcoa_points) <- c("PCoA1", "PCoA2")
+pcoa_points <- bind_cols(pcoa_points, meta2)
 
-# Extract coordinates
-pcoa_location <- as.data.frame(pcoa_location_result$points)
-colnames(pcoa_location) <- c("PCoA1", "PCoA2")
-
-# Combine coordinates with metadata
-pcoa_location <- cbind(pcoa_location, meta_data)
-
-# Percent variance explained by first two axes
-pos_eig <- pcoa_location_result$eig[pcoa_location_result$eig > 0]
-var_explained <- round(100 * pcoa_location_result$eig[1:2] / sum(pos_eig), 1)
+pos_eig <- pcoa_result$eig[pcoa_result$eig > 0]
+var_explained <- round(100 * pcoa_result$eig[1:2] / sum(pos_eig), 1)
 
 #  Plot with 95% confidence ellipses
-ggplot(pcoa_location, aes(x = PCoA1, y = PCoA2, color = location, fill = location)) +
+ggplot(pcoa_points, aes(x = PCoA1, y = PCoA2, color = location, fill = location)) +
   geom_point(size = 3, alpha = 0.8) +
   stat_ellipse(geom = "polygon", alpha = 0.15, level = 0.95, type = "t", colour = NA) +
   labs(
     title = "PCoA of Bray–Curtis Dissimilarity by Location",
     x = paste0("PCoA 1 (", var_explained[1], "%)"),
     y = paste0("PCoA 2 (", var_explained[2], "%)"), 
-    color = "Location", 
-    fill = "Location"
+    fill = "Location", 
+    color = "Location"
   ) +
   theme_minimal(base_size = 14) +
   theme(
@@ -188,7 +183,9 @@ p <- ggplot(pcoa_points, aes(x = PCoA1, y = PCoA2, color = bleaching, fill = ble
   labs(
     title = "PCoA of Bray–Curtis Dissimilarity by Bleaching Status",
     x = paste0("PCoA1 (", var_explained[1], "%)"),
-    y = paste0("PCoA2 (", var_explained[2], "%)")
+    y = paste0("PCoA2 (", var_explained[2], "%)"), 
+    fill = "Bleaching Status", 
+    color = "Bleaching Status"
   ) +
   theme_minimal(base_size = 13) +
   theme(legend.position = "right")
@@ -239,9 +236,11 @@ ggplot(pcoa_points, aes(x = PCoA1, y = PCoA2, color = symbiont.potential, fill =
   geom_point(size = 3, alpha = 0.8) +
   stat_ellipse(geom = "polygon", alpha = 0.15, level = 0.95, type = "t", colour = NA) +
   labs(
-    title = "PCoA of Bray–Curtis by symbiont.potential",
+    title = "PCoA of Bray–Curtis by Symbiont Potential",
     x = paste0("PCoA1 (", var_explained[1], "%)"),
-    y = paste0("PCoA2 (", var_explained[2], "%)")
+    y = paste0("PCoA2 (", var_explained[2], "%)"), 
+    fill = "Symbiont Potential", 
+    color = "Symbiont Potential"
   ) +
   theme_minimal(base_size = 13) +
   theme(legend.position = "right")
@@ -300,9 +299,11 @@ ggplot(pcoa_df, aes(x = Axis1, y = Axis2, color = host_family, fill = host_famil
   geom_point(size = 3) +
   stat_ellipse(type = "t", level = 0.95, alpha = 0.2) +
   labs(
-    title = "PCoA (Bray-Curtis) — Scleractinia samples",
+    title = "PCoA by Family for Scleractinia",
     x = paste0("PCoA1 (", var_explained[1], "%)"),
-    y = paste0("PCoA2 (", var_explained[2], "%)")
+    y = paste0("PCoA2 (", var_explained[2], "%)"), 
+    color = "Family", 
+    fill = "Family"
   ) +
   theme_minimal()
 
@@ -353,12 +354,33 @@ ggplot(pcoa_df, aes(x = Axis1, y = Axis2, color = host_genus, fill = host_genus)
   geom_point(size = 3) +
   stat_ellipse(type = "t", level = 0.95, alpha = 0.2) +
   labs(
-    title = "PCoA (Bray-Curtis) — Scleractinia samples",
+    title = "PCoA by Genus for Scleractinia",
     x = paste0("PCoA1 (", var_explained[1], "%)"),
-    y = paste0("PCoA2 (", var_explained[2], "%)")
+    y = paste0("PCoA2 (", var_explained[2], "%)"), 
+    fill = "Genus", 
+    color = "Genus"
   ) +
   theme_minimal()
 
+```
+
+```{r}
+#| label: Scleractinia_genus_PERMANOVA
+
+# Remove rows with any NA values in numeric columns
+permanova_scl_numeric_data <- na.omit(permanova_scl_numeric_data)
+
+# Recompute Bray-Curtis distance
+bray_curtis <- vegdist(permanova_scl_numeric_data, method = "bray")
+
+# Make sure host_family matches the remaining rows
+family_permanova_result <- adonis2(
+  bray_curtis ~ host_genus,
+  data = Scleractinia_only[rownames(permanova_scl_numeric_data), ],
+  permutations = 999
+)
+
+print(family_permanova_result)
 ```
 
 ## General PERMANOVA for Corals vs other
