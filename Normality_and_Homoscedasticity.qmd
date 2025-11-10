@@ -1292,3 +1292,7 @@ plot(
   as.dendrogram(cluster.average)
 
 ```
+
+```{r}
+hi 
+```
