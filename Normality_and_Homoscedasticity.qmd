@@ -213,7 +213,7 @@ kruskal.test(bleaching ~ Evenness, data = kw_evenness)
 kruskal.test(symbiont.potential ~ Evenness, data = kw_evenness)
 ```
 
-## **Bar graphs to** visualize normality
+## **Histogram to** visualize normality
 
 ### Richness
 
@@ -1065,6 +1065,230 @@ kw_entropy |>
 ```{r}
 #| label: levene_richness_phylum
 
-leveneTest(MetabolomicRichness ~ host_phylum, data = kw_richness)
+leveneTest(MetabolomicRichness ~ factor(host_phylum), data = kw_richness)
+
+```
+
+```{r}
+#| label: levene_richness_symbiont_potential
+
+leveneTest(MetabolomicRichness ~ factor(symbiont.potential), data = kw_richness)
+```
+
+```{r}
+#| label: levene_richness_bleaching
+
+leveneTest(MetabolomicRichness ~ factor(bleaching), data = kw_richness)
+```
+
+```{r}
+#| label: levene_richness_location
+
+leveneTest(MetabolomicRichness ~ factor(location), data = kw_richness)
+```
+
+```{r}
+#| label: levene_richness_Scleractinia_family
+
+leveneTest(
+  MetabolomicRichness ~ factor(host_family),data = kw_richness |>
+    filter(host_order == "Scleractinia")
+  )
+```
+
+```{r}
+#| label: levene_richness_Scleractinia_symbiont_potential
+
+leveneTest(
+  MetabolomicRichness ~ factor(symbiont.potential),data = kw_richness |>
+    filter(host_order == "Scleractinia")
+  )
+```
+
+```{r}
+#| label: levene_richness_Scleractinia_bleaching
+
+leveneTest(
+  MetabolomicRichness ~ factor(bleaching),data = kw_richness |>
+    filter(host_order == "Scleractinia")
+  )
+```
+
+```{r}
+#| label: levene_richness_Scleractinia_location
+
+leveneTest(
+  MetabolomicRichness ~ factor(location),data = kw_richness |>
+    filter(host_order == "Scleractinia")
+  )
+```
+
+### Evenness
+
+```{r}
+#| label: levene_evenness_phylum 
+
+leveneTest(Evenness ~ factor(host_phylum), data = kw_evenness)
+```
+
+```{r}
+#| label: levene_evenness_symbiont_potential
+
+leveneTest(Evenness ~ factor(symbiont.potential), data = kw_evenness)
+```
+
+```{r}
+#| label: levene_evenness_bleaching
+
+leveneTest(Evenness ~ factor(bleaching), data = kw_evenness)
+```
+
+```{r}
+#| label: levene_evenness_location
+
+leveneTest(Evenness ~ factor(location), data = kw_evenness)
+```
+
+```{r}
+#| label: levene_richness_Scleractinia_family
+
+leveneTest(Evenness ~ factor(host_family),data = kw_evenness |>
+             filter(host_order == "Scleractinia")
+           )
+```
+
+```{r}
+#| label: levene_richness_Scleractinia_symbiont_potential 
+
+leveneTest(Evenness ~ factor(symbiont.potential),data = kw_evenness |>
+             filter(host_order == "Scleractinia")
+           )
+```
+
+```{r}
+#| label: levene_richness_Scleractinia_bleaching
+
+leveneTest(Evenness ~ factor(bleaching),data = kw_evenness |>
+             filter(host_order == "Scleractinia")
+           )
+```
+
+```{r}
+#| label: levene_richness_Scleractinia_location
+
+leveneTest(Evenness ~ factor(location),data = kw_evenness |>
+             filter(host_order == "Scleractinia")
+           )
+```
+
+### Entropy
+
+```{r}
+#| label: levene_entropy_phylum
+
+leveneTest(MetabolicEntropy ~ factor(host_phylum), data = kw_entropy)
+```
+
+```{r}
+#| label: levene_entropy_symbiont_potential
+
+leveneTest(MetabolicEntropy ~ factor(symbiont.potential), data = kw_entropy)
+```
+
+```{r}
+#| label: levene_entropy_bleaching
+
+leveneTest(MetabolicEntropy ~ factor(bleaching), data = kw_entropy)
+```
+
+```{r}
+#| label: levene_entropy_location
+
+leveneTest(MetabolicEntropy ~ factor(location), data = kw_entropy)
+```
+
+```{r}
+#| label: levene_entropy_Scleractinia_family
+
+leveneTest(MetabolicEntropy ~ factor(host_family),data = kw_entropy |>
+             filter(host_order == "Scleractinia")
+           )
+```
+
+```{r}
+#| label: levene_entropy_Scleractinia_symbiont_potential
+
+leveneTest(MetabolicEntropy ~ factor(symbiont.potential),data = kw_entropy |>
+             filter(host_order == "Scleractinia")
+           )
+```
+
+```{r}
+#| label: levene_entropy_Scleractinia_bleaching
+
+leveneTest(MetabolicEntropy ~ factor(bleaching),data = kw_entropy |>
+             filter(host_order == "Scleractinia")
+           )
+```
+
+```{r}
+#| label: levene_entropy_Scleractinia_location
+
+leveneTest(MetabolicEntropy ~ factor(location),data = kw_entropy |>
+             filter(host_order == "Scleractinia")
+           )
+```
+
+## Dendrogram 
+
+```{r}
+avg_metabolite_values_family <- Corals_clean |>
+  group_by(host_family) |> 
+  filter(!is.na(host_family)) |> 
+  summarise(across(starts_with("x"), mean, na.rm = TRUE)) |>
+  ungroup()
+
+```
+
+```{r}
+# turn host_family into rownames and create numeric matrix for vegdist
+mat_family <- avg_metabolite_values_family %>%
+  as.data.frame()                     # ensure data.frame for rownames()
+rownames(mat_family) <- mat_family$host_family
+mat_family <- mat_family[ , setdiff(names(mat_family), "host_family")]  # drop the column now that it's rownames
+
+mat_family[] <- lapply(mat_family, as.numeric)
+
+mat_family <- mat_family %>%
+  mutate_all(~ifelse(is.na(.), 0, .))   # replace NAs with 0s (common for abundance data)
+```
+
+```{r}
+bray_curtis_family <- vegdist (sqrt (mat_), method = 'bray') 
+# percentage cover data are transformed by square root
+cluster.single <- hclust (d = bray_curtis_family, method = 'single')
+cluster.complete <- hclust (bray_curtis_family, 'complete')
+cluster.average <- hclust (bray_curtis_family, 'average')
+```
+
+```{r}
+par (mfrow = c (1,3)) # will draw all dendrograms into one figure
+ 
+plot (cluster.single, main = 'Single linkage')
+plot (cluster.complete, main = 'Complete linkage')
+plot (cluster.average, main = 'Average linkage')
+```
+
+```{r}
+ 
+plot (cluster.average, main = 'Average linkage')
+rect.hclust(cluster.average, k = 10, border = "blue")
+```
+
+```{r}
+op <- par(mar = c(5, 4, 4, 12))
+
+plot(
+  as.dendrogram(cluster.average)
 
 ```
