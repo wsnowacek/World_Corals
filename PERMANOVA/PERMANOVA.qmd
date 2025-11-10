@@ -434,3 +434,16 @@ ggplot(plot_df, aes(x = Axis1, y = Axis2, color = group)) +
   stat_ellipse(level = 0.95, linetype = "dashed")
 
 ```
+
+```{r}
+genus_counts <- table(Corals_clean$host_genus)
+genus_counts <- sort(genus_counts, decreasing = TRUE)
+genus_counts
+```
+
+```{r}
+species_counts <- table(Corals_clean$host_species)
+species_counts <- sort(species_counts, decreasing = TRUE)
+species_counts
+
+```

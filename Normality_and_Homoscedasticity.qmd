@@ -1,0 +1,1070 @@
+---
+title: "Kruskal_wallis"
+format: html
+---
+
+## Library and Data
+
+```{r}
+#| label: install_packages
+
+#install.packages("tidyverse")
+#install.packages("rstatix")
+#install.packages("ggpubr")
+```
+
+```{r}
+#| label: load_packages
+
+library(tidyverse)
+library(rstatix)
+library(ggpubr)
+library(knitr)
+library(readxl)
+library(data.table)
+library(vegan)
+library(car)
+```
+
+```{r}
+#| label: read_csvs
+
+Corals_clean <- read.csv("/Users/ellaandonov/World_Corals/Cleaned data CSVs/Corals_clean.csv")
+ITS2_clean   <- read.csv("/Users/ellaandonov/World_Corals/Cleaned data CSVs/ITS2_clean.csv")
+met_summary_coral_only <- read.csv("/Users/ellaandonov/World_Corals/Metabolite Summary Data/met_summary_coral_only.csv")
+```
+
+## **Kruskal wallis test:**
+
+### Richness
+
+```{r}
+#| label: set_up_richness_metric
+
+#Identify metabolite columns (start with "x")
+metabolite_cols <- grep("^x", names(Corals_clean), value = TRUE)
+
+# Compute metabolomic richness per sample
+# Richness = count of metabolites with intensity > 0
+kw_richness <- Corals_clean %>%
+  rowwise() %>%
+  mutate(MetabolomicRichness = sum(c_across(all_of(metabolite_cols)) > 0, na.rm = TRUE)) %>%
+  ungroup()
+
+#brought richness column to front for vizualization 
+kw_richness <- kw_richness %>% select(MetabolomicRichness, everything())
+
+```
+
+```{r}
+#| label: kw_test_richness_by_phylum
+
+kruskal.test(host_phylum ~ MetabolomicRichness, data = kw_richness)
+```
+
+```{r}
+#| label: kw_test_richness_by_location
+
+kruskal.test(location ~ MetabolomicRichness, data = kw_richness)
+```
+
+```{r}
+#| label: kw_test_richness_by_bleaching
+
+kruskal.test(bleaching ~ MetabolomicRichness, data = kw_richness)
+```
+
+```{r}
+#| label: kw_test_richness_by_symbiont_potential
+
+kruskal.test(symbiont.potential ~ MetabolomicRichness, data = kw_richness)
+```
+
+-   **Results:** No significant difference was found in the metabolomic richness (number of metabolites present) between different phyla, locations, corals with different bleaching status, or their symbiont.
+
+-   **Null hypothesis (H₀):** The number of metabolites are not significantly different across metadata groups, meaning the population medians are not significantly different.
+
+    -   p-value \> 0.05, failed to reject H₀ → no evidence that groups differ.
+
+### Entropy
+
+```{r}
+#| label: entropy_formula_setup
+
+shannon_index <- function(counts, assume_proportions = FALSE, log_base = exp(1)) {
+  # remove NAs and non-positive values
+  counts <- counts[!is.na(counts) & counts > 0]
+  if (length(counts) == 0) return(0)
+
+  if (!assume_proportions) {
+    total <- sum(counts)
+    if (total == 0) return(0)
+    p <- counts / total
+  } else {
+    p <- counts / sum(counts)  # if already proportions, this will still normalize safely
+  }
+
+  -sum(p * log(p, base = log_base))
+  }
+
+# identify metabolite columns (start with "x")
+metabolite_cols <- grep("^x", names(Corals_clean), value = TRUE)
+
+# calculate metabolic entropy per sample
+kw_entropy <- Corals_clean %>%
+  rowwise() %>%
+  mutate(MetabolicEntropy = shannon_index(c_across(all_of(metabolite_cols)))) %>%
+  ungroup()
+
+#brought richness column to front for vizualization 
+kw_entropy <- kw_entropy %>% select(MetabolicEntropy, everything())
+```
+
+```{r}
+#| label: kw_test_entropy_by_phylum
+
+kruskal.test(host_phylum ~ MetabolicEntropy, data = kw_entropy)
+```
+
+```{r}
+#| label: kw_test_entropy_by_location
+
+kruskal.test(location ~ MetabolicEntropy, data = kw_entropy)
+```
+
+```{r}
+#| label: kw_test_entropy_by_bleaching
+
+kruskal.test(bleaching ~ MetabolicEntropy, data = kw_entropy)
+```
+
+```{r}
+#| label: kw_test_entropy_by_symbiont_potential
+
+kruskal.test(symbiont.potential ~ MetabolicEntropy, data = kw_entropy)
+```
+
+-   **Results:** No significant difference was found in the metabolomic entropy between different phyla, locations, corals with different bleaching status, or their symbiont.
+
+-   **Null hypothesis (H₀):** The diversity of metabolites are not significantly different across metadata groups, meaning the population medians are not significantly different.
+
+    -   p-value \> 0.05, failed to reject H₀ → no evidence that groups differ.
+
+### Evenness
+
+```{r}
+#| label: evenness_formula_setup
+
+shannon_index <- function(counts, assume_proportions = FALSE, log_base = exp(1)) {
+  # remove NAs and non-positive values
+  counts <- counts[!is.na(counts) & counts > 0]
+  if (length(counts) == 0) return(0)
+
+  if (!assume_proportions) {
+    total <- sum(counts)
+    if (total == 0) return(0)
+    p <- counts / total
+  } else {
+    p <- counts / sum(counts)  # if already proportions, this will still normalize safely
+  }
+
+  -sum(p * log(p, base = log_base))
+  }
+
+# 1) Identify metabolite columns
+metabolite_cols <- grep("^x", names(Corals_clean), value = TRUE)
+
+# 2) Compute Shannon, Richness, and Evenness per sample
+kw_evenness <- Corals_clean %>%
+  rowwise() %>%
+  mutate(
+    Richness = sum(c_across(all_of(metabolite_cols)) > 0, na.rm = TRUE),
+    Shannon  = shannon_index(c_across(all_of(metabolite_cols))),
+    Evenness = ifelse(Richness > 1, Shannon / log(Richness), 0)
+  ) %>%
+  ungroup()
+
+
+#brought richness column to front for vizualization 
+kw_evenness <- kw_evenness %>% select(Evenness, everything())
+```
+
+```{r}
+#| label: kw_test_evenness_by_phylum
+
+kruskal.test(host_phylum ~ Evenness, data = kw_evenness)
+```
+
+```{r}
+#| label: kw_test_evenness_by_location
+
+kruskal.test(location ~ Evenness, data = kw_evenness)
+```
+
+```{r}
+#| label: kw_test_evenness_by_bleaching
+
+kruskal.test(bleaching ~ Evenness, data = kw_evenness)
+```
+
+```{r}
+#| label: kw_test_evenness_by_symbiont_potential
+
+kruskal.test(symbiont.potential ~ Evenness, data = kw_evenness)
+```
+
+## **Bar graphs to** visualize normality
+
+### Richness
+
+```{r}
+#| label: bar-graph-symbiont-potential 
+
+kw_richness |>
+  drop_na(symbiont.potential) |>
+  ggplot(aes(x = MetabolomicRichness, fill = symbiont.potential)) +
+  geom_histogram(position = "identity", alpha = 0.5, bins = 30) +
+  labs(
+    x= "Metabolite Richness", 
+    y = "Count", 
+    title = "Metabolite Richness by Symbiont Potential", 
+    fill = "Symbiont Potential" 
+  ) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+#| label: bar-graph-phylum
+
+kw_richness |>
+  drop_na(host_phylum) |>
+  ggplot(aes(x = MetabolomicRichness, fill = host_phylum)) +
+  geom_histogram(position = "identity", alpha = 0.5, bins = 30) +
+  labs(
+    x= "Metabolite Richness", 
+    y = "Count", 
+    title = "Metabolite Richness by Phylum", 
+    fill = "Phylum" 
+  ) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+#| label: bar-graph-bleaching
+
+kw_richness |>
+  drop_na(bleaching) |>
+  ggplot(aes(x = MetabolomicRichness, fill = bleaching)) +
+  geom_histogram(position = "identity", alpha = 0.5, bins = 30) +
+  labs(
+    x= "Metabolite Richness", 
+    y = "Count", 
+    title = "Metabolite Richness by Bleaching Status", 
+    fill = "Bleaching Status" 
+  ) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+#| label: bar-graph-location
+
+kw_richness |>
+  drop_na(location) |>
+  ggplot(aes(x = MetabolomicRichness, fill = location)) +
+  geom_histogram(position = "identity", alpha = 0.5, bins = 30) +
+  labs(
+    x= "Metabolite Richness", 
+    y = "Count", 
+    title = "Metabolite Richness by Location", 
+    fill = "Location" 
+  ) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+#| label: bar-graph-Scleractinia-symbiont-potential
+
+kw_richness |>
+  filter(host_order == "Scleractinia") |>
+  drop_na(symbiont.potential) |>
+  ggplot(aes(x = MetabolomicRichness, fill = symbiont.potential)) +
+  geom_histogram(position = "identity", alpha = 0.5, bins = 30) +
+  labs(
+    x= "Metabolite Richness", 
+    y = "Count", 
+    title = "Metabolite Richness (Scleractinia only) by Symbiont Potential", 
+    fill = "Symbiont Potential" 
+  ) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+#| label: bar-graph-Scleractinia-bleaching
+
+kw_richness |>
+  filter(host_order == "Scleractinia") |>
+  drop_na(bleaching) |>
+  ggplot(aes(x = MetabolomicRichness, fill = bleaching)) +
+  geom_histogram(position = "identity", alpha = 0.5, bins = 30) +
+  labs(
+    x= "Metabolite Richness", 
+    y = "Count", 
+    title = "Metabolite Richness (Scleractinia only) by Bleaching", 
+    fill = "Bleaching" 
+  ) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+#| label: bar-graph-Scleractinia-location
+
+kw_richness |>
+  filter(host_order == "Scleractinia") |>
+  drop_na(symbiont.potential) |>
+  ggplot(aes(x = MetabolomicRichness, fill = location)) +
+  geom_histogram(position = "identity", alpha = 0.5, bins = 30) +
+  labs(
+    x= "Metabolite Richness", 
+    y = "Count", 
+    title = "Metabolite Richness (Scleractinia only) by Location", 
+    fill = "Location" 
+  ) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+## **QQ plots to visualize normality** 
+
+### Richness
+
+```{r}
+#| label: qq_plot_richness_symbiont_potential
+
+kw_richness |>
+  drop_na(symbiont.potential) |>
+  ggplot(aes(sample = MetabolomicRichness)) +
+  stat_qq() +
+  stat_qq_line() +
+  facet_wrap(~symbiont.potential) +
+  labs(
+    title = "QQ Plots by Symbiont Potential", 
+    x = "Theoretical Quantiles (Normal Distribution)",
+    y = "Metabolite Richness"
+    ) +
+  theme(plot.title = element_text(hjust = 0.5))
+
+```
+
+```{r}
+#| label: qq_plot_richness_phylum 
+
+kw_richness |>
+  drop_na(host_phylum) |>
+  ggplot(aes(sample = MetabolomicRichness)) +
+  stat_qq() +
+  stat_qq_line() +
+  facet_wrap(~host_phylum) +
+  labs(
+    title = "QQ Plots by Phylum", 
+    x = "Theoretical Quantiles (Normal Distribution)",
+    y = "Metabolite Richness"
+    ) +
+  theme(plot.title = element_text(hjust = 0.5))
+
+```
+
+```{r}
+#| label: qq_plot_richness_location
+
+kw_richness |>
+  drop_na(location) |>
+  ggplot(aes(sample = MetabolomicRichness)) +
+  stat_qq() +
+  stat_qq_line() +
+  facet_wrap(~location) +
+  labs(
+    title = "QQ Plots by Location", 
+    x = "Theoretical Quantiles (Normal Distribution)",
+    y = "Metabolite Richness"
+    ) +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+#| label: qq_plot_richness_bleaching
+
+kw_richness |>
+  drop_na(bleaching) |>
+  ggplot(aes(sample = MetabolomicRichness)) +
+  stat_qq() +
+  stat_qq_line() +
+  facet_wrap(~bleaching) +
+  labs(
+    title = "QQ Plots by Bleaching", 
+    x = "Theoretical Quantiles (Normal Distribution)",
+    y = "Metabolite Richness"
+    ) +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+#| label: qq_plot_richness_Scleractinia_family
+
+kw_richness |>
+  filter(host_order == "Scleractinia") |>
+  drop_na(host_family) |>
+  ggplot(aes(sample = MetabolomicRichness)) +
+  stat_qq() +
+  stat_qq_line() +
+  facet_wrap(~host_family) +
+  labs(
+    title = "QQ Plots (Scleractinia only) by Family", 
+    x = "Theoretical Quantiles (Normal Distribution)",
+    y = "Metabolite Richness"
+    ) +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+#| label: qq_plot_richness_Scleractinia_symbiont_potential
+
+kw_richness |>
+  filter(host_order == "Scleractinia") |>
+  drop_na(symbiont.potential) |>
+  ggplot(aes(sample = MetabolomicRichness)) +
+  stat_qq() +
+  stat_qq_line() +
+  facet_wrap(~symbiont.potential) +
+  labs(
+    title = "QQ Plots (Scleractinia only) by Symbiont Potential", 
+    x = "Theoretical Quantiles (Normal Distribution)",
+    y = "Metabolite Richness"
+    ) +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+#| label: qq_plot_richness_Scleractinia_bleaching
+
+kw_richness |>
+  filter(host_order == "Scleractinia") |>
+  drop_na(bleaching) |>
+  ggplot(aes(sample = MetabolomicRichness)) +
+  stat_qq() +
+  stat_qq_line() +
+  facet_wrap(~bleaching) +
+  labs(
+    title = "QQ Plots (Scleractinia only) by Bleaching", 
+    x = "Theoretical Quantiles (Normal Distribution)",
+    y = "Metabolite Richness"
+    ) +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+#| label: qq_plot_richness_Scleractinia_location
+
+kw_richness |>
+  filter(host_order == "Scleractinia") |>
+  drop_na(location) |>
+  ggplot(aes(sample = MetabolomicRichness)) +
+  stat_qq() +
+  stat_qq_line() +
+  facet_wrap(~location) +
+  labs(
+    title = "QQ Plots (Scleractinia only) by Location", 
+    x = "Theoretical Quantiles (Normal Distribution)",
+    y = "Metabolite Richness"
+    ) +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+### Evenness
+
+```{r}
+#| label: qq_plot_evenness_symbiont_potential
+
+kw_evenness |>
+  drop_na(symbiont.potential) |>
+  ggplot(aes(sample = Evenness)) +
+  stat_qq() +
+  stat_qq_line() +
+  facet_wrap(~symbiont.potential) +
+  labs(
+    title = "QQ Plots by Symbiont Potential", 
+    x = "Theoretical Quantiles (Normal Distribution)",
+    y = "Evenness"
+    ) +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+#| label: qq_plot_evenness_bleaching
+
+kw_evenness |>
+  drop_na(bleaching) |>
+  ggplot(aes(sample = Evenness)) +
+  stat_qq() +
+  stat_qq_line() +
+  facet_wrap(~bleaching) +
+  labs(
+    title = "QQ Plots by Bleaching", 
+    x = "Theoretical Quantiles (Normal Distribution)",
+    y = "Evenness"
+    ) +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+#| label: qq_plot_evenness_location
+
+kw_evenness |>
+  drop_na(location) |>
+  ggplot(aes(sample = Evenness)) +
+  stat_qq() +
+  stat_qq_line() +
+  facet_wrap(~location) +
+  labs(
+    title = "QQ Plots by Location", 
+    x = "Theoretical Quantiles (Normal Distribution)",
+    y = "Evenness"
+    ) +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+#| label: qq_plot_evenness_phylum
+
+kw_evenness |>
+  drop_na(host_phylum) |>
+  ggplot(aes(sample = Evenness)) +
+  stat_qq() +
+  stat_qq_line() +
+  facet_wrap(~host_phylum) +
+  labs(
+    title = "QQ Plots by Phylum", 
+    x = "Theoretical Quantiles (Normal Distribution)",
+    y = "Evenness"
+    ) +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+#| label: qq_plot_evenness_Scleractinia_family
+
+kw_evenness |>
+  filter(host_order == "Scleractinia") |>
+  drop_na(host_family) |>
+  ggplot(aes(sample = Evenness)) +
+  stat_qq() +
+  stat_qq_line() +
+  facet_wrap(~host_family) +
+  labs(
+    title = "QQ Plots (Scleractinia only) by Family", 
+    x = "Theoretical Quantiles (Normal Distribution)",
+    y = "Evenness"
+    ) +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+#| label: qq_plot_evenness_Scleractinia_symbiont_potential 
+
+kw_evenness |>
+  filter(host_order == "Scleractinia") |>
+  drop_na(symbiont.potential) |>
+  ggplot(aes(sample = Evenness)) +
+  stat_qq() +
+  stat_qq_line() +
+  facet_wrap(~symbiont.potential) +
+  labs(
+    title = "QQ Plots (Scleractinia only) by Symbiont Potential", 
+    x = "Theoretical Quantiles (Normal Distribution)",
+    y = "Evenness"
+    ) +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+#| label: qq_plot_evenness_Scleractinia_bleaching
+
+kw_evenness |>
+  filter(host_order == "Scleractinia") |>
+  drop_na(bleaching) |>
+  ggplot(aes(sample = Evenness)) +
+  stat_qq() +
+  stat_qq_line() +
+  facet_wrap(~bleaching) +
+  labs(
+    title = "QQ Plots (Scleractinia only) by Bleaching", 
+    x = "Theoretical Quantiles (Normal Distribution)",
+    y = "Evenness"
+    ) +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+#| label: qq_plot_evenness_Scleractinia_location
+
+kw_evenness |>
+  filter(host_order == "Scleractinia") |>
+  drop_na(location) |>
+  ggplot(aes(sample = Evenness)) +
+  stat_qq() +
+  stat_qq_line() +
+  facet_wrap(~location) +
+  labs(
+    title = "QQ Plots (Scleractinia only) by Location", 
+    x = "Theoretical Quantiles (Normal Distribution)",
+    y = "Evenness"
+    ) +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+### Entropy
+
+```{r}
+#| label: qq_plot_entropy_phylum
+
+kw_entropy |>
+  drop_na(host_phylum) |>
+  ggplot(aes(sample = MetabolicEntropy)) +
+  stat_qq() +
+  stat_qq_line() +
+  facet_wrap(~host_phylum) +
+  labs(
+    title = "QQ Plots by Phylum", 
+    x = "Theoretical Quantiles (Normal Distribution)",
+    y = "Entropy"
+    ) +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+#| label: qq_plot_entropy_symbiont_potential
+
+kw_entropy |>
+  drop_na(symbiont.potential) |>
+  ggplot(aes(sample = MetabolicEntropy)) +
+  stat_qq() +
+  stat_qq_line() +
+  facet_wrap(~symbiont.potential) +
+  labs(
+    title = "QQ Plots by Symbiont Potential", 
+    x = "Theoretical Quantiles (Normal Distribution)",
+    y = "Entropy"
+    ) +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+#| label: qq_plot_entropy_bleaching
+
+kw_entropy |>
+  drop_na(bleaching) |>
+  ggplot(aes(sample = MetabolicEntropy)) +
+  stat_qq() +
+  stat_qq_line() +
+  facet_wrap(~bleaching) +
+  labs(
+    title = "QQ Plots by Bleaching", 
+    x = "Theoretical Quantiles (Normal Distribution)",
+    y = "Entropy"
+    ) +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+#| label: qq_plot_entropy_location
+
+kw_entropy |>
+  drop_na(location) |>
+  ggplot(aes(sample = MetabolicEntropy)) +
+  stat_qq() +
+  stat_qq_line() +
+  facet_wrap(~location) +
+  labs(
+    title = "QQ Plots by Location", 
+    x = "Theoretical Quantiles (Normal Distribution)",
+    y = "Entropy"
+    ) +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+#| label: qq_plot_entropy_Scleractinia_family
+
+kw_entropy |>
+  filter(host_order == "Scleractinia") |>
+  drop_na(host_family) |>
+  ggplot(aes(sample = MetabolicEntropy)) +
+  stat_qq() +
+  stat_qq_line() +
+  facet_wrap(~host_family) +
+  labs(
+    title = "QQ Plots (Scleractinia only) by Family", 
+    x = "Theoretical Quantiles (Normal Distribution)",
+    y = "Entropy"
+    ) +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+#| label: qq_plot_entropy_Scleractinia_symbiont_potential
+
+kw_entropy |>
+  filter(host_order == "Scleractinia") |>
+  drop_na(symbiont.potential) |>
+  ggplot(aes(sample = MetabolicEntropy)) +
+  stat_qq() +
+  stat_qq_line() +
+  facet_wrap(~symbiont.potential) +
+  labs(
+    title = "QQ Plots (Scleractinia only) by Symbiont Potential", 
+    x = "Theoretical Quantiles (Normal Distribution)",
+    y = "Entropy"
+    ) +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+#| label: qq_plot_entropy_Scleractinia_bleaching
+
+kw_entropy |>
+  filter(host_order == "Scleractinia") |>
+  drop_na(bleaching) |>
+  ggplot(aes(sample = MetabolicEntropy)) +
+  stat_qq() +
+  stat_qq_line() +
+  facet_wrap(~bleaching) +
+  labs(
+    title = "QQ Plots (Scleractinia only) by Bleaching", 
+    x = "Theoretical Quantiles (Normal Distribution)",
+    y = "Entropy"
+    ) +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+#| label: qq_plot_entropy_Scleractinia_location
+
+kw_entropy |>
+  filter(host_order == "Scleractinia") |>
+  drop_na(location) |>
+  ggplot(aes(sample = MetabolicEntropy)) +
+  stat_qq() +
+  stat_qq_line() +
+  facet_wrap(~location) +
+  labs(
+    title = "QQ Plots (Scleractinia only) by Location", 
+    x = "Theoretical Quantiles (Normal Distribution)",
+    y = "Entropy"
+    ) +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+## Shaprio Wilks **for normality** 
+
+### Richness
+
+```{r}
+#| label: shaprio_wilks_richness_phylum
+
+kw_richness |>
+  group_by(host_phylum) |>
+  summarise(
+    W = shapiro.test(MetabolomicRichness)$statistic,
+    p_value = shapiro.test(MetabolomicRichness)$p.value
+  )
+
+```
+
+```{r}
+#| label: shaprio_wilks_richness_symbiont_potential
+
+kw_richness |>
+  group_by(symbiont.potential) |>
+  summarise(
+    W = shapiro.test(MetabolomicRichness)$statistic,
+    p_value = shapiro.test(MetabolomicRichness)$p.value
+  )
+```
+
+```{r}
+#| label: shaprio_wilks_richness_location
+
+kw_richness |>
+  group_by(location) |>
+  summarise(
+    W = shapiro.test(MetabolomicRichness)$statistic,
+    p_value = shapiro.test(MetabolomicRichness)$p.value
+  )
+```
+
+```{r}
+#| label: shaprio_wilks_richness_bleaching
+
+kw_richness |>
+  filter(bleaching != "Pale") |>
+  group_by(bleaching) |>
+  summarise(
+    W = shapiro.test(MetabolomicRichness)$statistic,
+    p_value = shapiro.test(MetabolomicRichness)$p.value
+  )
+```
+
+```{r}
+#| label: shaprio_wilks_richness_Scleractinia_symbiont_potential
+
+kw_richness |>
+  filter(symbiont.potential != "Aposymbiotic") |>
+  filter(host_order == "Scleractinia") |>
+  group_by(symbiont.potential) |>
+  summarise(
+    W = shapiro.test(MetabolomicRichness)$statistic,
+    p_value = shapiro.test(MetabolomicRichness)$p.value
+  )
+```
+
+```{r}
+#| label: shaprio_wilks_richness_Scleractinia_bleaching
+
+kw_richness |>
+  filter(!is.na(bleaching), host_order == "Scleractinia") |>
+  group_by(bleaching) |>
+  summarise(
+    W = shapiro.test(MetabolomicRichness)$statistic,
+    p_value = shapiro.test(MetabolomicRichness)$p.value
+  )
+```
+
+```{r}
+#| label: shaprio_wilks_richness_Scleractinia_location
+
+kw_richness |>
+  filter(host_order == "Scleractinia") |>
+  group_by(location) |>
+  summarise(
+    W = shapiro.test(MetabolomicRichness)$statistic,
+    p_value = shapiro.test(MetabolomicRichness)$p.value
+  )
+```
+
+```{r}
+#| label: shaprio_wilks_richness_Scleractinia_family
+
+kw_richness |>
+  filter(host_family != "Plerogyridae", host_order == "Scleractinia") |>
+  group_by(host_family) |>
+  summarise(
+    W = shapiro.test(MetabolomicRichness)$statistic,
+    p_value = shapiro.test(MetabolomicRichness)$p.value
+  )
+```
+
+### Evenness
+
+```{r}
+#| label: shaprio_wilks_evenness_phylum
+
+kw_evenness |>
+  group_by(host_phylum) |>
+  summarise(
+    W = shapiro.test(Evenness)$statistic,
+    p_value = shapiro.test(Evenness)$p.value
+  )
+```
+
+```{r}
+#| label: shaprio_wilks_evenness_symbiont_potential
+
+kw_evenness |>
+  group_by(symbiont.potential) |>
+  summarise(
+    W = shapiro.test(Evenness)$statistic,
+    p_value = shapiro.test(Evenness)$p.value
+  )
+```
+
+```{r}
+#| label: shaprio_wilks_evenness_bleaching
+
+kw_evenness |>
+  filter(bleaching != "Pale") |>
+  group_by(bleaching) |>
+  summarise(
+    W = shapiro.test(Evenness)$statistic,
+    p_value = shapiro.test(Evenness)$p.value
+  )
+```
+
+```{r}
+#| label: shaprio_wilks_evenness_location
+
+kw_evenness |>
+  group_by(location) |>
+  summarise(
+    W = shapiro.test(Evenness)$statistic,
+    p_value = shapiro.test(Evenness)$p.value
+  )
+```
+
+```{r}
+#| label: shaprio_wilks_evenness_Scleractinia_family
+
+kw_evenness |>
+  filter(host_family != "Plerogyridae", host_order == "Scleractinia") |>
+  group_by(host_family) |>
+  summarise(
+    W = shapiro.test(Evenness)$statistic,
+    p_value = shapiro.test(Evenness)$p.value
+  )
+```
+
+```{r}
+#| label: shaprio_wilks_evenness_Scleractinia_symbiont_potential
+
+kw_evenness |>
+  filter(symbiont.potential != "Aposymbiotic", host_order == "Scleractinia") |>
+  group_by(symbiont.potential) |>
+  summarise(
+    W = shapiro.test(Evenness)$statistic,
+    p_value = shapiro.test(Evenness)$p.value
+  )
+```
+
+```{r}
+#| label: shaprio_wilks_evenness_Scleractinia_bleaching
+
+kw_evenness |>
+  filter(!is.na(bleaching), host_order == "Scleractinia") |>
+  group_by(bleaching) |>
+  summarise(
+    W = shapiro.test(Evenness)$statistic,
+    p_value = shapiro.test(Evenness)$p.value
+  )
+```
+
+```{r}
+#| label: shaprio_wilks_evenness_Scleractinia_location
+
+kw_evenness |>
+  filter(host_order == "Scleractinia") |>
+  group_by(location) |>
+  summarise(
+    W = shapiro.test(Evenness)$statistic,
+    p_value = shapiro.test(Evenness)$p.value
+  )
+```
+
+### Entropy
+
+```{r}
+#| label: shaprio_wilks_entropy_phylum
+
+kw_entropy |>
+  group_by(host_phylum) |>
+  summarise(
+    W = shapiro.test(MetabolicEntropy)$statistic,
+    p_value = shapiro.test(MetabolicEntropy)$p.value
+  )
+```
+
+```{r}
+#| label: shaprio_wilks_entropy_symbiont_potential
+
+kw_entropy |>
+  group_by(symbiont.potential) |>
+  summarise(
+    W = shapiro.test(MetabolicEntropy)$statistic,
+    p_value = shapiro.test(MetabolicEntropy)$p.value
+  )
+```
+
+```{r}
+#| label: shaprio_wilks_entropy_bleaching
+
+kw_entropy |>
+  filter(bleaching != "Pale") |>
+  group_by(bleaching) |>
+  summarise(
+    W = shapiro.test(MetabolicEntropy)$statistic,
+    p_value = shapiro.test(MetabolicEntropy)$p.value
+  )
+```
+
+```{r}
+#| label: shaprio_wilks_entropy_location
+
+kw_entropy |>
+  group_by(location) |>
+  summarise(
+    W = shapiro.test(MetabolicEntropy)$statistic,
+    p_value = shapiro.test(MetabolicEntropy)$p.value
+  )
+```
+
+```{r}
+#| label: shaprio_wilks_entropy_Scleractinia_family
+
+kw_entropy |>
+  filter(host_family != "Plerogyridae", host_order == "Scleractinia") |>
+  group_by(host_family) |>
+  summarise(
+    W = shapiro.test(MetabolicEntropy)$statistic,
+    p_value = shapiro.test(MetabolicEntropy)$p.value
+  )
+```
+
+```{r}
+#| label: shaprio_wilks_entropy_Scleractinia_symbiont_potential
+
+kw_entropy |>
+  filter(symbiont.potential != "Aposymbiotic", host_order == "Scleractinia") |>
+  group_by(symbiont.potential) |>
+  summarise(
+    W = shapiro.test(MetabolicEntropy)$statistic,
+    p_value = shapiro.test(MetabolicEntropy)$p.value
+  )
+```
+
+```{r}
+#| label: shaprio_wilks_entropy_Scleractinia_bleaching
+
+kw_entropy |>
+  filter(!is.na(bleaching), host_order == "Scleractinia") |>
+  group_by(bleaching) |>
+  summarise(
+    W = shapiro.test(MetabolicEntropy)$statistic,
+    p_value = shapiro.test(MetabolicEntropy)$p.value
+  )
+```
+
+```{r}
+#| label: shaprio_wilks_entropy_Scleractinia_location
+
+kw_entropy |>
+  filter(host_order == "Scleractinia") |>
+  group_by(location) |>
+  summarise(
+    W = shapiro.test(MetabolicEntropy)$statistic,
+    p_value = shapiro.test(MetabolicEntropy)$p.value
+  )
+```
+
+## Levene **for Homoscedasticity** 
+
+### Richness
+
+```{r}
+#| label: levene_richness_phylum
+
+leveneTest(MetabolomicRichness ~ host_phylum, data = kw_richness)
+
+```
