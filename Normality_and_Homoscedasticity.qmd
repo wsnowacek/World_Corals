@@ -339,7 +339,7 @@ kw_richness |>
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
-## **QQ plots to visualize normality** 
+## **QQ plots to visualize normality**
 
 ### Richness
 
@@ -769,7 +769,7 @@ kw_entropy |>
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
-## Shaprio Wilks **for normality** 
+## Shaprio Wilks **for normality**
 
 ### Richness
 
@@ -1058,7 +1058,7 @@ kw_entropy |>
   )
 ```
 
-## Levene **for Homoscedasticity** 
+## Levene **for Homoscedasticity**
 
 ### Richness
 
@@ -1239,7 +1239,7 @@ leveneTest(MetabolicEntropy ~ factor(location),data = kw_entropy |>
            )
 ```
 
-## Dendrogram 
+## Dendrogram
 
 ```{r}
 avg_metabolite_values_family <- Corals_clean |>
