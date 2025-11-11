@@ -4,3 +4,4 @@
 *.Ruserdata
 .Rproj.user
 /venv_world_corals/
+.RData*

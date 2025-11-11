@@ -246,7 +246,7 @@ ggplot(pcoa_points, aes(x = PCoA1, y = PCoA2, color = symbiont.potential, fill =
   theme(legend.position = "right")
 ```
 
-## PERMANOVA for Scleractinia 
+## PERMANOVA for Scleractinia
 
 ```{r}
 #| label: Scleractinia_only_df
