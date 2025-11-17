@@ -25,7 +25,7 @@ ITS2_clean   <- read.csv("ITS2_clean.csv")
 met_summary_coral_only <- read.csv("met_summary_coral_only.csv")
 ```
 
-## PERMANOVAs and PCoAs per metadata
+## Metadata PERMANOVAs and PCoAs
 
 ```{r}
 #| label: permanova_phylum
@@ -246,7 +246,7 @@ ggplot(pcoa_points, aes(x = PCoA1, y = PCoA2, color = symbiont.potential, fill =
   theme(legend.position = "right")
 ```
 
-## PERMANOVA for Scleractinia
+## Scleractinia PERMANOVA and PCoA
 
 ```{r}
 #| label: Scleractinia_only_df

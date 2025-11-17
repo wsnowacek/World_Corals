@@ -57,6 +57,10 @@ kw_richness <- kw_richness %>% select(MetabolomicRichness, everything())
 ```
 
 ```{r}
+richness_df <- richness_df %>% select(MetabolomicRichness, everything())
+```
+
+```{r}
 #| label: kw_test_richness_by_phylum
 
 kruskal.test(host_phylum ~ MetabolomicRichness, data = kw_richness)
@@ -1264,7 +1268,7 @@ mat_family <- mat_family %>%
 ```
 
 ```{r}
-bray_curtis_family <- vegdist (sqrt (mat_), method = 'bray') 
+bray_curtis_family <- vegdist (sqrt (mat_family), method = 'bray') 
 # percentage cover data are transformed by square root
 cluster.single <- hclust (d = bray_curtis_family, method = 'single')
 cluster.complete <- hclust (bray_curtis_family, 'complete')
@@ -1288,7 +1292,6 @@ rect.hclust(cluster.average, k = 10, border = "blue")
 ```{r}
 op <- par(mar = c(5, 4, 4, 12))
 
-plot(
-  as.dendrogram(cluster.average)
+plot(as.dendrogram(cluster.average))
 
 ```

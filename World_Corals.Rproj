@@ -14,4 +14,4 @@ LaTeX: pdfLaTeX
 
 PythonType: virtualenv
 PythonVersion: 3.9.6
-PythonPath: venv_world_corals/bin/python
+PythonPath: venv_world_corals/bin/python3

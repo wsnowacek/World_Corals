@@ -9,7 +9,6 @@ editor: visual
 ```{r}
 # install.packages("randomForest")
 # install.packages("vegan")
-library(vegan)
 ```
 
 ```{r}
@@ -19,15 +18,15 @@ library(tidyverse)
 library(knitr)
 library(readxl)
 library(data.table)
+library(vegan)
 ```
 
 ```{r}
 #| label: read_csvs
 
-Corals_raw <- read_excel("Corals_raw.xlsx")
-ITS2 <- read.csv("ITS2.csv")
-Corals_clean <- read.csv("Corals_clean.csv")
-ITS2_clean   <- read.csv("ITS2_clean.csv")
+Corals_clean <- read.csv("/Users/ellaandonov/World_Corals/Cleaned data CSVs/Corals_clean.csv")
+ITS2_clean   <- read.csv("/Users/ellaandonov/World_Corals/Cleaned data CSVs/ITS2_clean.csv")
+met_summary_coral_only <- read.csv("/Users/ellaandonov/World_Corals/Metabolite Summary Data/met_summary_coral_only.csv")
 ```
 
 ## Unique species graphs
