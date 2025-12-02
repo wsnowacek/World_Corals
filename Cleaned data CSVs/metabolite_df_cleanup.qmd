@@ -1,0 +1,182 @@
+---
+title: "metabolite_df_cleanup"
+format: html
+---
+
+## Library and Data
+
+```{r}
+#| label: install_packages
+
+#install.packages("tidyverse")
+```
+
+```{r}
+#| label: read_csvs
+
+metabolite_df <- read.csv("/Users/ellaandonov/World_Corals/Raw data CSVs/Ty_superset_metabolites_coraldb_updated.csv")
+Corals_clean <- read.csv("/Users/ellaandonov/World_Corals/Cleaned data CSVs/Corals_clean.csv")
+```
+
+```{r}
+#| label: library_function 
+
+library(tidyverse)
+library(knitr)
+library(readxl)
+library(data.table)
+library(vegan)
+library(dplyr)
+library(tidyr)
+library(stringr)
+library(purrr)
+```
+
+## Splitting data
+
+```{r}
+#| label: seperate-mass-to-charge
+
+metabolite_clean <- metabolite_df %>%
+  # Remove the leading "x"
+  mutate(clean_str = str_sub(metabolite, 2)) %>%
+  
+  # Split into multiple columns
+  separate(clean_str, into = paste0("part_", 1:10), sep = "_", fill = "right") %>%
+  
+  # Rename the first part to mass_charge_ratio
+  rename(mass_charge_ratio = part_2) |>
+
+  relocate(mass_charge_ratio, .after = metabolite) |>
+  
+  mutate(mass_charge_ratio = as.numeric(mass_charge_ratio))
+
+```
+
+```{r}
+#| label: new-df-seprated-mass-to-charge
+
+same_mass_ratio <- metabolite_clean %>%
+  # keep only the needed columns
+  select(mass_charge_ratio, metabolite) %>%
+  
+  # group by mass/charge ratio
+  group_by(mass_charge_ratio) %>%
+  
+  # give each metabolite within a group its own index
+  mutate(met_idx = row_number()) %>%
+  ungroup() %>%
+  
+  # pivot wider: met_idx becomes met_1, met_2, ...
+  pivot_wider(
+    names_from = met_idx,
+    values_from = metabolite,
+    names_prefix = "met_"
+  ) %>%
+  
+  # sort by mass/charge ratio
+  arrange(mass_charge_ratio)
+
+```
+
+## Merging data for metabolites with same mass charge ratio
+
+```{r}
+corals_met_ratio <- Corals_clean
+```
+
+```{r}
+#| label: replace-metabolite-id-with-mass-ratio
+
+# Build lookup: names = metabolite labels, values = mass_charge_ratio (as character)
+lookup <- same_mass_ratio %>%
+  select(mass_charge_ratio, starts_with("met_")) %>%
+  pivot_longer(cols = starts_with("met_"),
+               names_to = "met_col",
+               values_to = "metabolite") %>%
+  filter(!is.na(metabolite)) %>%
+  distinct(metabolite, mass_charge_ratio) %>%
+  mutate(mass_charge_ratio = as.character(mass_charge_ratio)) %>%
+  deframe()   # named vector: names = metabolite, values = mass_charge_ratio (string)
+
+# Find which columns in corals_met_ratio match metabolite labels
+cols_to_rename <- intersect(names(corals_met_ratio), names(lookup))
+
+# If none match, keep original
+if (length(cols_to_rename) == 0) {
+  message("No column names in corals_met_ratio matched metabolite labels in same_mass_ratio.")
+  corals_met_ratio_renamed <- corals_met_ratio
+} else {
+  # Get new names (may contain duplicates) in the same order as cols_to_rename
+  new_names <- lookup[cols_to_rename]
+  
+  # Perform replacement without enforcing uniqueness:
+  corals_met_ratio <- corals_met_ratio
+  names(corals_met_ratio)[match(cols_to_rename, names(corals_met_ratio))] <- unname(new_names)
+}
+```
+
+```{r}
+#| label: combine-same-mass-ratios
+
+# robust recombine that preserves non-numeric columns exactly (no accidental NA shifts)
+df <- corals_met_ratio  # original
+n <- nrow(df)
+
+# (re)compute numeric grouping & summed_df as before if you don't have it already
+coerced <- lapply(df, function(x) suppressWarnings(as.numeric(as.character(x))))
+is_numeric_like <- sapply(coerced, function(x) any(!is.na(x)))
+numeric_cols <- names(df)[is_numeric_like]
+non_numeric_cols <- names(df)[!is_numeric_like]
+
+numeric_df <- if (length(numeric_cols) > 0) {
+  as.data.frame(coerced[numeric_cols], stringsAsFactors = FALSE, check.names = FALSE)
+} else {
+  data.frame()
+}
+
+if (ncol(numeric_df) > 0) {
+  groups <- split.default(numeric_df, names(numeric_df))
+  summed_list <- lapply(groups, function(subdf) rowSums(as.matrix(subdf), na.rm = TRUE))
+  summed_df <- as.data.frame(summed_list, stringsAsFactors = FALSE, check.names = FALSE)
+  # restore NA where all were NA in original group
+  all_na_mask <- lapply(groups, function(subdf) apply(is.na(as.matrix(subdf)), 1, all))
+  for (nm in names(all_na_mask)) {
+    mask <- all_na_mask[[nm]]
+    if (any(mask)) summed_df[[nm]][mask] <- NA_real_
+  }
+} else {
+  summed_df <- data.frame()
+}
+
+# --- SAFE recombine by position (no rowname alignment) ---
+# Start with an empty data.frame with correct number of rows
+result <- data.frame(rowid = seq_len(n))
+
+# Add non-numeric columns exactly as in original (preserve types/values)
+if (length(non_numeric_cols) > 0) {
+  result[non_numeric_cols] <- df[non_numeric_cols]
+}
+
+# Add the summed numeric columns (these are numeric)
+if (ncol(summed_df) > 0) {
+  # ensure same number of rows
+  if (nrow(summed_df) != n) stop("Row count mismatch between summed_df and original df")
+  result[names(summed_df)] <- summed_df
+}
+
+# remove helper column
+result$rowid <- NULL
+
+# final output
+corals_met_ratio <- result
+
+```
+
+```{r}
+#| label: save-as-csv
+
+write.csv(corals_met_ratio, "corals_met_ratio.csv", row.names = FALSE)
+```
+
+## Merging data

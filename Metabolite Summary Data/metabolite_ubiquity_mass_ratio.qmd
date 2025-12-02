@@ -1,0 +1,288 @@
+---
+title: "metabolite_ubiquity_mass_ratio"
+format: html
+---
+
+## Library and Data
+
+```{r}
+#| label: install_packages
+
+#install.packages("tidyverse")
+#install.packages("rstatix")
+#install.packages("ggpubr")
+```
+
+```{r}
+#| label: load_packages
+
+library(tidyverse)
+library(rstatix)
+library(ggpubr)
+library(knitr)
+library(readxl)
+library(data.table)
+library(vegan)
+library(car)
+library(scales)
+```
+
+```{r}
+corals_met_ratio <- read.csv("/Users/ellaandonov/World_Corals/Cleaned data CSVs/corals_met_ratio.csv")
+```
+
+## Ubiquity graphs combined mass charge ratios
+
+```{r}
+#| label: Metabolite_ubiquity_vs_average_abundance
+
+# helper: choose a y-axis label function compatible with the installed 'scales' version
+y_labels_fn <- if (packageVersion("scales") >= "1.2.0") {
+  # new API (scales >= 1.2.0)
+  label_number(scale_cut = cut_short_scale())
+} else {
+  # fallback for older scales
+  label_number_si()
+}
+
+# Select metabolite columns (start with "x") from the new data frame
+metabolite_data <- corals_met_ratio %>%
+  select(starts_with("x"))
+
+# Calculate ubiquity (% samples with metabolite present) and average abundance
+metabolite_summary <- metabolite_data %>%
+  pivot_longer(
+    cols = everything(),
+    names_to = "metabolite",
+    values_to = "value"
+  ) %>%
+  group_by(metabolite) %>%
+  summarise(
+    ubiquity = mean(value > 0) * 100,
+    avg_abundance = mean(value, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+ggplot(metabolite_summary, aes(x = ubiquity, y = avg_abundance)) +
+  geom_point(color = "#6d9eeb", alpha = 0.8, size = 2) +  # circles
+  scale_y_continuous(labels = y_labels_fn) +
+  labs(
+    x = "Ubiquity (% samples present)",
+    y = "Average abundance",
+    title = "Metabolite ubiquity vs average abundance"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.background   = element_rect(fill = "#000042", color = NA),
+    panel.background  = element_rect(fill = "#000042", color = NA),
+    panel.grid.major  = element_line(color = "gray50"),
+    panel.grid.minor  = element_blank(),
+    plot.title        = element_text(hjust = 0.5, face = "bold", color = "white"),
+    axis.title        = element_text(color = "white"),
+    axis.text         = element_text(color = "white"),
+    axis.line         = element_blank(),   # removes x and y axis lines
+    legend.position   = "none"
+  )
+
+```
+
+```{r}
+#| label: Metabolite_ubiquity_vs_average_abundance_corals
+
+# helper: choose a y-axis label function compatible with the installed 'scales' version
+y_labels_fn <- if (packageVersion("scales") >= "1.2.0") {
+  # new API (scales >= 1.2.0)
+  label_number(scale_cut = cut_short_scale())
+} else {
+  # fallback for older scales
+  label_number_si()
+}
+
+# --- Compute presence / ubiquity overall and within coral samples ---
+met_presence_long <- corals_met_ratio %>%
+  pivot_longer(
+    cols = starts_with("x"),
+    names_to = "metabolite",
+    values_to = "value"
+  ) %>%
+  mutate(present = value > 0)
+
+ubiquity_overall <- met_presence_long %>%
+  group_by(metabolite) %>%
+  summarise(ubiquity_all = mean(present) * 100, .groups = "drop")
+
+ubiquity_corals <- met_presence_long %>%
+  filter(host_order == "Scleractinia") %>%
+  group_by(metabolite) %>%
+  summarise(ubiquity_coral = mean(present) * 100, .groups = "drop")
+
+met_summary <- ubiquity_overall %>%
+  left_join(ubiquity_corals, by = "metabolite") %>%
+  mutate(ubiquity_coral = ifelse(is.na(ubiquity_coral), 0, ubiquity_coral))
+
+coral_present <- met_presence_long %>%
+  filter(host_order == "Scleractinia", present) %>%
+  distinct(metabolite)
+
+noncoral_present <- met_presence_long %>%
+  filter(host_order != "Scleractinia", present) %>%
+  distinct(metabolite)
+
+coral_only <- setdiff(coral_present$metabolite, noncoral_present$metabolite)
+
+met_summary <- met_summary %>%
+  left_join(
+    met_presence_long %>%
+      group_by(metabolite) %>%
+      summarise(avg_abundance = mean(value, na.rm = TRUE), .groups = "drop"),
+    by = "metabolite"
+  ) %>%
+  mutate(category = ifelse(metabolite %in% coral_only, "Coral-only", "Other"))
+
+# --- compute x position for vertical line (max overall ubiquity among coral-only mets) ---
+x_vline_pos <- met_summary %>%
+  filter(category == "Coral-only") %>%
+  pull(ubiquity_all) %>%
+  { if(length(.) == 0) NA_real_ else max(., na.rm = TRUE) }
+
+# --- Plot: map fill to category so legend is generated; use override.aes to force legend key fills ---
+ggplot(met_summary, aes(x = ubiquity_all, y = avg_abundance, fill = category)) +
+  geom_point(
+    data = subset(met_summary, category == "Other"),
+    aes(x = ubiquity_all, y = avg_abundance),
+    shape = 21, size = 2.8, color = "white",
+    alpha = 0.55, stroke = 0.3, show.legend = TRUE
+  ) +
+  geom_point(
+    data = subset(met_summary, category == "Coral-only"),
+    aes(x = ubiquity_all, y = avg_abundance),
+    shape = 21, size = 2.8, color = "white",
+    alpha = 0.6, stroke = 0.35, show.legend = TRUE
+  ) +
+  { if (!is.na(x_vline_pos)) geom_vline(xintercept = x_vline_pos, color = "white", linetype = "dashed", linewidth = 0.6) else NULL } +
+  scale_fill_manual(
+    values = c("Coral-only" = "red", "Other" = "white"),
+    breaks = c("Coral-only", "Other"),
+    labels = c("Coral-only (Scleractinia)", "Other")
+  ) +
+  guides(
+    fill = guide_legend(
+      override.aes = list(
+        fill = c("red", "white"),
+        color = "white",
+        shape = 21,
+        size = 4,
+        alpha = c(0.6, 0.55),
+        stroke = 0.35
+      )
+    )
+  ) +
+  scale_y_continuous(labels = y_labels_fn) +
+  scale_x_continuous(
+    limits = c(0, 100),
+    breaks = seq(0, 100, by = 20),
+    labels = as.character(seq(0, 100, by = 20))
+  ) +
+  labs(
+    x = "Ubiquity (% samples present)",
+    y = "Average abundance",
+    title = "Metabolite ubiquity vs average abundance"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.background   = element_rect(fill = "#000042", color = NA),
+    panel.background  = element_rect(fill = "#000042", color = NA),
+    panel.grid.major  = element_line(color = "gray40"),
+    panel.grid.minor  = element_blank(),
+    plot.title        = element_text(hjust = 0.5, face = "bold", color = "white"),
+    axis.title        = element_text(color = "white"),
+    axis.text         = element_text(color = "white"),
+    axis.line         = element_blank(),
+    legend.position   = "bottom",
+    legend.title      = element_blank(),
+    legend.text       = element_text(color = "white"),
+    legend.background = element_rect(fill = "#000042", color = NA),
+    legend.key        = element_rect(fill = "#000042", color = NA)
+  )
+
+```
+
+```{r}
+#| label: dataset_with_Scleractinia_metabolites
+
+# 1) Long-format presence/values for all samples
+met_presence_long <- corals_met_ratio %>%
+  pivot_longer(
+    cols = starts_with("x"),
+    names_to = "metabolite",
+    values_to = "value"
+  ) %>%
+  mutate(present = value > 0)
+
+# 2) Ubiquity overall (all samples) and ubiquity in corals (Scleractinia)
+ubiquity_overall <- met_presence_long %>%
+  group_by(metabolite) %>%
+  summarise(ubiquity_overall = mean(present) * 100, .groups = "drop")
+
+ubiquity_in_corals <- met_presence_long %>%
+  filter(host_order == "Scleractinia") %>%
+  group_by(metabolite) %>%
+  summarise(
+    percent_in_corals = mean(present) * 100,  # percent of coral samples metabolite is found in
+    n_corals_present = sum(present),          # number of coral samples with metabolite
+    n_corals_total = n(),                     # total coral samples used for denominator
+    .groups = "drop"
+  )
+
+# 3) Identify metabolites present in non-coral samples
+met_in_noncoral <- met_presence_long %>%
+  filter(host_order != "Scleractinia", present) %>%
+  distinct(metabolite) %>%
+  pull(metabolite)
+
+# 4) Coral‐specific metabolites: present in corals but absent from all non-coral samples
+coral_specific_mets <- ubiquity_in_corals %>%
+  filter(percent_in_corals > 0) %>%      # present ≥ once in corals
+  filter(!metabolite %in% met_in_noncoral) %>%
+  pull(metabolite)
+
+# 5) Build metabolite-level summary for coral-specific metabolites
+met_ratio_scler_only <- ubiquity_in_corals %>%
+  filter(metabolite %in% coral_specific_mets) %>%
+  # add overall ubiquity and average abundance (across all samples)
+  left_join(ubiquity_overall, by = "metabolite") %>%
+  left_join(
+    met_presence_long %>%
+      group_by(metabolite) %>%
+      summarise(avg_abundance = mean(value, na.rm = TRUE), .groups = "drop"),
+    by = "metabolite"
+  ) %>%
+  arrange(desc(percent_in_corals), desc(avg_abundance)) %>%
+  select(percent_in_corals, metabolite, ubiquity_overall, avg_abundance,
+         n_corals_present, n_corals_total)
+
+# 6) Sample-level dataset: coral metadata + coral-only metabolite columns
+coral_samples_with_coralonly_mets <- corals_met_ratio %>%
+  filter(host_order == "Scleractinia") %>%
+  select(
+    # keep metadata columns (all non-metabolite)
+    -starts_with("x"),
+    # then keep only coral-specific metabolite columns
+    all_of(coral_specific_mets)
+  )
+
+met_ratio_scler_only
+```
+
+```{r}
+#| label: metabolite_mass_ratio_for_sclerictinia_csv
+
+# Save coral-specific metabolite summary as a CSV file
+write.csv(
+  met_ratio_scler_only,
+  file = "met_ratio_scler_only.csv",
+  row.names = FALSE
+)
+```
+
+## Ubiquity graphs by metabolite compound class

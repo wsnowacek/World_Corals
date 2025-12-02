@@ -1198,14 +1198,7 @@ coral_samples_with_coralonly_mets <- Corals_clean %>%
     all_of(coral_specific_mets)
   )
 
-# 7) Optional: write outputs to CSV for downstream use
-# write.csv(met_summary_coral_only, "met_summary_coral_only.csv", row.names = FALSE)
-# write.csv(coral_samples_with_coralonly_mets, "coral_samples_coralonly_mets.csv", row.names = FALSE)
-
-# 8) Inspect the results
-message("Number of coral-specific metabolites found: ", length(coral_specific_mets))
-met_summary_coral_only   # metabolite-level table, ranked by percent_in_corals
-# coral_samples_with_coralonly_mets  # sample-level table (uncomment to view)
+met_summary_coral_only   
 
 ```
 
@@ -1218,9 +1211,6 @@ write.csv(
   file = "met_summary_coral_only.csv",
   row.names = FALSE
 )
-
-message("✅ File saved: met_summary_coral_only.csv")
-
 ```
 
 ## Need ID
