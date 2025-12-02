@@ -30,7 +30,6 @@ library(car)
 #| label: read_csvs
 
 Corals_clean <- read.csv("/Users/ellaandonov/World_Corals/Cleaned data CSVs/Corals_clean.csv")
-ITS2_clean   <- read.csv("/Users/ellaandonov/World_Corals/Cleaned data CSVs/ITS2_clean.csv")
 met_summary_coral_only <- read.csv("/Users/ellaandonov/World_Corals/Metabolite Summary Data/met_summary_coral_only.csv")
 ```
 
@@ -54,10 +53,6 @@ kw_richness <- Corals_clean %>%
 #brought richness column to front for vizualization 
 kw_richness <- kw_richness %>% select(MetabolomicRichness, everything())
 
-```
-
-```{r}
-richness_df <- richness_df %>% select(MetabolomicRichness, everything())
 ```
 
 ```{r}
@@ -1294,4 +1289,54 @@ op <- par(mar = c(5, 4, 4, 12))
 
 plot(as.dendrogram(cluster.average))
 
+```
+
+## ANOVA
+
+ANOVAs were only run on the groups that had non-significant values for the levene test.
+
+-   These values (p-value \> 0.05) means you fail to reject the null hypothesis, suggesting the variances are equal and the assumption is met. 
+
+-   If the p-value is less than the chosen significance level (p-value \< 0.05), you reject the null hypothesis. This means the variances are not equal, and you have violated the assumption of homoscedasticity.
+
+```{r}
+#| label: richness_bleaching_anova
+
+richness_bleaching_anova <- aov(MetabolomicRichness ~ bleaching, data = kw_richness)
+summary(richness_bleaching_anova)
+
+#post-hoc test
+TukeyHSD(richness_bleaching_anova)
+```
+
+```{r}
+#| label: evenness_bleaching_anova
+
+evenness_bleaching_anova <- aov(Evenness ~ bleaching, data = kw_evenness)
+summary(evenness_bleaching_anova)
+
+#post-hoc test
+TukeyHSD(evenness_bleaching_anova)
+```
+
+```{r}
+#| label: entropy_phylum_anova
+
+entropy_phylum_anova <- aov(MetabolicEntropy ~ host_phylum, data = kw_entropy)
+summary(entropy_phylum_anova)
+
+#post-hoc test
+TukeyHSD(entropy_phylum_anova)
+```
+
+```{r}
+#| label: evenness_bleaching_scler_anova
+
+kw_evenness_scler <- kw_evenness %>%
+  filter(host_order == "Scleractinia")
+
+evenness_bleaching_scler_anova <- aov(Evenness ~ bleaching, data = kw_evenness_scler)
+summary(evenness_bleaching_scler_anova)
+
+TukeyHSD(evenness_bleaching_scler_anova)
 ```

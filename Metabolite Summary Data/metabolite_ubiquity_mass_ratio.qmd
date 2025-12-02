@@ -554,7 +554,7 @@ ubiquity_scler_df <- Corals_clean %>%
     .groups = "drop"
   )
 
-# get only shared metabolites (as you had)
+# get only shared metabolites 
 shared_metabolites <- merged_metabolite_data %>%
   semi_join(met_summary_coral_only, by = "metabolite")
 
@@ -562,9 +562,9 @@ shared_metabolites <- merged_metabolite_data %>%
 plot_data_shared_scler <- shared_metabolites %>%
   left_join(ubiquity_scler_df, by = "metabolite") %>%
   # if any metabolites are missing (no scleractinia samples with that metabolite),
-  # set ubiquity to 0 (or keep NA if you prefer)
+  # set ubiquity to 0 
   mutate(ubiquity_scler = ifelse(is.na(ubiquity_scler), 0, ubiquity_scler)) %>%
-  # drop Unknown pathway if desired
+  # drop Unknown pathway 
   filter(npc_number_pathway != "Unknown")
 
 # Plot using ubiquity_scler on the x-axis
@@ -613,8 +613,6 @@ ggplot(plot_data_shared_scler,
     legend.spacing.x  = unit(0.2, "cm"),
     legend.margin     = margin(t = 0, b = 0),
     legend.box.margin = margin(t = -5),
-
     plot.margin       = margin(10, 10, 10, 10)
   )
-
 ```
