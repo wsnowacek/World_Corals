@@ -19,6 +19,7 @@ library(knitr)
 library(readxl)
 library(data.table)
 library(vegan)
+library(scales)
 ```
 
 ```{r}
@@ -32,81 +33,7 @@ met_summary_coral_only <- read.csv("/Users/ellaandonov/World_Corals/Metabolite S
 ## Unique species graphs
 
 ```{r}
-#| label: Scleractinia_species_per_loaction
-
-# 1. Build presence data for Scleractinia: one row per (location, host_species)
-sclero_presence <- Corals_clean %>%
-  filter(!is.na(location),
-         !is.na(host_species),
-         !is.na(host_order),
-         host_order == "Scleractinia") %>%
-  distinct(location, host_species) %>%
-  mutate(present = 1L)
-
-# 2. Sum species per location (for label positions)
-species_count <- sclero_presence %>%
-  group_by(location) %>%
-  summarise(n_species = n_distinct(host_species), .groups = "drop")
-
-# 3. Get vector of species (stable ordering)
-species_vec <- sclero_presence %>%
-  distinct(host_species) %>%
-  arrange(host_species) %>%   # alphabetical order; change if you want another order
-  pull(host_species)
-
-n_species <- length(species_vec)
-if (n_species == 0) stop("No Scleractinia species found in the dataset (after filtering).")
-
-# 4. Generate maximally distinct colors using HCL hue spacing
-#    - h: huges spaced across 15..375 degrees
-#    - c (chroma) and l (luminance) chosen for good contrast
-h_vals <- seq(15, 375, length.out = n_species + 1)[1:n_species]
-species_colors <- grDevices::hcl(h = h_vals, c = 100, l = 65)
-names(species_colors) <- species_vec
-
-# 5. Print species-color mapping as a table and save CSV
-species_mapping <- tibble(host_species = species_vec,
-                          color = species_colors[species_vec]) %>%
-  arrange(host_species)
-
-cat("\nSpecies -> Color mapping (saved to species_color_mapping.csv):\n")
-print(species_mapping)
-
-# write to CSV for external reference
-readr::write_csv(species_mapping, "species_color_mapping.csv")
-
-# 6. Plot: stacked bars (each species contributes 1 to the stack) with no legend
-p <- ggplot(sclero_presence, aes(x = factor(location, 
-                                            levels = c("Hawaii", "Sri Lanka", "Curaçao", "North Carolina")), 
-                                 y = present, fill = host_species)) +
-  geom_col(position = "stack", width = 0.7, color = "black") +
-  # label total unique species above each bar
-  geom_text(data = species_count,
-            aes(x = location, y = n_species + 0.3, label = n_species),
-            inherit.aes = FALSE,
-            color = "white", size = 4.5, fontface = "bold") +
-  scale_y_continuous(expand = expansion(mult = c(0, 0.12))) +
-  scale_fill_manual(values = species_colors) +   # assign distinct colors
-  labs(title = "Unique Scleractinia Species per Location",
-       x = "Location",
-       y = "Count of Unique Species") +
-  theme_minimal(base_size = 13) +
-  theme(
-    plot.title = element_text(hjust = 0.5, face = "bold", size = 16, color = "white"),
-    axis.title = element_text(size = 13, color = "white"),
-    axis.text = element_text(size = 11, color = "white"),
-    legend.position = "none",      # remove legend from plot
-    plot.background = element_rect(fill = "#000042", color = NA),
-    panel.background = element_rect(fill = "#000042", color = NA),
-    panel.grid.major = element_line(color = "gray40"),
-    panel.grid.minor = element_line(color = "gray30")
-  )
-
-print(p)
-```
-
-```{r}
-#| label: Overall_Species_Richness_per_Location
+#| label: number_of_species_per_Location
 
 # Overall species richness per location (exclude NA)
 location_richness <- Corals_clean %>%
@@ -114,14 +41,23 @@ location_richness <- Corals_clean %>%
   group_by(location) %>%
   summarise(Richness = n_distinct(host_species), .groups = "drop")
 
-# Bar plot with styling
 ggplot(location_richness, aes(
   x = factor(location, levels = c("Hawaii", "Sri Lanka", "Curaçao", "North Carolina")),
-  y = Richness, fill = location
+  y = Richness,
+  fill = location
 )) +
   geom_col() +
+  
+  # ---- Add number above bars ----
+  geom_text(
+    aes(label = Richness),
+    vjust = -0.4,
+    size = 5,
+    fontface = "bold"
+  ) +
+  
   labs(
-    title = "Overall Species Richness per Location",
+    title = "Number Species per Location",
     x = "Location",
     y = "Number of Unique Species"
   ) +
@@ -131,56 +67,9 @@ ggplot(location_richness, aes(
     axis.title = element_text(size = 14),
     axis.text  = element_text(size = 12),
     legend.position = "none"   # hide redundant legend
-  )
-```
-
-```{r}
-#| label: proportion_of_coral_by_species
-
-# prepare data: unique species per location × host_species (only Hexacorallia & Octocorallia)
-prop_df <- Corals_clean %>%
-  filter(!is.na(location),
-         !is.na(host_species),
-         host_class %in% c("Hexacorallia", "Octocorallia")) %>%
-  group_by(location, host_species) %>%
-  summarise(n_records = n(), .groups = "drop") %>%   # keep counts
-  mutate(location = factor(location, 
-                           levels = c("Hawaii", "Sri Lanka", "Curaçao", "North Carolina"))) %>%
-  group_by(location) %>%
-  mutate(prop = n_records / sum(n_records)) %>%
-  ungroup()
-
-# how many unique species?
-n_species <- n_distinct(prop_df$host_species)
-
-# generate a diverse palette (enough colors for all species)
-diverse_palette <- grDevices::colorRampPalette(
-  c("#ebf2ff", "#6d9eeb", "#3c78d8",   # blues
-    "#a2d9a2", "#3fa34d", "#145214",   # greens
-    "#e0c2f2", "#9b59b6", "#4b0082")   # purples
-)(n_species)
-
-# 100% stacked bar chart filled by species
-ggplot(prop_df, aes(x = location, y = prop, fill = host_species)) +
-  geom_col(position = "fill", width = 0.6) +
-  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
-  scale_fill_manual(values = diverse_palette) +
-  labs(
-    title = "Proportion of Coral by Species",
-    x = "Location",
-    y = "Proportion of Unique Species"
   ) +
-  theme_minimal(base_size = 14) +
-  theme(
-    plot.background   = element_rect(fill = "#000042", color = NA),
-    panel.background  = element_rect(fill = "#000042", color = NA),
-    legend.position   = "none",   # hide legend (too many species to show clearly)
-    plot.title = element_text(hjust = 0.5, size = 16, face = "bold", color = "white"),
-    axis.title = element_text(size = 14, color = "white"),
-    axis.text  = element_text(size = 12, color = "white"),
-    panel.grid.major = element_line(color = "gray40"),
-    panel.grid.minor = element_line(color = "gray30")
-  )
+  # expand y-axis so text fits comfortably above bars
+  scale_y_continuous(expand = expansion(mult = c(0, 0.1)))
 ```
 
 ```{r}
@@ -196,17 +85,31 @@ phylum_richness <- Corals_clean %>%
 ggplot(phylum_richness, aes(x = fct_reorder(host_phylum, Richness), 
                             y = Richness, fill = host_phylum)) +
   geom_col() +
-  scale_fill_brewer(palette = "Dark2") +  # new distinct color palette
-  labs(title = "Species per Phylum",
-       x = "Phylum",
-       y = "Number of Unique Species") +
+  
+  # ---- Add number labels above bars ----
+  geom_text(
+    aes(label = Richness),
+    vjust = -0.4,
+    size = 5,
+    fontface = "bold"
+  ) +
+  
+  scale_fill_brewer(palette = "Dark2") +  # distinct colors
+  labs(
+    title = "Species per Phylum",
+    x = "Phylum",
+    y = "Number of Unique Species"
+  ) +
   theme_minimal() +
   theme(
     plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
     axis.title = element_text(size = 14),
     axis.text  = element_text(size = 12),
     legend.position = "none"
-  )
+  ) +
+  
+  # Give space above bars for the labels
+  scale_y_continuous(expand = expansion(mult = c(0, 0.1)))
 ```
 
 ```{r}
@@ -226,6 +129,15 @@ ggplot(symbiont_richness, aes(x = symbiont.potential,
                               y = Richness, 
                               fill = symbiont.potential)) +
   geom_col() +
+  
+  # ------- Add labels above bars -------
+  geom_text(
+    aes(label = Richness),
+    vjust = -0.4,
+    size = 5,
+    fontface = "bold"
+  ) +
+  
   scale_fill_manual(values = coral_colors) +
   labs(title = "Species by Symbiont Potential",
        x = "Symbiont Potential",
@@ -236,20 +148,10 @@ ggplot(symbiont_richness, aes(x = symbiont.potential,
     axis.title = element_text(size = 14),
     axis.text  = element_text(size = 12),
     legend.position = "none"
-  )
-```
-
-```{r}
-#| label: unique_aposymbiotic_species_corals
-
-# Unique aposymbiotic species within Hexacorallia & Octocorallia, with phylum + genus
-aposymbiotic_species <- Corals_clean %>%
-  filter(symbiont.potential == "Aposymbiotic",
-         !is.na(host_species)) %>%
-  distinct(host_phylum, host_class, host_genus, host_species) %>%
-  arrange(host_phylum, host_class, host_genus, host_species)
-
-aposymbiotic_species
+  ) +
+  
+  # Give extra space above bars for labels
+  scale_y_continuous(expand = expansion(mult = c(0, 0.1)))
 ```
 
 ```{r}
@@ -258,7 +160,7 @@ aposymbiotic_species
 richness_bleaching <- Corals_clean %>%
   filter(!is.na(bleaching),
          !is.na(host_species),
-         host_class %in% c("Hexacorallia", "Octocorallia")) %>%
+         host_order == "Scleractinia") %>%   
   group_by(bleaching) %>%
   summarise(Richness = n_distinct(host_species), .groups = "drop") %>%
   mutate(bleaching = factor(bleaching, levels = c("NB", "Pale", "B")))
@@ -266,6 +168,15 @@ richness_bleaching <- Corals_clean %>%
 # Bar plot
 ggplot(richness_bleaching, aes(x = bleaching, y = Richness, fill = bleaching)) +
   geom_col(width = 0.7) +
+  
+  # ---- Add numbers above bars ----
+  geom_text(
+    aes(label = Richness),
+    vjust = -0.4,
+    size = 5,
+    fontface = "bold"
+  ) +
+  
   scale_fill_brewer(palette = "Set2") +
   scale_x_discrete(labels = c(
     "NB"   = "Non-bleaching",
@@ -273,7 +184,7 @@ ggplot(richness_bleaching, aes(x = bleaching, y = Richness, fill = bleaching)) +
     "B"    = "Bleaching"
   )) +
   labs(
-    title = "Amount of Corals by Bleaching Status",
+    title = "Amount of Scleractinia by Bleaching Status",
     x = "Bleaching Status",
     y = "Number of Unique Coral species"
   ) +
@@ -283,7 +194,10 @@ ggplot(richness_bleaching, aes(x = bleaching, y = Richness, fill = bleaching)) +
     axis.title  = element_text(size = 14),
     axis.text   = element_text(size = 12),
     legend.position = "none"
-  )
+  ) +
+  
+  # Add some room above bars so labels aren't cut off
+  scale_y_continuous(expand = expansion(mult = c(0, 0.1)))
 ```
 
 ## Richness graphs
@@ -945,18 +859,12 @@ ggplot(metabolite_summary, aes(x = ubiquity, y = abundance)) +
   labs(
     x = "Ubiquity (% samples present)",
     y = "Total abundance",
-    title = "Metabolite ubiquity vs abundance"
+    title = "Metabolite ubiquity vs total abundance"
   )
-
 ```
 
 ```{r}
 #| label: Metabolite_ubiquity_vs_average_abundance
-
-library(scales)
-library(dplyr)
-library(tidyr)
-library(ggplot2)
 
 # helper: choose a y-axis label function compatible with the installed 'scales' version
 y_labels_fn <- if (packageVersion("scales") >= "1.2.0") {
@@ -1005,17 +913,10 @@ ggplot(metabolite_summary, aes(x = ubiquity, y = avg_abundance)) +
     axis.line         = element_blank(),   # removes x and y axis lines
     legend.position   = "none"
   )
-
-
 ```
 
 ```{r}
 #| label: Metabolite_ubiquity_vs_average_abundance_corals
-
-library(scales)
-library(dplyr)
-library(tidyr)
-library(ggplot2)
 
 # --- Compute presence / ubiquity overall and within coral samples ---
 met_presence_long <- Corals_clean %>%
@@ -1124,14 +1025,10 @@ ggplot(met_summary, aes(x = ubiquity_all, y = avg_abundance, fill = category)) +
     legend.background = element_rect(fill = "#000042", color = NA),
     legend.key        = element_rect(fill = "#000042", color = NA)
   )
-
 ```
 
 ```{r}
 #| label: dataset_with_Scleractinia_metabolites
-
-library(dplyr)
-library(tidyr)
 
 # 1) Long-format presence/values for all samples
 met_presence_long <- Corals_clean %>%
@@ -1197,9 +1094,6 @@ coral_samples_with_coralonly_mets <- Corals_clean %>%
     # then add the coral-specific metabolite columns (if any)
     all_of(coral_specific_mets)
   )
-
-met_summary_coral_only   
-
 ```
 
 ```{r}

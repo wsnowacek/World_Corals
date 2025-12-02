@@ -1285,10 +1285,13 @@ rect.hclust(cluster.average, k = 10, border = "blue")
 ```
 
 ```{r}
-op <- par(mar = c(5, 4, 4, 12))
+plot(cluster.average,
+     main = "Average Linkage Dendrogram",
+     xlab = "Observations",
+     sub = "",
+     cex = 0.6)
 
-plot(as.dendrogram(cluster.average))
-
+rect.hclust(cluster.average, k = 10, border = "steelblue", lwd = 2)
 ```
 
 ## ANOVA
