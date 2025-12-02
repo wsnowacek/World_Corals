@@ -179,4 +179,14 @@ corals_met_ratio <- result
 write.csv(corals_met_ratio, "corals_met_ratio.csv", row.names = FALSE)
 ```
 
-## Merging data
+## Merging data for compound class
+
+```{r}
+#| label: cleaning-refined-origin
+
+metabolite_df <- 
+  metabolite_df %>%
+  mutate(refined_origin = if_else(refined_origin == "Coral",
+                                  "Host",
+                                  refined_origin))
+```

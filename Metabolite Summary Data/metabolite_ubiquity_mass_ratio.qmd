@@ -28,7 +28,11 @@ library(scales)
 ```
 
 ```{r}
+#| label: read_csvs
+
 corals_met_ratio <- read.csv("/Users/ellaandonov/World_Corals/Cleaned data CSVs/corals_met_ratio.csv")
+metabolite_df <- read.csv("/Users/ellaandonov/World_Corals/Raw data CSVs/Ty_superset_metabolites_coraldb_updated.csv")
+met_summary_coral_only <- read.csv("/Users/ellaandonov/World_Corals/Metabolite Summary Data/met_summary_coral_only.csv")
 ```
 
 ## Ubiquity graphs combined mass charge ratios
@@ -286,3 +290,331 @@ write.csv(
 ```
 
 ## Ubiquity graphs by metabolite compound class
+
+```{r}
+#| label: ubiquity-avg-abundance-all-samples
+
+# Create dataset of ubiquity + average abundance
+ubiquity_avg_abundance_values <- Corals_clean %>%
+  # select metabolite columns
+  select(starts_with("x")) %>%
+  # reshape to long format
+  pivot_longer(
+    cols = everything(),
+    names_to = "metabolite",
+    values_to = "value"
+  ) %>%
+  # compute ubiquity and average abundance
+  group_by(metabolite) %>%
+  summarise(
+    ubiquity = mean(value > 0) * 100,          # % of samples with metabolite present
+    avg_abundance = mean(value, na.rm = TRUE), # mean abundance across all samples
+    .groups = "drop"
+  )
+```
+
+```{r}
+#| label: merge-data
+
+merged_metabolite_data <- ubiquity_avg_abundance_values %>%
+  left_join(metabolite_df, by = "metabolite")
+```
+
+```{r}
+#| label: ubiquity-graph-npc-pathway
+
+plot_data <- merged_metabolite_data %>%
+  filter(npc_number_pathway != "Unknown")
+
+ggplot(plot_data,
+       aes(x = ubiquity, y = avg_abundance, color = npc_number_pathway)) +
+  geom_point(size = 2.5, alpha = 0.8) +
+  scale_y_continuous(labels = y_labels_fn) +
+  scale_color_discrete(
+    labels = function(x) stringr::str_wrap(x, width = 18),
+    guide = guide_legend(
+      nrow = 2,            # few rows, compact
+      byrow = TRUE,
+      keyheight = unit(0.3, "cm"),
+      keywidth  = unit(0.6, "cm"),
+      title = NULL
+    )
+  ) +
+  labs(
+    x = "Ubiquity (% samples present)",
+    y = "Average abundance",
+    title = "Metabolite ubiquity vs average abundance"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.background   = element_rect(fill = "#000042", color = NA),
+    panel.background  = element_rect(fill = "#000042", color = NA),
+    panel.grid.major  = element_line(color = "gray50"),
+    panel.grid.minor  = element_blank(),
+    plot.title        = element_text(hjust = 0.5, face = "bold", color = "white"),
+    axis.title        = element_text(color = "white"),
+    axis.text         = element_text(color = "white"),
+
+    # ---- Smaller Legend ----
+    legend.position   = "bottom",
+    legend.title      = element_blank(),
+    legend.text       = element_text(color = "white", size = 8),   # smaller text
+    legend.key        = element_rect(fill = "#000042", color = NA),
+    legend.spacing.y  = unit(0.15, "cm"),
+    legend.spacing.x  = unit(0.2, "cm"),
+    legend.margin     = margin(t = 0, b = 0),                      # reduce extra padding
+    legend.box.margin = margin(t = -5),                            # pulls legend closer
+
+    # make plot area bigger by reducing outer margin
+    plot.margin       = margin(t = 10, r = 10, b = 10, l = 10)
+  )
+```
+
+```{r}
+#| label: ubiquity-graph-npc-pathway-host-only
+
+# Filter merged_metabolite_data to only Host rows
+plot_data_host <- merged_metabolite_data %>%
+  filter(refined_origin == "Host") %>%
+  filter(npc_number_pathway != "Unknown")   #Unknown removed
+
+ggplot(plot_data_host,
+       aes(x = ubiquity,
+           y = avg_abundance,
+           color = npc_number_pathway)) +
+  geom_point(size = 2.5, alpha = 0.8) +
+  scale_y_continuous(labels = y_labels_fn) +
+  scale_color_discrete(
+    labels = function(x) stringr::str_wrap(x, width = 18),
+    guide = guide_legend(
+      nrow = 2,
+      byrow = TRUE,
+      keyheight = unit(0.3, "cm"),
+      keywidth  = unit(0.6, "cm"),
+      title = NULL
+    )
+  ) +
+  labs(
+    x = "Ubiquity (% samples present)",
+    y = "Average abundance",
+    title = "Metabolite ubiquity vs average abundance (Host only)"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.background   = element_rect(fill = "#000042", color = NA),
+    panel.background  = element_rect(fill = "#000042", color = NA),
+    panel.grid.major  = element_line(color = "gray50"),
+    panel.grid.minor  = element_blank(),
+    plot.title        = element_text(hjust = 0.5, face = "bold", color = "white"),
+    axis.title        = element_text(color = "white"),
+    axis.text         = element_text(color = "white"),
+
+    # Compact legend
+    legend.position   = "bottom",
+    legend.title      = element_blank(),
+    legend.text       = element_text(color = "white", size = 8),
+    legend.key        = element_rect(fill = "#000042", color = NA),
+    legend.spacing.y  = unit(0.15, "cm"),
+    legend.spacing.x  = unit(0.2, "cm"),
+    legend.margin     = margin(t = 0, b = 0),
+    legend.box.margin = margin(t = -5),
+
+    # room for the plot
+    plot.margin       = margin(10, 10, 10, 10)
+  )
+```
+
+```{r}
+#| label: ubiquity-graph-npc-pathway-symbiont-only
+
+plot_data_symbiont <- merged_metabolite_data %>%
+  filter(refined_origin == "Symbiont") %>%
+  filter(npc_number_pathway != "Unknown")   # removes Unknown 
+
+ggplot(plot_data_symbiont,
+       aes(x = ubiquity,
+           y = avg_abundance,
+           color = npc_number_pathway)) +
+  geom_point(size = 2.5, alpha = 0.8) +
+  scale_y_continuous(labels = y_labels_fn) +
+  scale_color_discrete(
+    labels = function(x) stringr::str_wrap(x, width = 18),
+    guide = guide_legend(
+      nrow = 2,
+      byrow = TRUE,
+      keyheight = unit(0.3, "cm"),
+      keywidth  = unit(0.6, "cm"),
+      title = NULL
+    )
+  ) +
+  labs(
+    x = "Ubiquity (% samples present)",
+    y = "Average abundance",
+    title = "Metabolite ubiquity vs average abundance (Symbiont only)"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.background   = element_rect(fill = "#000042", color = NA),
+    panel.background  = element_rect(fill = "#000042", color = NA),
+    panel.grid.major  = element_line(color = "gray50"),
+    panel.grid.minor  = element_blank(),
+    plot.title        = element_text(hjust = 0.5, face = "bold", color = "white"),
+    axis.title        = element_text(color = "white"),
+    axis.text         = element_text(color = "white"),
+
+    # Compact legend
+    legend.position   = "bottom",
+    legend.title      = element_blank(),
+    legend.text       = element_text(color = "white", size = 8),
+    legend.key        = element_rect(fill = "#000042", color = NA),
+    legend.spacing.y  = unit(0.15, "cm"),
+    legend.spacing.x  = unit(0.2, "cm"),
+    legend.margin     = margin(t = 0, b = 0),
+    legend.box.margin = margin(t = -5),
+
+    # more space for the plot
+    plot.margin       = margin(10, 10, 10, 10)
+  )
+```
+
+```{r}
+#| label: ubiquity-graph-npc-pathway-both
+
+# Filter merged_metabolite_data to only Both rows
+plot_data_both <- merged_metabolite_data %>%
+  filter(refined_origin == "Both") %>%
+  filter(npc_number_pathway != "Unknown")   #Unknown removed
+
+ggplot(plot_data_both,
+       aes(x = ubiquity,
+           y = avg_abundance,
+           color = npc_number_pathway)) +
+  geom_point(size = 2.5, alpha = 0.8) +
+  scale_y_continuous(labels = y_labels_fn) +
+  scale_color_discrete(
+    labels = function(x) stringr::str_wrap(x, width = 18),
+    guide = guide_legend(
+      nrow = 2,
+      byrow = TRUE,
+      keyheight = unit(0.3, "cm"),
+      keywidth  = unit(0.6, "cm"),
+      title = NULL
+    )
+  ) +
+  labs(
+    x = "Ubiquity (% samples present)",
+    y = "Average abundance",
+    title = "Metabolite ubiquity vs average abundance (Both)"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.background   = element_rect(fill = "#000042", color = NA),
+    panel.background  = element_rect(fill = "#000042", color = NA),
+    panel.grid.major  = element_line(color = "gray50"),
+    panel.grid.minor  = element_blank(),
+    plot.title        = element_text(hjust = 0.5, face = "bold", color = "white"),
+    axis.title        = element_text(color = "white"),
+    axis.text         = element_text(color = "white"),
+
+    # Compact legend
+    legend.position   = "bottom",
+    legend.title      = element_blank(),
+    legend.text       = element_text(color = "white", size = 8),
+    legend.key        = element_rect(fill = "#000042", color = NA),
+    legend.spacing.y  = unit(0.15, "cm"),
+    legend.spacing.x  = unit(0.2, "cm"),
+    legend.margin     = margin(t = 0, b = 0),
+    legend.box.margin = margin(t = -5),
+
+    # room for the plot
+    plot.margin       = margin(10, 10, 10, 10)
+  )
+```
+
+## Scleractinia Ubiquity graphs by metabolite compound class
+
+About 60% of the samples are Scleractinia; ubiquity on this plot only reflects % out of Scleractinia samples.
+
+```{r}
+#| label:  ubiquity-graph-npc-pathway-scleractinia-only
+
+# compute ubiquity among Scleractinia samples only
+ubiquity_scler_df <- Corals_clean %>%
+  # select metabolite columns and sample metadata needed
+  select(host_order, starts_with("x")) %>%
+  pivot_longer(
+    cols = starts_with("x"),
+    names_to = "metabolite",
+    values_to = "value"
+  ) %>%
+  filter(host_order == "Scleractinia") %>%
+  group_by(metabolite) %>%
+  summarise(
+    ubiquity_scler = mean(value > 0) * 100,
+    .groups = "drop"
+  )
+
+# get only shared metabolites (as you had)
+shared_metabolites <- merged_metabolite_data %>%
+  semi_join(met_summary_coral_only, by = "metabolite")
+
+# join the scleractinia-only ubiquity percent
+plot_data_shared_scler <- shared_metabolites %>%
+  left_join(ubiquity_scler_df, by = "metabolite") %>%
+  # if any metabolites are missing (no scleractinia samples with that metabolite),
+  # set ubiquity to 0 (or keep NA if you prefer)
+  mutate(ubiquity_scler = ifelse(is.na(ubiquity_scler), 0, ubiquity_scler)) %>%
+  # drop Unknown pathway if desired
+  filter(npc_number_pathway != "Unknown")
+
+# Plot using ubiquity_scler on the x-axis
+ggplot(plot_data_shared_scler,
+       aes(x = ubiquity_scler,
+           y = avg_abundance,
+           color = npc_number_pathway)) +
+  geom_point(size = 2.5, alpha = 0.8) +
+  scale_y_continuous(labels = y_labels_fn) +
+  scale_x_continuous(
+    name = "Ubiquity (% Scleractinia samples present)",
+    limits = c(0, 100),
+    breaks = seq(0, 100, by = 20),
+    labels = as.character(seq(0, 100, by = 20))
+  ) +
+  scale_color_discrete(
+    labels = function(x) stringr::str_wrap(x, width = 18),
+    guide = guide_legend(
+      nrow = 2,
+      byrow = TRUE,
+      keyheight = unit(0.3, "cm"),
+      keywidth  = unit(0.6, "cm"),
+      title = NULL
+    )
+  ) +
+  labs(
+    y = "Average abundance",
+    title = "Metabolite ubiquity vs average abundance (Scleractinia)"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.background   = element_rect(fill = "#000042", color = NA),
+    panel.background  = element_rect(fill = "#000042", color = NA),
+    panel.grid.major  = element_line(color = "gray50"),
+    panel.grid.minor  = element_blank(),
+    plot.title        = element_text(hjust = 0.5, face = "bold", color = "white"),
+    axis.title        = element_text(color = "white"),
+    axis.text         = element_text(color = "white"),
+
+    # Compact legend at bottom
+    legend.position   = "bottom",
+    legend.title      = element_blank(),
+    legend.text       = element_text(color = "white", size = 8),
+    legend.key        = element_rect(fill = "#000042", color = NA),
+    legend.spacing.y  = unit(0.15, "cm"),
+    legend.spacing.x  = unit(0.2, "cm"),
+    legend.margin     = margin(t = 0, b = 0),
+    legend.box.margin = margin(t = -5),
+
+    plot.margin       = margin(10, 10, 10, 10)
+  )
+
+```
