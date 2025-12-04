@@ -57,4 +57,61 @@ pca_fit %>%
 
 
 ```
+#####################################################################
+
+```{r}
+library(tidyverse)
+library(dplyr)
+library(tibble)
+library(stringr)
+feature_importance_comparison_df <- read.csv("coral_mets_only/featureimportancenov20.csv")
+met_df <- read.csv("~/Desktop/Duke/PhD 2025-2026/World_Corals/Raw Data CSVs/Ty_superset_metabolites_coraldb_updated.csv")
+
+# temp_feature_df <- feature_importance_comparison_df %>%
+#   rownames_to_column(var = "metabolite")
+feature_importance_comparison_df <- feature_importance_comparison_df %>%
+  dplyr::rename(metabolite = Feature)
+
+
+merged_df <- feature_importance_comparison_df %>%
+  inner_join(
+    met_df,
+    by = "metabolite"
+  )
+
+merged_df <- merged_df %>%
+  arrange(desc(XGBoost_Importance))
+
+merged_df
+```
+
+```{r}
+library(RColorBrewer)
+top20 <- merged_df[1:20, ] 
+top20 <- top20 %>%
+  mutate(metabolite = fct_reorder(metabolite, XGBoost_Importance, .desc = TRUE))
+
+ggplot(top20, aes(x=metabolite, y=XGBoost_Importance, fill=compound_superclass)) + 
+  geom_bar(stat="identity", position="dodge") +
+  scale_fill_brewer(palette = "Set2") +
+  theme(axis.title.x = element_blank()) +
+  theme_classic() +
+  labs(
+    y = "XGBoost Feature Importance",
+    x = "Metabolite",
+    fill = "Compound Superclass"
+  ) +
+  scale_y_continuous(
+    expand = c(0, 0),  
+    limits = c(0, NA) 
+  ) +
+  theme(
+    legend.position = "right",
+    # axis.title.x = element_blank(), 
+    axis.text.x = element_blank()
+    # axis.ticks.x = element_blank()
+  )
+
+
+```
 
