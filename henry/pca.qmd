@@ -82,16 +82,18 @@ merged_df <- feature_importance_comparison_df %>%
 merged_df <- merged_df %>%
   arrange(desc(XGBoost_Importance))
 
-merged_df
+top20 <- merged_df[1:20, ]
+top20 <- top20 %>%
+  mutate(metabolite = fct_reorder(metabolite, XGBoost_Importance, .desc = TRUE))
 ```
 
 ```{r}
 library(RColorBrewer)
-top20 <- merged_df[1:20, ] 
-top20 <- top20 %>%
-  mutate(metabolite = fct_reorder(metabolite, XGBoost_Importance, .desc = TRUE))
+# top20 <- merged_df[1:20, ] 
+# top20 <- top20 %>%
+#   mutate(metabolite = fct_reorder(metabolite, XGBoost_Importance, .desc = TRUE))
 
-ggplot(top20, aes(x=metabolite, y=XGBoost_Importance, fill=compound_superclass)) + 
+ggplot(top20, aes(x=metabolite, y=XGBoost_Importance, fill=npc_number_pathway)) + 
   geom_bar(stat="identity", position="dodge") +
   scale_fill_brewer(palette = "Set2") +
   theme(axis.title.x = element_blank()) +
@@ -99,7 +101,7 @@ ggplot(top20, aes(x=metabolite, y=XGBoost_Importance, fill=compound_superclass))
   labs(
     y = "XGBoost Feature Importance",
     x = "Metabolite",
-    fill = "Compound Superclass"
+    fill = "NPC Number Pathway"
   ) +
   scale_y_continuous(
     expand = c(0, 0),  
@@ -112,6 +114,35 @@ ggplot(top20, aes(x=metabolite, y=XGBoost_Importance, fill=compound_superclass))
     # axis.ticks.x = element_blank()
   )
 
+```
 
+```{r}
+merged_df_rf <- merged_df %>%
+  arrange(desc(RandomForest_Importance))
+
+top20 <- merged_df_rf[1:20, ] 
+top20 <- top20 %>%
+  mutate(metabolite = fct_reorder(metabolite, RandomForest_Importance, .desc = TRUE))
+
+ggplot(top20, aes(x=metabolite, y=RandomForest_Importance, fill=npc_number_pathway)) + 
+  geom_bar(stat="identity", position="dodge") +
+  scale_fill_brewer(palette = "Set2") +
+  theme(axis.title.x = element_blank()) +
+  theme_classic() +
+  labs(
+    y = "Random Forest Feature Importance",
+    x = "Metabolite",
+    fill = "NPC Number Pathway"
+  ) +
+  scale_y_continuous(
+    expand = c(0, 0),  
+    limits = c(0, NA) 
+  ) +
+  theme(
+    legend.position = "right",
+    # axis.title.x = element_blank(), 
+    axis.text.x = element_blank()
+    # axis.ticks.x = element_blank()
+  )
 ```
 
