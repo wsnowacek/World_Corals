@@ -49,10 +49,6 @@ met_cols <- grep("^x", names(Corals_clean), value = TRUE)
 met_mat <- as.matrix(Corals_clean[, met_cols])
 mode(met_mat) <- "numeric"
 
-# drop samples with no detected metabolites
-keep <- rowSums(met_mat, na.rm = TRUE) > 0 & !is.na(Corals_clean$host_phylum)
-met_mat <- met_mat[keep, , drop = FALSE]
-meta <- Corals_clean[keep, , drop = FALSE]
 
 # Bray–Curtis distance
 bc_dist <- vegdist((met_mat > 0) * 1, method = "bray")  # prevalence-based similarity
@@ -96,12 +92,55 @@ ggplot(pcoa_points_phylum, aes(x = PCoA1, y = PCoA2, color = host_phylum)) +
   labs(
     x = paste0("PCoA 1 (", var_explained[1], "%)"),
     y = paste0("PCoA 2 (", var_explained[2], "%)"),
-    title = "PCoA of Bray–Curtis Dissimilarity by Host Phylum",
+    title = "PCoA of Bray–Curtis Dissimilarity by Phylum",
     color = "Phylum",
     fill = "Phylum"
   ) +
   theme_minimal(base_size = 14) +
   theme(legend.position = "right")
+```
+
+```{r}
+{r}
+ggplot(pcoa_points_phylum, aes(x = PCoA1, y = PCoA2, color = host_phylum)) +
+  geom_point(size = 3, alpha = 0.9) +
+  geom_polygon(
+    data = ellipses_df,
+    aes(x = PCoA1, y = PCoA2, fill = host_phylum),
+    alpha = 0.20, colour = NA
+  ) +
+  labs(
+    x = paste0("PCoA 1 (", var_explained[1], "%)"),
+    y = paste0("PCoA 2 (", var_explained[2], "%)"),
+    title = "PCoA of Bray–Curtis Dissimilarity by Phylum",
+    color = "Phylum",
+    fill = "Phylum"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    # background colors
+    plot.background = element_rect(fill = "#000042", color = NA),
+    panel.background = element_rect(fill = "#000042", color = NA),
+    
+    # text and axis colors
+    text = element_text(color = "white"),
+    axis.text = element_text(color = "white"),
+    axis.title = element_text(color = "white"),
+    plot.title = element_text(color = "white", hjust = 0.5),  # << centered title
+
+    # gridlines
+    panel.grid.major = element_line(color = "#444477"),
+    panel.grid.minor = element_line(color = "#333366"),
+
+    # legend
+    legend.background = element_rect(fill = "#000042", color = NA),
+    legend.text = element_text(color = "white"),
+    legend.title = element_text(color = "white"),
+
+    legend.position = "right"
+  ) +
+  scale_color_brewer(palette = "Set2") +
+  scale_fill_brewer(palette = "Set2")
 ```
 
 ```{r}

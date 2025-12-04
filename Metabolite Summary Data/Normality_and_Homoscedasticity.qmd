@@ -1286,12 +1286,12 @@ rect.hclust(cluster.average, k = 10, border = "blue")
 
 ```{r}
 plot(cluster.average,
-     main = "Average Linkage Dendrogram",
-     xlab = "Observations",
+     main = "Dendrogram by Family",
+     xlab = "Families",
      sub = "",
      cex = 0.6)
 
-rect.hclust(cluster.average, k = 10, border = "steelblue", lwd = 2)
+rect.hclust(cluster.average, k = 10, lwd = 2)
 ```
 
 ## ANOVA
