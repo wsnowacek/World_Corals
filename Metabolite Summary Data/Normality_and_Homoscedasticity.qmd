@@ -1149,7 +1149,7 @@ leveneTest(Evenness ~ factor(location), data = kw_evenness)
 ```
 
 ```{r}
-#| label: levene_richness_Scleractinia_family
+#| label: levene_evenness_Scleractinia_family
 
 leveneTest(Evenness ~ factor(host_family),data = kw_evenness |>
              filter(host_order == "Scleractinia")
@@ -1157,7 +1157,7 @@ leveneTest(Evenness ~ factor(host_family),data = kw_evenness |>
 ```
 
 ```{r}
-#| label: levene_richness_Scleractinia_symbiont_potential 
+#| label: levene_evenness_Scleractinia_symbiont_potential 
 
 leveneTest(Evenness ~ factor(symbiont.potential),data = kw_evenness |>
              filter(host_order == "Scleractinia")
@@ -1165,7 +1165,7 @@ leveneTest(Evenness ~ factor(symbiont.potential),data = kw_evenness |>
 ```
 
 ```{r}
-#| label: levene_richness_Scleractinia_bleaching
+#| label: levene_evenness_Scleractinia_bleaching
 
 leveneTest(Evenness ~ factor(bleaching),data = kw_evenness |>
              filter(host_order == "Scleractinia")
@@ -1173,7 +1173,7 @@ leveneTest(Evenness ~ factor(bleaching),data = kw_evenness |>
 ```
 
 ```{r}
-#| label: levene_richness_Scleractinia_location
+#| label: levene_evenness_Scleractinia_location
 
 leveneTest(Evenness ~ factor(location),data = kw_evenness |>
              filter(host_order == "Scleractinia")
@@ -1292,6 +1292,34 @@ plot(cluster.average,
      cex = 0.6)
 
 rect.hclust(cluster.average, k = 10, lwd = 2)
+```
+
+```{r}
+# Set background color for the plot area and device
+par(bg = "#000042")               # device background
+par(col = "white",                # axis & text color
+    col.axis = "white",
+    col.lab  = "white",
+    col.main = "white",
+    col.sub  = "white",
+    fg = "white")                 # foreground (box, axes)
+
+# Plot dendrogram with white lines and labels
+plot(cluster.average,
+     main = "Dendrogram by Family",
+     xlab = "Families",
+     sub = "",
+     cex = 0.6,
+     col = "white",               # dendrogram lines
+     col.lab = "white",
+     col.main = "white",
+     col.axis = "white",
+     labels = cluster.average$labels,
+     col.lab = "white")
+
+# Draw cluster rectangles in white
+rect.hclust(cluster.average, k = 10, border = "white", lwd = 2)
+
 ```
 
 ## ANOVA
