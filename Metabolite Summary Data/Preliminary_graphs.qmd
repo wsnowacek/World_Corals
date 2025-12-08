@@ -494,8 +494,85 @@ ggplot(entropy_df, aes(x = host_phylum, y = MetabolicEntropy, fill = host_phylum
     panel.grid.major = element_line(color = "gray40"),
     panel.grid.minor = element_line(color = "gray30")
   )
+```
 
+```{r}
+#| label: Metabolic_Entropy_by_Phylum_significance
 
+library(ggsignif)
+
+# --- choose the two phyla to annotate (from Tukey results: Porifera vs Cnidaria was significant)
+phylum_a <- "Cnidaria"
+phylum_b <- "Porifera"
+
+# ensure factor levels and get numeric x positions for the two phyla
+entropy_df$host_phylum <- factor(entropy_df$host_phylum)   # preserve current ordering
+lvl <- levels(entropy_df$host_phylum)
+x_a <- which(lvl == phylum_a)
+x_b <- which(lvl == phylum_b)
+x_mid <- mean(c(x_a, x_b))
+
+# compute y positions relative to data range so annotations scale
+y_max   <- max(entropy_df$MetabolicEntropy, na.rm = TRUE)
+y_min   <- min(entropy_df$MetabolicEntropy, na.rm = TRUE)
+y_range <- y_max - y_min
+
+y_line   <- y_max + 0.06 * y_range   # bar slightly above the boxes
+y_text   <- y_line    + 0.05 * y_range # stars above the bar
+y_pvalue <- y_line    - 0.05 * y_range # p-value below the bar
+
+ggplot(entropy_df, aes(x = host_phylum, y = MetabolicEntropy, fill = host_phylum)) +
+  geom_boxplot(color = "white", outlier.colour = "white", outlier.shape = 16, outlier.size = 2) +
+  scale_fill_manual(values = diverse_palette) +
+
+  # draw only the yellow significance bar (no numeric annotation from geom_signif)
+  geom_signif(
+    comparisons = list(c(phylum_a, phylum_b)),
+    annotations = "",         # suppress default text (prevents numbers behind stars)
+    y_position = y_line,
+    tip_length = 0.02,
+    color = "red",
+    size = 1.3
+  ) +
+
+  # stars above the line
+  annotate(
+    "text",
+    x = x_mid,
+    y = y_text,
+    label = "***",
+    color = "white",
+    size = 7,
+    fontface = "bold"
+  ) +
+
+  # Tukey p-value below the line (formatted)
+  annotate(
+    "text",
+    x = x_mid,
+    y = y_pvalue,
+    label = paste0("p < 0.0001"),
+    color = "white",
+    size = 4,
+    fontface = "plain"
+  ) +
+
+  labs(
+    title = "Metabolic Entropy by Phylum",
+    x = "Phylum",
+    y = "Shannon Diversity of Metabolites"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.background   = element_rect(fill = "#000042", color = NA),
+    panel.background  = element_rect(fill = "#000042", color = NA),
+    legend.position   = "none",
+    plot.title = element_text(color = "white", face = "bold", hjust = 0.5, size = 18),
+    axis.title = element_text(size = 14, color = "white"),
+    axis.text  = element_text(size = 12, color = "white"),
+    panel.grid.major = element_line(color = "gray40"),
+    panel.grid.minor = element_line(color = "gray30")
+  )
 ```
 
 ```{r}
@@ -827,7 +904,74 @@ ggplot(evenness_df, aes(x = bleaching, y = Evenness, fill = bleaching)) +
     panel.grid.major = element_line(color = "gray40"),
     panel.grid.minor = element_line(color = "gray30")
   )
+```
 
+```{r}
+#| label: Metabolomic_Evenness_by_Bleaching_Status_significant
+
+library(ggsignif)
+
+# positions computed from the data range so they scale nicely
+y_max   <- max(evenness_df$Evenness, na.rm = TRUE)
+y_min   <- min(evenness_df$Evenness, na.rm = TRUE)
+y_range <- y_max - y_min
+
+y_line   <- y_max + 0.05 * y_range   # bar slightly above the boxes
+y_text   <- y_line    + 0.05 * y_range # stars above the bar
+y_pvalue <- y_line    - 0.05 * y_range # p-value below the bar
+
+ggplot(evenness_df, aes(x = bleaching, y = Evenness, fill = bleaching)) +
+  geom_boxplot(color = "white", outlier.colour = "white", outlier.shape = 16, outlier.size = 2) +
+  scale_fill_manual(values = diverse_palette) +
+
+  # draw only the red significance bar
+  geom_signif(
+    comparisons = list(c("NB", "B")),
+    annotations = "",         # important: suppress numbers printed by geom_signif
+    y_position = y_line,
+    tip_length = 0.02,
+    color = "red",
+    size = 1.3
+  ) +
+
+  # stars above the line
+  annotate(
+    "text",
+    x = 1.5,                  # midpoint between NB (1) and B (2)
+    y = y_text,
+    label = "***",
+    color = "white",
+    size = 7,
+    fontface = "bold"
+  ) +
+
+  # Tukey p-value below the line (formatted)
+  annotate(
+    "text",
+    x = 1.5,
+    y = y_pvalue,
+    label = paste0("p < 0.0001"),
+    color = "white",
+    size = 4,
+    fontface = "plain"
+  ) +
+
+  labs(
+    title = "Metabolomic Evenness by Bleaching Status",
+    x = "Bleaching Status",
+    y = "Evenness"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.background   = element_rect(fill = "#000042", color = NA),
+    panel.background  = element_rect(fill = "#000042", color = NA),
+    legend.position   = "none",
+    plot.title = element_text(color = "white", face = "bold", hjust = 0.5, size = 18),
+    axis.title = element_text(size = 14, color = "white"),
+    axis.text  = element_text(size = 12, color = "white"),
+    panel.grid.major = element_line(color = "gray40"),
+    panel.grid.minor = element_line(color = "gray30")
+  )
 ```
 
 ```{r}
