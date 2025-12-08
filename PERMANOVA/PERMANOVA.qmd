@@ -23,6 +23,13 @@ ITS2_clean   <- read.csv("/Users/ellaandonov/World_Corals/Cleaned data CSVs/ITS2
 met_summary_coral_only <- read.csv("/Users/ellaandonov/World_Corals/Metabolite Summary Data/met_summary_coral_only.csv")
 ```
 
+```{r}
+#| label: install_packages
+
+install.packages("remotes")
+remotes::install_github("pmartinezarbizu/pairwiseAdonis/pairwiseAdonis")
+```
+
 ## Metadata PERMANOVAs and PCoAs
 
 ```{r}
