@@ -101,7 +101,8 @@ ggplot(pcoa_points_phylum, aes(x = PCoA1, y = PCoA2, color = host_phylum)) +
 ```
 
 ```{r}
-{r}
+#| label: PCoA_phylum_confidence_ellipses_blue
+
 ggplot(pcoa_points_phylum, aes(x = PCoA1, y = PCoA2, color = host_phylum)) +
   geom_point(size = 3, alpha = 0.9) +
   geom_polygon(
@@ -246,6 +247,67 @@ p <- ggplot(pcoa_points, aes(x = PCoA1, y = PCoA2, color = bleaching, fill = ble
     y = paste0("PCoA2 (", var_explained[2], "%)"), 
     fill = "Bleaching Status", 
     color = "Bleaching Status"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(legend.position = "right")
+
+print(p)
+```
+
+```{r}
+#| label: nest_permanova_bleaching_location
+
+# Remove rows with NA in grouping variables and ensure rows match numeric table
+keep_rows <- complete.cases(meta2$bleaching, meta2$location)
+if(any(!keep_rows)) message(sum(!keep_rows), " rows removed because bleaching or location is NA.")
+meta3 <- meta2[keep_rows, , drop = FALSE]
+permanova_numeric_data3 <- permanova_numeric_data2[rownames(meta3), , drop = FALSE]  # ensure same order
+
+# Require at least two levels for tests
+meta3$bleaching <- factor(meta3$bleaching)
+meta3$location <- factor(meta3$location)
+if(nlevels(meta3$bleaching) < 2) stop("Need >= 2 bleaching levels to run PERMANOVA.")
+if(nlevels(meta3$location) < 2) message("Warning: < 2 location levels — location tests may be meaningless.")
+
+# Recompute Bray–Curtis on the filtered numeric data
+bray_curtis3 <- vegdist(permanova_numeric_data3, method = "bray")
+
+# Nested adonis2 model: location nested within bleaching
+nested_permanova_result <- adonis2(bray_curtis3 ~ bleaching/location,
+                                   data = meta3,
+                                   permutations = 999)
+print(nested_permanova_result)
+
+# Explicit equivalent
+nested_permanova_result_explicit <- adonis2(bray_curtis3 ~ bleaching + bleaching:location,
+                                            data = meta3,
+                                            permutations = 999)
+print(nested_permanova_result_explicit)
+```
+
+```{r}
+#| label: PCoA_bleaching_location
+
+# PCoA (cmdscale) and percent variance explained
+pcoa_result <- cmdscale(bray_curtis2, eig = TRUE, k = 2)
+pcoa_points <- as.data.frame(pcoa_result$points)
+colnames(pcoa_points) <- c("PCoA1", "PCoA2")
+pcoa_points <- bind_cols(pcoa_points, meta2)
+
+pos_eig <- pcoa_result$eig[pcoa_result$eig > 0]
+var_explained <- round(100 * pcoa_result$eig[1:2] / sum(pos_eig), 1)
+
+# Add shape aesthetic + legend for location
+p <- ggplot(pcoa_points, aes(x = PCoA1, y = PCoA2, color = bleaching, fill = bleaching)) +
+  geom_point(aes(shape = location), size = 3, alpha = 0.8) +   # <-- added shape
+  stat_ellipse(geom = "polygon", alpha = 0.15, level = 0.95, type = "t", colour = NA) +
+  labs(
+    title = "PCoA of Bray–Curtis Dissimilarity by Bleaching Status & Location",
+    x = paste0("PCoA1 (", var_explained[1], "%)"),
+    y = paste0("PCoA2 (", var_explained[2], "%)"), 
+    fill = "Bleaching Status", 
+    color = "Bleaching Status",
+    shape = "Location"          # <-- added legend title
   ) +
   theme_minimal(base_size = 13) +
   theme(legend.position = "right")
