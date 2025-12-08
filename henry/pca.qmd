@@ -1,48 +1,63 @@
 ```{r}
-setwd("/Users/henrysun_1/Desktop/Duke/PhD 2025-2026/World_Corals")
-## update file path
-df <- read.csv("Corals_clean.csv")
+#| label: read_csvs_henry
 
+#setwd("/Users/henrysun_1/Desktop/Duke/PhD 2025-2026/World_Corals")
+## update file path
+#Corals_clean <- read.csv("Corals_clean.csv")
+# met_df <- read.csv("~/Desktop/Duke/PhD 2025-2026/World_Corals/Raw Data CSVs/Ty_superset_metabolites_coraldb_updated.csv")
 ```
 
 ```{r}
+#| label: read_csvs_ella
+
+Corals_clean <- read.csv("/Users/ellaandonov/World_Corals/Cleaned data CSVs/Corals_clean.csv")
+feature_importance_comparison_df <- read.csv("coral_mets_only/featureimportancenov20.csv")
+met_df <- read.csv("/Users/ellaandonov/World_Corals/Raw Data CSVs/Ty_superset_metabolites_coraldb_updated.csv")
+```
+
+```{r}
+#| label: load_library
+
 library(tidyverse)
 library(readr)
 library(broom)
 library(cowplot)
 library(caret)
-
 ```
 
 ```{r}
-set.seed(111)
-df_filtered <- df[df$host_phylum != "Cnidaria", ]
+#| label: pca-fit
 
-pca_fit <- df %>% 
+set.seed(111)
+df_filtered <- Corals_clean[Corals_clean$host_phylum != "Cnidaria", ]
+
+pca_fit <- Corals_clean %>% 
   select(where(is.numeric)) %>% # retain only numeric columns
   prcomp() # do PCA
-
 ```
 
 ```{r}
+#| label: pca-fit-graph
+
 pca_fit %>%
-  augment(df) %>% # add original dataset back in
+  augment(Corals_clean) %>% # add original dataset back in
   ggplot(aes(.fittedPC1, .fittedPC2, color = host_phylum)) + 
   geom_point(size = 1.5) +
   theme_half_open(12) + background_grid()
-
 ```
 
 ```{r}
+#| label: pca-fit-rotation-matrix
+
 pca_fit %>%
   tidy(matrix = "rotation")
-
 ```
 
 ```{r}
+#| label: pca-fit-rotation-eigenvalues
+
 pca_fit %>%
   tidy(matrix = "eigenvalues")
-
 ```
 
 ```{r}
@@ -56,8 +71,6 @@ pca_fit %>%
     expand = expansion(mult = c(0, 0.01))
   ) +
   theme_minimal_hgrid(12)
-
-
 ```
 
 ##################################################################### 
@@ -67,9 +80,6 @@ library(tidyverse)
 library(dplyr)
 library(tibble)
 library(stringr)
-feature_importance_comparison_df <- read.csv("coral_mets_only/featureimportancenov20.csv")
-met_df <- read.csv("/Users/ellaandonov/World_Corals/Raw Data CSVs/Ty_superset_metabolites_coraldb_updated.csv")
-# met_df <- read.csv("~/Desktop/Duke/PhD 2025-2026/World_Corals/Raw Data CSVs/Ty_superset_metabolites_coraldb_updated.csv")
 
 # temp_feature_df <- feature_importance_comparison_df %>%
 #   rownames_to_column(var = "metabolite")
@@ -92,42 +102,12 @@ top20 <- top20 %>%
 ```
 
 ```{r}
-library(RColorBrewer)
-# top20 <- merged_df[1:20, ] 
-# top20 <- top20 %>%
-#   mutate(metabolite = fct_reorder(metabolite, XGBoost_Importance, .desc = TRUE))
+#| label: xgboost-feature-importance-top20
 
-ggplot(top20, aes(x=metabolite, y=XGBoost_Importance, fill=compound_superclass)) + 
-  geom_bar(stat="identity", position="dodge") +
-  scale_fill_brewer(palette = "Set2") +
-  theme(axis.title.x = element_blank()) +
-  theme_classic() +
-  labs(
-    y = "XGBoost Feature Importance",
-    x = "Metabolite",
-    fill = "Compound Superclass"
-  ) +
-  scale_y_continuous(
-    expand = c(0, 0),  
-    limits = c(0, NA) 
-  ) +
-  theme(
-    legend.position = "right",
-    # axis.title.x = element_blank(), 
-    axis.text.x = element_blank()
-    # axis.ticks.x = element_blank()
-  )
-
-```
-
-```{r}
 library(ggplot2)
 
-# --- use the exact class names you have in the data ---
+# --- use the exact class names in the data ---
 observed <- unique(as.character(top20$compound_superclass))
-# observed (based on your output) should be:
-# "Glycerolipids", "Glycerophospholipids", "Monoalkyldiacylglycerols",
-# "Phosphatidylglycerocholines", "Sphingolipids", "Steroids", "Unknown"
 
 # --- define a named color vector that matches those labels exactly ---
 superclass_colors <- c(
@@ -137,17 +117,13 @@ superclass_colors <- c(
   "Phosphatidylglycerocholines" = "#E78AC3",
   "Sphingolipids"               = "#A6D854",
   "Steroids"                    = "#FFD92F",
-  "Unknown"                     = "#BEBADA"   # change if you want another color
+  "Unknown"                     = "#BEBADA"   
 )
 
 # --- make sure only the observed classes are used (and in the observed order) ---
-# This guards against mismatches and ensures legend order matches the bars.
 observed <- intersect(observed, names(superclass_colors))    # keep order from data
 top20$compound_superclass <- factor(as.character(top20$compound_superclass),
                                     levels = observed)
-
-# If you want to include any named colors that don't appear in the data, keep them but
-# they won't be shown unless you set levels accordingly. The above keeps things strict.
 
 # --- plot ---
 ggplot(top20, aes(x = metabolite, y = XGBoost_Importance, fill = compound_superclass)) +
@@ -169,42 +145,14 @@ ggplot(top20, aes(x = metabolite, y = XGBoost_Importance, fill = compound_superc
 ```
 
 ```{r}
-merged_df_rf <- merged_df %>%
-  arrange(desc(RandomForest_Importance))
+#| label: rf-feature-importance-graph
 
-top100 <- merged_df_rf[1:100, ] 
-top100 <- top100 %>%
-  mutate(metabolite = fct_reorder(metabolite, RandomForest_Importance, .desc = TRUE))
-
-ggplot(top100, aes(x=metabolite, y=RandomForest_Importance, fill=compound_superclass)) + 
-  geom_bar(stat="identity", position="dodge") +
-  scale_fill_brewer(palette = "Set3") +
-  theme(axis.title.x = element_blank()) +
-  theme_classic() +
-  labs(
-    y = "Random Forest Feature Importance",
-    x = "Metabolite",
-    fill = "Compound Superclass"
-  ) +
-  scale_y_continuous(
-    expand = c(0, 0),  
-    limits = c(0, NA) 
-  ) +
-  theme(
-    legend.position = "right",
-    # axis.title.x = element_blank(), 
-    axis.text.x = element_blank()
-    # axis.ticks.x = element_blank()
-  )
-```
-
-```{r}
 library(ggplot2)
 library(RColorBrewer)
 library(dplyr)
 library(forcats)
 
-# --- your existing base colors (exact names must match previous data) ---
+# --- match previous colors on xgboost graph ---
 base_colors <- c(
   "Glycerolipids"               = "#66C2A5",
   "Glycerophospholipids"        = "#FC8D62",
@@ -215,7 +163,7 @@ base_colors <- c(
   "Unknown"                     = "#BEBADA"
 )
 
-# --- find all classes present in your full merged_df (so we can color any that may appear) ---
+# --- find all classes present in full merged_df ---
 all_classes <- unique(as.character(merged_df$compound_superclass))
 
 # --- classes that don't yet have a color in base_colors ---
@@ -231,10 +179,10 @@ if(length(missing_classes) > 0) {
   colors_for_missing <- character(0)
 }
 
-# --- final named color vector for all classes (base first to preserve your chosen colors) ---
+# --- final named color vector for all classes ---
 superclass_colors_all <- c(base_colors, colors_for_missing)
 
-# --- Prepare the top20 data (as in your snippet) ---
+# --- Prepare the top20 data ---
 merged_df_rf <- merged_df %>%
   arrange(desc(RandomForest_Importance))
 
@@ -248,7 +196,7 @@ observed_in_plot <- unique(as.character(top100$compound_superclass))
 plot_levels <- intersect(observed_in_plot, names(superclass_colors_all))
 top100$compound_superclass <- factor(as.character(top20$compound_superclass), levels = plot_levels)
 
-# --- Plot: use scale_fill_manual with the full mapping; drop = FALSE only matters if you want absent levels shown
+# Plot
 ggplot(top100, aes(x = metabolite, y = RandomForest_Importance, fill = compound_superclass)) +
   geom_bar(stat = "identity", position = "dodge") +
   scale_fill_manual(values = superclass_colors_all) +
