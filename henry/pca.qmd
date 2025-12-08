@@ -131,7 +131,8 @@ ggplot(top20, aes(x = metabolite, y = XGBoost_Importance, fill = compound_superc
   scale_fill_manual(values = superclass_colors, drop = FALSE) +
   theme_classic() +
   labs(
-    y = "XGBoost Feature Importance",
+    y = "Relative Feature Importance (Normalized Gain)",
+    title = "Extreme Gradient Boost Feature Importance", 
     x = "Metabolite",
     fill = "Compound Superclass"
   ) +
@@ -139,8 +140,9 @@ ggplot(top20, aes(x = metabolite, y = XGBoost_Importance, fill = compound_superc
   theme(
     legend.position = "right",
     axis.text.x = element_blank(),
-    axis.title.x = element_text(size = 14),   # bigger x title
-    axis.title.y = element_text(size = 14)    # bigger y title
+    axis.title.x = element_text(size = 12),   # bigger x title
+    axis.title.y = element_text(size = 12),    # bigger y title
+    title = element_text(size = 16)
   )
 ```
 
@@ -202,7 +204,8 @@ ggplot(top100, aes(x = metabolite, y = RandomForest_Importance, fill = compound_
   scale_fill_manual(values = superclass_colors_all) +
   theme_classic() +
   labs(
-    y = "Random Forest Feature Importance",
+    title = "Random Forest Feature Importance",
+    y = "Relative Feature Importance (Normalized Gain)", 
     x = "Metabolite",
     fill = "Compound Superclass"
   ) +
@@ -210,7 +213,8 @@ ggplot(top100, aes(x = metabolite, y = RandomForest_Importance, fill = compound_
   theme(
     legend.position = "right",
     axis.text.x = element_blank(),
-    axis.title.x = element_text(size = 14),
-    axis.title.y = element_text(size = 14)
+    axis.title.x = element_text(size = 12),
+    axis.title.y = element_text(size = 12), 
+    title = element_text(size = 16)
   )
 ```
