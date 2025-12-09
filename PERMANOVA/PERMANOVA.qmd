@@ -293,7 +293,7 @@ print(nested_permanova_result_explicit)
 ```
 
 ```{r}
-#| label: PCoA_bleaching_location
+#| label: PCoA_bleaching_and_location
 
 # PCoA (cmdscale) and percent variance explained
 pcoa_result <- cmdscale(bray_curtis2, eig = TRUE, k = 2)
@@ -303,6 +303,10 @@ pcoa_points <- bind_cols(pcoa_points, meta2)
 
 pos_eig <- pcoa_result$eig[pcoa_result$eig > 0]
 var_explained <- round(100 * pcoa_result$eig[1:2] / sum(pos_eig), 1)
+
+# ---- REMOVE SAMPLES WITH NA FOR LOCATION ----
+pcoa_points <- pcoa_points |> 
+  dplyr::filter(!is.na(location))
 
 # Add shape aesthetic + legend for location
 p <- ggplot(pcoa_points, aes(x = PCoA1, y = PCoA2, color = bleaching, fill = bleaching)) +

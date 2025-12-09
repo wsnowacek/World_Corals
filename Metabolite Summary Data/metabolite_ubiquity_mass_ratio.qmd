@@ -328,23 +328,36 @@ plot_data <- merged_metabolite_data %>%
 
 ggplot(plot_data,
        aes(x = ubiquity, y = avg_abundance, color = npc_number_pathway)) +
-  geom_point(size = 2.5, alpha = 0.8) +
+  geom_point(size = 2.5, alpha = 0.6) +
   scale_y_continuous(labels = y_labels_fn) +
-  scale_color_discrete(
+  
+  # ---- Fixed 7-category color palette ----
+  scale_color_manual(
+    values = c(
+      "Fatty acids"                     = "#E69F00",
+      "Polyketides"                     = "#56B4E9",
+      "Shikimates and Phenylpropanoids" = "#009E73",
+      "Terpenoids"                      = "#F0E442",
+      "Alkaloids"                       = "#0072B2",
+      "Amino acids and Peptides"        = "#D55E00",
+      "Carbohydrates"                   = "#CC79A7"
+    ),
     labels = function(x) stringr::str_wrap(x, width = 18),
     guide = guide_legend(
-      nrow = 2,            # few rows, compact
+      nrow = 2,
       byrow = TRUE,
       keyheight = unit(0.3, "cm"),
       keywidth  = unit(0.6, "cm"),
       title = NULL
     )
   ) +
+  
   labs(
     x = "Ubiquity (% samples present)",
     y = "Average abundance",
     title = "Metabolite ubiquity vs average abundance"
   ) +
+  
   theme_minimal(base_size = 14) +
   theme(
     plot.background   = element_rect(fill = "#000042", color = NA),
@@ -358,12 +371,12 @@ ggplot(plot_data,
     # ---- Smaller Legend ----
     legend.position   = "bottom",
     legend.title      = element_blank(),
-    legend.text       = element_text(color = "white", size = 8),   # smaller text
+    legend.text       = element_text(color = "white", size = 8),
     legend.key        = element_rect(fill = "#000042", color = NA),
     legend.spacing.y  = unit(0.15, "cm"),
     legend.spacing.x  = unit(0.2, "cm"),
-    legend.margin     = margin(t = 0, b = 0),                      # reduce extra padding
-    legend.box.margin = margin(t = -5),                            # pulls legend closer
+    legend.margin     = margin(t = 0, b = 0),
+    legend.box.margin = margin(t = -5),
 
     # make plot area bigger by reducing outer margin
     plot.margin       = margin(t = 10, r = 10, b = 10, l = 10)
@@ -376,7 +389,7 @@ ggplot(plot_data,
 # Filter merged_metabolite_data to only Host rows
 plot_data_host <- merged_metabolite_data %>%
   filter(refined_origin == "Host") %>%
-  filter(npc_number_pathway != "Unknown")   #Unknown removed
+  filter(npc_number_pathway != "Unknown")   # Unknown removed
 
 ggplot(plot_data_host,
        aes(x = ubiquity,
@@ -384,7 +397,18 @@ ggplot(plot_data_host,
            color = npc_number_pathway)) +
   geom_point(size = 2.5, alpha = 0.8) +
   scale_y_continuous(labels = y_labels_fn) +
-  scale_color_discrete(
+  
+  # ---- Same 7-color pathway palette ----
+  scale_color_manual(
+    values = c(
+      "Fatty acids"                     = "#E69F00",
+      "Polyketides"                     = "#56B4E9",
+      "Shikimates and Phenylpropanoids" = "#009E73",
+      "Terpenoids"                      = "#F0E442",
+      "Alkaloids"                       = "#0072B2",
+      "Amino acids and Peptides"        = "#D55E00",
+      "Carbohydrates"                   = "#CC79A7"
+    ),
     labels = function(x) stringr::str_wrap(x, width = 18),
     guide = guide_legend(
       nrow = 2,
@@ -394,11 +418,13 @@ ggplot(plot_data_host,
       title = NULL
     )
   ) +
+  
   labs(
     x = "Ubiquity (% samples present)",
     y = "Average abundance",
     title = "Metabolite ubiquity vs average abundance (Host only)"
   ) +
+  
   theme_minimal(base_size = 14) +
   theme(
     plot.background   = element_rect(fill = "#000042", color = NA),
@@ -409,7 +435,6 @@ ggplot(plot_data_host,
     axis.title        = element_text(color = "white"),
     axis.text         = element_text(color = "white"),
 
-    # Compact legend
     legend.position   = "bottom",
     legend.title      = element_blank(),
     legend.text       = element_text(color = "white", size = 8),
@@ -419,9 +444,9 @@ ggplot(plot_data_host,
     legend.margin     = margin(t = 0, b = 0),
     legend.box.margin = margin(t = -5),
 
-    # room for the plot
     plot.margin       = margin(10, 10, 10, 10)
   )
+
 ```
 
 ```{r}
@@ -437,7 +462,18 @@ ggplot(plot_data_symbiont,
            color = npc_number_pathway)) +
   geom_point(size = 2.5, alpha = 0.8) +
   scale_y_continuous(labels = y_labels_fn) +
-  scale_color_discrete(
+  
+  # ---- Same 7-color palette as other plots ----
+  scale_color_manual(
+    values = c(
+      "Fatty acids"                     = "#E69F00",
+      "Polyketides"                     = "#56B4E9",
+      "Shikimates and Phenylpropanoids" = "#009E73",
+      "Terpenoids"                      = "#F0E442",
+      "Alkaloids"                       = "#0072B2",
+      "Amino acids and Peptides"        = "#D55E00",
+      "Carbohydrates"                   = "#CC79A7"
+    ),
     labels = function(x) stringr::str_wrap(x, width = 18),
     guide = guide_legend(
       nrow = 2,
@@ -447,11 +483,13 @@ ggplot(plot_data_symbiont,
       title = NULL
     )
   ) +
+  
   labs(
     x = "Ubiquity (% samples present)",
     y = "Average abundance",
     title = "Metabolite ubiquity vs average abundance (Symbiont only)"
   ) +
+  
   theme_minimal(base_size = 14) +
   theme(
     plot.background   = element_rect(fill = "#000042", color = NA),
@@ -462,7 +500,6 @@ ggplot(plot_data_symbiont,
     axis.title        = element_text(color = "white"),
     axis.text         = element_text(color = "white"),
 
-    # Compact legend
     legend.position   = "bottom",
     legend.title      = element_blank(),
     legend.text       = element_text(color = "white", size = 8),
@@ -472,7 +509,6 @@ ggplot(plot_data_symbiont,
     legend.margin     = margin(t = 0, b = 0),
     legend.box.margin = margin(t = -5),
 
-    # more space for the plot
     plot.margin       = margin(10, 10, 10, 10)
   )
 ```
