@@ -355,7 +355,8 @@ ggplot(plot_data,
   labs(
     x = "Ubiquity (% samples present)",
     y = "Average abundance",
-    title = "Metabolite ubiquity vs average abundance"
+    title = "Metabolite ubiquity vs average abundance", 
+    subtitle = "by pathways of NPClassifiers"
   ) +
   
   theme_minimal(base_size = 14) +
@@ -364,7 +365,11 @@ ggplot(plot_data,
     panel.background  = element_rect(fill = "#000042", color = NA),
     panel.grid.major  = element_line(color = "gray50"),
     panel.grid.minor  = element_blank(),
+
+    # Title + subtitle styling
     plot.title        = element_text(hjust = 0.5, face = "bold", color = "white"),
+    plot.subtitle     = element_text(hjust = 0.5, color = "white", size = 12, margin = margin(b = 6)),
+
     axis.title        = element_text(color = "white"),
     axis.text         = element_text(color = "white"),
 
@@ -395,7 +400,7 @@ ggplot(plot_data_host,
        aes(x = ubiquity,
            y = avg_abundance,
            color = npc_number_pathway)) +
-  geom_point(size = 2.5, alpha = 0.8) +
+  geom_point(size = 2.5, alpha = 0.6) +
   scale_y_continuous(labels = y_labels_fn) +
   
   # ---- Same 7-color pathway palette ----
@@ -422,7 +427,8 @@ ggplot(plot_data_host,
   labs(
     x = "Ubiquity (% samples present)",
     y = "Average abundance",
-    title = "Metabolite ubiquity vs average abundance (Host only)"
+    title = "Metabolite ubiquity vs average abundance (Host only)",
+    subtitle = "by pathways of NPClassifiers"
   ) +
   
   theme_minimal(base_size = 14) +
@@ -431,7 +437,11 @@ ggplot(plot_data_host,
     panel.background  = element_rect(fill = "#000042", color = NA),
     panel.grid.major  = element_line(color = "gray50"),
     panel.grid.minor  = element_blank(),
+
+    # Title + subtitle styling (critical for visibility)
     plot.title        = element_text(hjust = 0.5, face = "bold", color = "white"),
+    plot.subtitle     = element_text(hjust = 0.5, color = "white", size = 12, margin = margin(b = 6)),
+
     axis.title        = element_text(color = "white"),
     axis.text         = element_text(color = "white"),
 
@@ -446,7 +456,6 @@ ggplot(plot_data_host,
 
     plot.margin       = margin(10, 10, 10, 10)
   )
-
 ```
 
 ```{r}
@@ -460,7 +469,7 @@ ggplot(plot_data_symbiont,
        aes(x = ubiquity,
            y = avg_abundance,
            color = npc_number_pathway)) +
-  geom_point(size = 2.5, alpha = 0.8) +
+  geom_point(size = 2.5, alpha = 0.6) +
   scale_y_continuous(labels = y_labels_fn) +
   
   # ---- Same 7-color palette as other plots ----
@@ -487,7 +496,8 @@ ggplot(plot_data_symbiont,
   labs(
     x = "Ubiquity (% samples present)",
     y = "Average abundance",
-    title = "Metabolite ubiquity vs average abundance (Symbiont only)"
+    title = "Metabolite ubiquity vs average abundance (Symbiont only)",
+    subtitle = "by pathways of NPClassifiers"
   ) +
   
   theme_minimal(base_size = 14) +
@@ -496,7 +506,11 @@ ggplot(plot_data_symbiont,
     panel.background  = element_rect(fill = "#000042", color = NA),
     panel.grid.major  = element_line(color = "gray50"),
     panel.grid.minor  = element_blank(),
+
+    # Title + subtitle styling
     plot.title        = element_text(hjust = 0.5, face = "bold", color = "white"),
+    plot.subtitle     = element_text(hjust = 0.5, color = "white", size = 12, margin = margin(b = 6)),
+
     axis.title        = element_text(color = "white"),
     axis.text         = element_text(color = "white"),
 
@@ -519,15 +533,26 @@ ggplot(plot_data_symbiont,
 # Filter merged_metabolite_data to only Both rows
 plot_data_both <- merged_metabolite_data %>%
   filter(refined_origin == "Both") %>%
-  filter(npc_number_pathway != "Unknown")   #Unknown removed
+  filter(npc_number_pathway != "Unknown")   # Unknown removed
 
 ggplot(plot_data_both,
        aes(x = ubiquity,
            y = avg_abundance,
            color = npc_number_pathway)) +
-  geom_point(size = 2.5, alpha = 0.8) +
+  geom_point(size = 2.5, alpha = 0.6) +
   scale_y_continuous(labels = y_labels_fn) +
-  scale_color_discrete(
+  
+  # ---- Same 7-color pathway palette used everywhere ----
+  scale_color_manual(
+    values = c(
+      "Fatty acids"                     = "#E69F00",
+      "Polyketides"                     = "#56B4E9",
+      "Shikimates and Phenylpropanoids" = "#009E73",
+      "Terpenoids"                      = "#F0E442",
+      "Alkaloids"                       = "#0072B2",
+      "Amino acids and Peptides"        = "#D55E00",
+      "Carbohydrates"                   = "#CC79A7"
+    ),
     labels = function(x) stringr::str_wrap(x, width = 18),
     guide = guide_legend(
       nrow = 2,
@@ -537,22 +562,28 @@ ggplot(plot_data_both,
       title = NULL
     )
   ) +
+  
   labs(
     x = "Ubiquity (% samples present)",
     y = "Average abundance",
-    title = "Metabolite ubiquity vs average abundance (Both)"
+    title = "Metabolite ubiquity vs average abundance (Both)",
+    subtitle = "by pathways of NPClassifiers"
   ) +
+  
   theme_minimal(base_size = 14) +
   theme(
     plot.background   = element_rect(fill = "#000042", color = NA),
     panel.background  = element_rect(fill = "#000042", color = NA),
     panel.grid.major  = element_line(color = "gray50"),
     panel.grid.minor  = element_blank(),
+
+    # Title + subtitle must be styled for visibility
     plot.title        = element_text(hjust = 0.5, face = "bold", color = "white"),
+    plot.subtitle     = element_text(hjust = 0.5, color = "white", size = 12, margin = margin(b = 6)),
+
     axis.title        = element_text(color = "white"),
     axis.text         = element_text(color = "white"),
 
-    # Compact legend
     legend.position   = "bottom",
     legend.title      = element_blank(),
     legend.text       = element_text(color = "white", size = 8),
@@ -562,7 +593,6 @@ ggplot(plot_data_both,
     legend.margin     = margin(t = 0, b = 0),
     legend.box.margin = margin(t = -5),
 
-    # room for the plot
     plot.margin       = margin(10, 10, 10, 10)
   )
 ```
@@ -608,7 +638,7 @@ ggplot(plot_data_shared_scler,
        aes(x = ubiquity_scler,
            y = avg_abundance,
            color = npc_number_pathway)) +
-  geom_point(size = 2.5, alpha = 0.8) +
+  geom_point(size = 2.5, alpha = 0.6) +
   scale_y_continuous(labels = y_labels_fn) +
   scale_x_continuous(
     name = "Ubiquity (% Scleractinia samples present)",
@@ -616,7 +646,18 @@ ggplot(plot_data_shared_scler,
     breaks = seq(0, 100, by = 20),
     labels = as.character(seq(0, 100, by = 20))
   ) +
-  scale_color_discrete(
+  
+  # ---- Same 7-color pathway palette & legend spec ----
+  scale_color_manual(
+    values = c(
+      "Fatty acids"                     = "#E69F00",
+      "Polyketides"                     = "#56B4E9",
+      "Shikimates and Phenylpropanoids" = "#009E73",
+      "Terpenoids"                      = "#F0E442",
+      "Alkaloids"                       = "#0072B2",
+      "Amino acids and Peptides"        = "#D55E00",
+      "Carbohydrates"                   = "#CC79A7"
+    ),
     labels = function(x) stringr::str_wrap(x, width = 18),
     guide = guide_legend(
       nrow = 2,
@@ -626,9 +667,11 @@ ggplot(plot_data_shared_scler,
       title = NULL
     )
   ) +
+  
   labs(
     y = "Average abundance",
-    title = "Metabolite ubiquity vs average abundance (Scleractinia)"
+    title = "Metabolite ubiquity vs average abundance (Scleractinia)",
+    subtitle = "by pathways of NPClassifiers"
   ) +
   theme_minimal(base_size = 14) +
   theme(
@@ -636,7 +679,11 @@ ggplot(plot_data_shared_scler,
     panel.background  = element_rect(fill = "#000042", color = NA),
     panel.grid.major  = element_line(color = "gray50"),
     panel.grid.minor  = element_blank(),
+
+    # Title + subtitle styling (visible on dark bg)
     plot.title        = element_text(hjust = 0.5, face = "bold", color = "white"),
+    plot.subtitle     = element_text(hjust = 0.5, color = "white", size = 12, margin = margin(b = 6)),
+
     axis.title        = element_text(color = "white"),
     axis.text         = element_text(color = "white"),
 
