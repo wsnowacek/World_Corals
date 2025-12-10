@@ -184,9 +184,12 @@ write.csv(corals_met_ratio, "corals_met_ratio.csv", row.names = FALSE)
 ```{r}
 #| label: cleaning-refined-origin
 
-metabolite_df <- 
+metabolite_clean <- 
   metabolite_df %>%
   mutate(refined_origin = if_else(refined_origin == "Coral",
                                   "Host",
                                   refined_origin))
+
+# Save to CSV
+write_csv(metabolite_clean, "metabolite_clean.csv")
 ```

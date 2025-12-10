@@ -12,6 +12,7 @@
 
 Corals_clean <- read.csv("/Users/ellaandonov/World_Corals/Cleaned data CSVs/Corals_clean.csv")
 feature_importance_comparison_df <- read.csv("coral_mets_only/featureimportancenov20.csv")
+feature_importance_comparison_all <- read.csv("all_mets/featureimportancedec2.csv")
 met_df <- read.csv("/Users/ellaandonov/World_Corals/Raw Data CSVs/Ty_superset_metabolites_coraldb_updated.csv")
 ```
 
@@ -73,7 +74,7 @@ pca_fit %>%
   theme_minimal_hgrid(12)
 ```
 
-##################################################################### 
+## Models trained on just coral data
 
 ```{r}
 library(tidyverse)
@@ -200,6 +201,154 @@ top100$compound_superclass <- factor(as.character(top20$compound_superclass), le
 
 # Plot
 ggplot(top100, aes(x = metabolite, y = RandomForest_Importance, fill = compound_superclass)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  scale_fill_manual(values = superclass_colors_all) +
+  theme_classic() +
+  labs(
+    title = "Random Forest Feature Importance",
+    y = "Relative Feature Importance (Normalized Gain)", 
+    x = "Metabolite",
+    fill = "Compound Superclass"
+  ) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, NA)) +
+  theme(
+    legend.position = "right",
+    axis.text.x = element_blank(),
+    axis.title.x = element_text(size = 12),
+    axis.title.y = element_text(size = 12), 
+    title = element_text(size = 16)
+  )
+```
+
+## Models trained on all data
+
+```{r}
+#| label: set-up
+
+library(tidyverse)
+library(dplyr)
+library(tibble)
+library(stringr)
+
+# temp_feature_df <- feature_importance_comparison_df %>%
+#   rownames_to_column(var = "metabolite")
+feature_importance_comparison_all <- feature_importance_comparison_all %>%
+  dplyr::rename(metabolite = Feature)
+
+
+merged_df_all <- feature_importance_comparison_all %>%
+  inner_join(
+    met_df,
+    by = "metabolite"
+  )
+
+merged_df_all <- merged_df_all %>%
+  arrange(desc(XGBoost_Importance))
+
+top20_all <- merged_df_all[1:20, ]
+top20_all <- top20_all %>%
+  mutate(metabolite = fct_reorder(metabolite, XGBoost_Importance, .desc = TRUE))
+```
+
+```{r}
+#| label: xgboost-feature-importance-top20-all
+
+library(ggplot2)
+
+# --- use the exact class names in the data ---
+observed <- unique(as.character(top20_all$compound_superclass))
+
+# --- define a named color vector that matches those labels exactly ---
+superclass_colors <- c(
+  "Glycerolipids"               = "#66C2A5",
+  "Glycerophospholipids"        = "#FC8D62",
+  "Monoalkyldiacylglycerols"    = "#8DA0CB",
+  "Phosphatidylglycerocholines" = "#E78AC3",
+  "Sphingolipids"               = "#A6D854",
+  "Steroids"                    = "#FFD92F",
+  "Unknown"                     = "#BEBADA"   
+)
+
+# --- make sure only the observed classes are used (and in the observed order) ---
+observed <- intersect(observed, names(superclass_colors))    # keep order from data
+top20_all$compound_superclass <- factor(as.character(top20_all$compound_superclass),
+                                    levels = observed)
+
+# --- plot ---
+ggplot(top20_all, aes(x = metabolite, y = XGBoost_Importance, fill = compound_superclass)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  scale_fill_manual(values = superclass_colors, drop = FALSE) +
+  theme_classic() +
+  labs(
+    y = "Relative Feature Importance (Normalized Gain)",
+    title = "Extreme Gradient Boost Feature Importance", 
+    x = "Metabolite",
+    fill = "Compound Superclass"
+  ) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, NA)) +
+  theme(
+    legend.position = "right",
+    axis.text.x = element_blank(),
+    axis.title.x = element_text(size = 12),   # bigger x title
+    axis.title.y = element_text(size = 12),    # bigger y title
+    title = element_text(size = 16)
+  )
+```
+
+```{r}
+#| label: rf-feature-importance-graph-all
+
+library(ggplot2)
+library(RColorBrewer)
+library(dplyr)
+library(forcats)
+
+# --- match previous colors on xgboost graph ---
+base_colors <- c(
+  "Glycerolipids"               = "#66C2A5",
+  "Glycerophospholipids"        = "#FC8D62",
+  "Monoalkyldiacylglycerols"    = "#8DA0CB",
+  "Phosphatidylglycerocholines" = "#E78AC3",
+  "Sphingolipids"               = "#A6D854",
+  "Steroids"                    = "#FFD92F",
+  "Unknown"                     = "#BEBADA"
+)
+
+# --- find all classes present in full merged_df ---
+all_classes <- unique(as.character(merged_df_all$compound_superclass))
+
+# --- classes that don't yet have a color in base_colors ---
+missing_classes <- setdiff(all_classes, names(base_colors))
+
+# --- create distinct colors for missing classes using Set3 as a base, expanded as needed ---
+if(length(missing_classes) > 0) {
+  # use up to 12 base brewer colors, then interpolate if more are needed
+  palette_base <- brewer.pal(12, "Set3")
+  colors_for_missing <- grDevices::colorRampPalette(palette_base)(length(missing_classes))
+  names(colors_for_missing) <- missing_classes
+} else {
+  colors_for_missing <- character(0)
+}
+
+# --- final named color vector for all classes ---
+superclass_colors_all <- c(base_colors, colors_for_missing)
+
+# --- Prepare the top100 data ---
+merged_df_rf_all <- merged_df_all %>%
+  arrange(desc(RandomForest_Importance))
+
+top100_all <- merged_df_rf_all[1:100, ]
+top100_all <- top100_all %>%
+  mutate(metabolite = fct_reorder(metabolite, RandomForest_Importance, .desc = TRUE))
+
+# --- Ensure factor levels for the plot follow the order of appearance in top20
+# but also ensure levels are actual names present in the color mapping to avoid mismatches
+observed_in_plot <- unique(as.character(top100_all$compound_superclass))
+plot_levels <- intersect(observed_in_plot, names(superclass_colors_all))
+top100_all$compound_superclass <- factor(as.character(top20_all$compound_superclass), levels = plot_levels)
+
+# Plot
+ggplot(top100_all, aes(x = metabolite, y = RandomForest_Importance, fill = compound_superclass)) +
   geom_bar(stat = "identity", position = "dodge") +
   scale_fill_manual(values = superclass_colors_all) +
   theme_classic() +
