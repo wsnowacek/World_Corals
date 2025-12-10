@@ -51,27 +51,32 @@ print(phylum_permanova_result)
 ```{r}
 #| label: PCoA_phylum_confidence_ellipses
 
-# --- Select metabolites (columns starting with "x")
+# Select metabolite columns (columns starting with "x")
 met_cols <- grep("^x", names(Corals_clean), value = TRUE)
+
+# numeric matrix of metabolite abundances (same selection as PERMANOVA)
 met_mat <- as.matrix(Corals_clean[, met_cols])
 mode(met_mat) <- "numeric"
 
+# Bray–Curtis distance calculated from numeric abundances (same as PERMANOVA)
+bc_dist <- vegdist(met_mat, method = "bray")
 
-# Bray–Curtis distance
-bc_dist <- vegdist((met_mat > 0) * 1, method = "bray")  # prevalence-based similarity
-
-# --- PCoA
+# --- PCoA (classical MDS)
 pcoa <- cmdscale(bc_dist, eig = TRUE, k = 2)
-var_explained <- round(100 * pcoa$eig[1:2] / sum(pcoa$eig[pcoa$eig > 0]), 1)
 
-# build plotting data frame
+# calculate percent variance explained (only positive eigenvalues)
+pos_eigs <- pcoa$eig[pcoa$eig > 0]
+var_explained <- round(100 * pcoa$eig[1:2] / sum(pos_eigs), 1)
+
+# build plotting data frame (keep row order consistent with met_mat / bc_dist)
 pcoa_points_phylum <- data.frame(
   PCoA1 = pcoa$points[, 1],
   PCoA2 = pcoa$points[, 2],
-  host_phylum = meta$host_phylum
+  host_phylum = Corals_clean$host_phylum,
+  row.names = rownames(Corals_clean)
 )
 
-# --- helper for ellipse computation
+# --- helper for ellipse computation (unchanged)
 veganCovEllipse <- function(cov, center, scale = 1, npoints = 100) {
   theta <- seq(0, 2 * pi, length.out = npoints)
   circle <- cbind(cos(theta), sin(theta))
@@ -81,7 +86,7 @@ veganCovEllipse <- function(cov, center, scale = 1, npoints = 100) {
 }
 
 # compute ellipses per host_phylum
-ellipses_df <- do.call(rbind, lapply(unique(pcoa_points_phylum$host_phylum), function(g) {
+ellipses_df <- do.call(rbind, lapply(unique(na.omit(pcoa_points_phylum$host_phylum)), function(g) {
   pts <- subset(pcoa_points_phylum, host_phylum == g)[, c("PCoA1", "PCoA2")]
   if (nrow(pts) < 3) return(NULL)
   cov_mat <- cov(pts)
