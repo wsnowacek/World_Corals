@@ -1,10 +1,12 @@
 ```{r}
 #| label: read_csvs_henry
 
-#setwd("/Users/henrysun_1/Desktop/Duke/PhD 2025-2026/World_Corals")
-## update file path
-#Corals_clean <- read.csv("Corals_clean.csv")
-# met_df <- read.csv("~/Desktop/Duke/PhD 2025-2026/World_Corals/Raw Data CSVs/Ty_superset_metabolites_coraldb_updated.csv")
+setwd("/Users/henrysun_1/Desktop/Duke/PhD 2025-2026/World_Corals")
+# update file path
+Corals_clean <- read.csv("Cleaned\ data\ CSVs/Corals_clean.csv")
+met_df <- read.csv("~/Desktop/Duke/PhD 2025-2026/World_Corals/Raw Data CSVs/Ty_superset_metabolites_coraldb_updated.csv")
+feature_importance_comparison_df <- read.csv("coral_mets_only/featureimportancenov20.csv")
+feature_importance_comparison_all <- read.csv("all_mets/featureimportancedec2.csv")
 ```
 
 ```{r}
@@ -24,64 +26,13 @@ library(readr)
 library(broom)
 library(cowplot)
 library(caret)
-```
-
-```{r}
-#| label: pca-fit
-
-set.seed(111)
-df_filtered <- Corals_clean[Corals_clean$host_phylum != "Cnidaria", ]
-
-pca_fit <- Corals_clean %>% 
-  select(where(is.numeric)) %>% # retain only numeric columns
-  prcomp() # do PCA
-```
-
-```{r}
-#| label: pca-fit-graph
-
-pca_fit %>%
-  augment(Corals_clean) %>% # add original dataset back in
-  ggplot(aes(.fittedPC1, .fittedPC2, color = host_phylum)) + 
-  geom_point(size = 1.5) +
-  theme_half_open(12) + background_grid()
-```
-
-```{r}
-#| label: pca-fit-rotation-matrix
-
-pca_fit %>%
-  tidy(matrix = "rotation")
-```
-
-```{r}
-#| label: pca-fit-rotation-eigenvalues
-
-pca_fit %>%
-  tidy(matrix = "eigenvalues")
-```
-
-```{r}
-pca_fit %>%
-  tidy(matrix = "eigenvalues") %>%
-  ggplot(aes(PC, percent)) +
-  geom_col(fill = "#56B4E9", alpha = 0.8) +
-  scale_x_continuous(breaks = 1:9) +
-  scale_y_continuous(
-    labels = scales::percent_format(),
-    expand = expansion(mult = c(0, 0.01))
-  ) +
-  theme_minimal_hgrid(12)
+library(tibble)
+library(stringr)
 ```
 
 ## Models trained on just coral data
 
 ```{r}
-library(tidyverse)
-library(dplyr)
-library(tibble)
-library(stringr)
-
 # temp_feature_df <- feature_importance_comparison_df %>%
 #   rownames_to_column(var = "metabolite")
 feature_importance_comparison_df <- feature_importance_comparison_df %>%
@@ -104,8 +55,6 @@ top20 <- top20 %>%
 
 ```{r}
 #| label: xgboost-feature-importance-top20
-
-library(ggplot2)
 
 # --- use the exact class names in the data ---
 observed <- unique(as.character(top20$compound_superclass))
