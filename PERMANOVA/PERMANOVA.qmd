@@ -384,6 +384,105 @@ ggplot(pcoa_points, aes(x = PCoA1, y = PCoA2, color = symbiont.potential, fill =
   theme(legend.position = "right")
 ```
 
+```{r}
+#| label: nest_permanova_symbiont_location
+
+# 1) select numeric columns (metabolites)
+permanova_numeric_data4 <- Corals_clean[, sapply(Corals_clean, is.numeric)]
+
+# 2) find rows with:
+#    - non-missing location
+#    - non-missing symbiont.potential
+#    - no missing numeric values
+keep_rows4 <- !is.na(Corals_clean$location) &
+              !is.na(Corals_clean$symbiont.potential) &
+              apply(permanova_numeric_data4, 1, function(x) !any(is.na(x)))
+
+# 3) subset both data objects
+permanova_numeric_data4 <- permanova_numeric_data4[keep_rows4, , drop = FALSE]
+meta4 <- Corals_clean[keep_rows4, , drop = FALSE]
+
+# 4) make sure grouping variables are factors
+meta4$symbiont.potential <- factor(meta4$symbiont.potential)
+meta4$location <- factor(meta4$location)
+
+# 5) compute Bray–Curtis on the filtered numeric table
+bray_curtis4 <- vegdist(permanova_numeric_data4, method = "bray")
+
+# 6) nested PERMANOVA: location nested within symbiont.potential
+nested_permanova_result_1 <- adonis2(
+  bray_curtis4 ~ symbiont.potential/location,
+  data = meta4,
+  permutations = 999
+)
+print(nested_permanova_result_1)
+
+# 7) explicit equivalent (main effect + interaction)
+nested_permanova_result_explicit_1 <- adonis2(
+  bray_curtis4 ~ symbiont.potential + symbiont.potential:location,
+  data = meta4,
+  permutations = 999
+)
+print(nested_permanova_result_explicit_1)
+```
+
+```{r}
+#| label: PCoA_symbiont_and_location
+
+# PCoA (cmdscale) on the SAME Bray–Curtis matrix used in the nested PERMANOVA
+pcoa_result_1 <- cmdscale(bray_curtis4, eig = TRUE, k = 2)
+
+# Turn scores into a data frame
+pcoa_points_1 <- as.data.frame(pcoa_result_1$points)
+colnames(pcoa_points_1) <- c("PCoA1", "PCoA2")
+
+# Bind metadata (meta4 was created in the PERMANOVA chunk)
+pcoa_points_1 <- dplyr::bind_cols(pcoa_points_1, meta4)
+
+# Percent variance explained
+pos_eig_1 <- pcoa_result_1$eig[pcoa_result_1$eig > 0]
+var_explained_1 <- round(100 * pcoa_result_1$eig[1:2] / sum(pos_eig_1), 1)
+
+# (Redundant with how meta4 was built, but explicit) 
+# Remove any samples with NA for symbiont.potential or location
+pcoa_points_1 <- pcoa_points_1 |>
+  dplyr::filter(!is.na(symbiont.potential),
+                !is.na(location))
+
+# Plot: color/fill = symbiont.potential, shape = location
+p_1 <- ggplot(
+  pcoa_points_1,
+  aes(x = PCoA1, y = PCoA2,
+      color = symbiont.potential,
+      fill  = symbiont.potential)
+) +
+  geom_point(aes(shape = location), size = 3, alpha = 0.8) +
+  stat_ellipse(
+    geom   = "polygon",
+    alpha  = 0.15,
+    level  = 0.95,
+    type   = "t",
+    colour = NA
+  ) +
+  labs(
+    title = "PCoA of Bray–Curtis Dissimilarity by Symbiont Potential & Location",
+    x     = paste0("PCoA1 (", var_explained_1[1], "%)"),
+    y     = paste0("PCoA2 (", var_explained_1[2], "%)"),
+    fill  = "Symbiont Potential",
+    color = "Symbiont Potential",
+    shape = "Location"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(legend.position = "right")
+
+print(p_1)
+```
+
+```{r}
+table(meta4$symbiont.potential[rownames(permanova_numeric_data4)])
+
+```
+
 ## Scleractinia PERMANOVA and PCoA
 
 ```{r}
