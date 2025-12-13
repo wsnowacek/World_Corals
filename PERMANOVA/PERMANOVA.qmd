@@ -478,11 +478,6 @@ p_1 <- ggplot(
 print(p_1)
 ```
 
-```{r}
-table(meta4$symbiont.potential[rownames(permanova_numeric_data4)])
-
-```
-
 ## Scleractinia PERMANOVA and PCoA
 
 ```{r}
