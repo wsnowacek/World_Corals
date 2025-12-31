@@ -1364,3 +1364,120 @@ openxlsx::write.xlsx(out_df, "problematic_taxonomy_rows.xlsx", overwrite = TRUE)
 #| label: excel_for_ubiquitous_scleractinia
 openxlsx::write.xlsx(met_summary_coral_only, "ubiquitous_scleractinia_metabolites.xlsx")
 ```
+
+## New data set
+
+```{r}
+#| label: one_sd_below_mean
+
+# Calculation to use 1 sd below mean
+total_met_abundance <- Corals_clean %>%
+  mutate(total = rowSums(across(starts_with("x")), na.rm = TRUE)) %>%
+  mutate(
+    mean_total = mean(total, na.rm = TRUE),
+    sd_total = sd(total, na.rm = TRUE),
+    #  1 sd below mean to catch samples on the lower tail
+    threshold = mean_total - (1 * sd_total), 
+    is_outlier = if_else(total < threshold, "Low Abundance", "Normal")
+  ) %>%
+  relocate(sample, total, is_outlier, threshold, mean_total, sd_total, .before = 1)
+
+table(total_met_abundance$is_outlier)
+```
+
+```{r}
+low_abundance_samples <- total_met_abundance %>%
+  filter(is_outlier == "Low Abundance")
+
+view(low_abundance_samples)
+```
+
+```{r}
+#| label: one_three_sd_below_mean
+
+# Calculation to use 1 sd below mean
+total_met_abundance_13 <- Corals_clean %>%
+  mutate(total = rowSums(across(starts_with("x")), na.rm = TRUE)) %>%
+  mutate(
+    mean_total = mean(total, na.rm = TRUE),
+    sd_total = sd(total, na.rm = TRUE),
+    #  1 sd below mean to catch samples on the lower tail
+    threshold = mean_total - (1.2 * sd_total), 
+    is_outlier = if_else(total < threshold, "Low Abundance", "Normal")
+  ) %>%
+  relocate(sample, total, is_outlier, threshold, mean_total, sd_total, .before = 1)
+
+table(total_met_abundance_13$is_outlier)
+```
+
+```{r}
+low_abundance_samples_13 <- total_met_abundance_13 %>%
+  filter(is_outlier == "Low Abundance")
+
+view(low_abundance_samples_13)
+```
+
+```{r}
+phylum_counts <- Corals_clean %>%
+  count(host_phylum, sort = TRUE)
+
+# View the results
+print(phylum_counts)
+```
+
+```{r}
+library(dplyr)
+
+# Create qc_data by removing samples found in low_abundance_samples
+qc_data <- Corals_clean %>%
+  anti_join(low_abundance_samples, by = "sample")
+```
+
+```{r}
+write.csv(qc_data, "qc_data.csv", row.names = FALSE)
+```
+
+**Testing new qc_data**
+
+```{r}
+qc_data <- read.csv("/Users/ellaandonov/World_Corals/Cleaned data CSVs/qc_data.csv")
+```
+
+```{r}
+#| label: set_up_richness_metric
+
+#Identify metabolite columns (start with "x")
+metabolite_cols <- grep("^x", names(qc_data), value = TRUE)
+
+# Compute metabolomic richness per sample
+# Richness = count of metabolites with intensity > 0
+kw_richness_qc <- qc_data %>%
+  rowwise() %>%
+  mutate(MetabolomicRichness = sum(c_across(all_of(metabolite_cols)) > 0, na.rm = TRUE)) %>%
+  ungroup()
+
+#brought richness column to front for vizualization 
+kw_richness_qc <- kw_richness_qc %>% select(MetabolomicRichness, everything())
+
+```
+
+```{r}
+#| label: kw_test_richness_by_phylum
+
+kruskal.test(host_phylum ~ MetabolomicRichness, data = kw_richness_qc)
+```
+
+```{r}
+#| label: levene_richness_phylum
+
+leveneTest(MetabolomicRichness ~ factor(host_phylum), data = kw_richness_qc)
+```
+
+```{r}
+#| label: levene_richness_Scleractinia_family
+
+leveneTest(
+  MetabolomicRichness ~ factor(host_family),data = kw_richness_qc |>
+    filter(host_order == "Scleractinia")
+  )
+```
