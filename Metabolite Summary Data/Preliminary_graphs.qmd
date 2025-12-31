@@ -1418,6 +1418,13 @@ print(paste("Samples removed:", nrow(richness_qc) - nrow(richness_qc_clean)))
 ```
 
 ```{r}
+library(readr)
+
+# Save the cleaned dataframe to your working directory
+write_csv(richness_qc_clean, "richness_qc_clean.csv")
+```
+
+```{r}
 #| label: dataset_with_Scleractinia_metabolites_qc
 
 # 1) Long-format presence/values for all samples
