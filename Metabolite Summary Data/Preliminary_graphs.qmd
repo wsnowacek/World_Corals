@@ -1418,14 +1418,6 @@ view(low_abundance_samples_13)
 ```
 
 ```{r}
-phylum_counts <- Corals_clean %>%
-  count(host_phylum, sort = TRUE)
-
-# View the results
-print(phylum_counts)
-```
-
-```{r}
 library(dplyr)
 
 # Create qc_data by removing samples found in low_abundance_samples
@@ -1442,6 +1434,44 @@ write.csv(qc_data, "qc_data.csv", row.names = FALSE)
 ```{r}
 qc_data <- read.csv("/Users/ellaandonov/World_Corals/Cleaned data CSVs/qc_data.csv")
 ```
+
+```{r}
+phylum_counts <- Corals_clean %>%
+  count(host_phylum, sort = TRUE)
+
+# View the results
+print(phylum_counts)
+```
+
+```{r}
+phylum_counts_qc <- qc_data %>%
+  count(host_phylum, sort = TRUE)
+
+# View the results
+print(phylum_counts_qc)
+```
+
+```{r}
+#| label: seeing_new_mean
+
+total_met_abundance_qc <- qc_data %>%
+  mutate(total = rowSums(across(starts_with("x")), na.rm = TRUE)) %>%
+  mutate(
+    mean_total = mean(total, na.rm = TRUE),
+    sd_total = sd(total, na.rm = TRUE)
+  ) %>%
+  relocate(sample, total, mean_total, sd_total, .before = 1)
+```
+
+-   One sd below the mean no longer negative, mean much higher.
+
+    -   Before qc, mean was: 2434862936
+
+    -   After qc: 2762211731
+
+    -   Before qc sd was: 1729284842
+
+    -   After qc: 1636697888
 
 ```{r}
 #| label: set_up_richness_metric
