@@ -1365,7 +1365,7 @@ openxlsx::write.xlsx(out_df, "problematic_taxonomy_rows.xlsx", overwrite = TRUE)
 openxlsx::write.xlsx(met_summary_coral_only, "ubiquitous_scleractinia_metabolites.xlsx")
 ```
 
-## New data set
+## New data set Abundance 
 
 ```{r}
 #| label: one_sd_below_mean
@@ -1474,24 +1474,6 @@ total_met_abundance_qc <- qc_data %>%
     -   After qc: 1636697888
 
 ```{r}
-#| label: set_up_richness_metric
-
-#Identify metabolite columns (start with "x")
-metabolite_cols <- grep("^x", names(qc_data), value = TRUE)
-
-# Compute metabolomic richness per sample
-# Richness = count of metabolites with intensity > 0
-kw_richness_qc <- qc_data %>%
-  rowwise() %>%
-  mutate(MetabolomicRichness = sum(c_across(all_of(metabolite_cols)) > 0, na.rm = TRUE)) %>%
-  ungroup()
-
-#brought richness column to front for vizualization 
-kw_richness_qc <- kw_richness_qc %>% select(MetabolomicRichness, everything())
-
-```
-
-```{r}
 #| label: kw_test_richness_by_phylum
 
 kruskal.test(host_phylum ~ MetabolomicRichness, data = kw_richness_qc)
@@ -1510,4 +1492,217 @@ leveneTest(
   MetabolomicRichness ~ factor(host_family),data = kw_richness_qc |>
     filter(host_order == "Scleractinia")
   )
+```
+
+## New data set Richness
+
+```{r}
+#Identify metabolite columns (start with "x")
+metabolite_cols <- grep("^x", names(qc_data), value = TRUE)
+
+# Compute metabolomic richness per sample
+# Richness = count of metabolites with intensity > 0
+richness_qc <- Corals_clean %>%
+  rowwise() %>%
+  mutate(MetabolomicRichness = sum(c_across(all_of(metabolite_cols)) > 0, na.rm = TRUE)) %>%
+  ungroup()
+
+#brought richness column to front for vizualization 
+richness_qc <- richness_qc %>% select(MetabolomicRichness, everything())
+```
+
+```{r}
+# Calculation to use 2.25 standard deviations below the mean for richness
+# Restricting "Low Richness" labels only to the phylum Cnidaria
+richness_qc <- richness_qc %>%
+  mutate(
+    mean_richness = mean(MetabolomicRichness, na.rm = TRUE),
+    sd_richness   = sd(MetabolomicRichness, na.rm = TRUE),
+    # Define threshold: standard deviations below the mean
+    threshold = mean_richness - (1.5 * sd_richness), 
+    # Label as "Low Richness" ONLY if below threshold AND host_phylum is Cnidaria
+    is_outlier = if_else(
+      MetabolomicRichness < threshold & host_phylum == "Cnidaria", 
+      "Low Richness", 
+      "Normal"
+    )
+  ) %>%
+  relocate(MetabolomicRichness, is_outlier, threshold, mean_richness, sd_richness, .before = 1)
+
+# Summary table to see the labels applied
+table(richness_qc$is_outlier)
+```
+
+```{r}
+# Filter the dataframe to remove "Low Richness" samples
+richness_qc_clean <- richness_qc %>%
+  filter(is_outlier != "Low Richness")
+
+# Verify the removal
+# This should show 0 "Low Richness" entries
+table(richness_qc_clean$is_outlier)
+
+# Check how many samples were removed
+print(paste("Samples removed:", nrow(richness_qc) - nrow(richness_qc_clean)))
+```
+
+```{r}
+#| label: dataset_with_Scleractinia_metabolites_qc
+
+# 1) Long-format presence/values for all samples
+met_presence_long <- richness_qc_clean %>%
+  pivot_longer(
+    cols = starts_with("x"),
+    names_to = "metabolite",
+    values_to = "value"
+  ) %>%
+  mutate(present = value > 0)
+
+# 2) Ubiquity overall (all samples) and ubiquity in corals (Scleractinia)
+ubiquity_overall <- met_presence_long %>%
+  group_by(metabolite) %>%
+  summarise(ubiquity_overall = mean(present) * 100, .groups = "drop")
+
+ubiquity_in_corals <- met_presence_long %>%
+  filter(host_order == "Scleractinia") %>%
+  group_by(metabolite) %>%
+  summarise(
+    percent_in_corals = mean(present) * 100,  # percent of coral samples metabolite is found in
+    n_corals_present = sum(present),          # number of coral samples with metabolite
+    n_corals_total = n(),                     # total coral samples used for denominator
+    .groups = "drop"
+  )
+
+# 3) Identify metabolites present in non-coral samples
+met_in_noncoral <- met_presence_long %>%
+  filter(host_order != "Scleractinia", present) %>%
+  distinct(metabolite) %>%
+  pull(metabolite)
+
+# 4) Coral-specific metabolites = those present in corals and NOT present in non-coral samples
+#    (i.e., present at least once in corals AND absent from all non-coral samples)
+coral_specific_mets <- ubiquity_in_corals %>%
+  filter(percent_in_corals > 0) %>%      # present at least once in corals
+  filter(!metabolite %in% met_in_noncoral) %>%
+  pull(metabolite)
+
+# 5) Build metabolite-level summary for coral-specific metabolites, ranked by percent_in_corals
+met_summary_coral_only <- ubiquity_in_corals %>%
+  filter(metabolite %in% coral_specific_mets) %>%
+  # add overall ubiquity and average abundance (across all samples)
+  left_join(ubiquity_overall, by = "metabolite") %>%
+  left_join(
+    met_presence_long %>%
+      group_by(metabolite) %>%
+      summarise(avg_abundance = mean(value, na.rm = TRUE), .groups = "drop"),
+    by = "metabolite"
+  ) %>%
+  # order by percent_in_corals (most -> least)
+  arrange(desc(percent_in_corals), desc(avg_abundance)) %>%
+  # make percent_in_corals the first column (already is), keep useful columns
+  select(percent_in_corals, metabolite, ubiquity_overall, avg_abundance, n_corals_present, n_corals_total)
+
+# 6) Sample-level dataset: all metadata columns for coral samples, plus only the coral-specific metabolite columns
+#    (this keeps original Corals_clean metadata intact)
+coral_samples_with_coralonly_mets <- Corals_clean %>%
+  filter(host_order == "Scleractinia") %>%
+  # keep all metadata columns plus only the coral-specific metabolite columns
+  select(
+    # keep everything that is NOT a metabolite first (assumes metabolite columns start with 'x')
+    -starts_with("x"),
+    # then add the coral-specific metabolite columns (if any)
+    all_of(coral_specific_mets)
+  )
+```
+
+```{r}
+#| label: metabolite_for_sclerictinia_csv_qc
+
+# Save coral-specific metabolite summary as a CSV file
+write.csv(
+  met_summary_coral_only,
+  file = "qc_met_summary_scler.csv",
+  row.names = FALSE
+)
+```
+
+```{r}
+qc_met_summary_scler <- read.csv("/Users/ellaandonov/World_Corals/Metabolite Summary Data/qc_met_summary_scler.csv")
+```
+
+```{r}
+# Count unique categories for each taxonomic level
+taxonomic_counts <- richness_qc_clean %>%
+  summarise(across(
+    c(host_phylum, host_class, host_order, host_genus, host_species), 
+    ~n_distinct(.x, na.rm = TRUE)
+  )) %>%
+  # Optional: Pivot to long format for a cleaner table view
+  tidyr::pivot_longer(
+    cols = everything(), 
+    names_to = "Taxonomic_Level", 
+    values_to = "Unique_Count"
+  )
+
+# View the counts
+print(taxonomic_counts)
+```
+
+Testing dendrogram
+
+```{r}
+avg_metabolite_values_family <- richness_qc_clean |>
+  group_by(host_family) |> 
+  filter(!is.na(host_family)) |> 
+  summarise(across(starts_with("x"), mean, na.rm = TRUE)) |>
+  ungroup()
+```
+
+```{r}
+# turn host_family into rownames and create numeric matrix for vegdist
+mat_family <- avg_metabolite_values_family %>%
+  as.data.frame()                     # ensure data.frame for rownames()
+rownames(mat_family) <- mat_family$host_family
+mat_family <- mat_family[ , setdiff(names(mat_family), "host_family")]  # drop the column now that it's rownames
+
+mat_family[] <- lapply(mat_family, as.numeric)
+
+mat_family <- mat_family %>%
+  mutate_all(~ifelse(is.na(.), 0, .))   # replace NAs with 0s (common for abundance data)
+```
+
+```{r}
+bray_curtis_family <- vegdist (sqrt (mat_family), method = 'bray') 
+# percentage cover data are transformed by square root
+cluster.single <- hclust (d = bray_curtis_family, method = 'single')
+cluster.complete <- hclust (bray_curtis_family, 'complete')
+cluster.average <- hclust (bray_curtis_family, 'average')
+```
+
+```{r}
+# Set background color for the plot area and device
+par(bg = "#000042")               # device background
+par(col = "white",                # axis & text color
+    col.axis = "white",
+    col.lab  = "white",
+    col.main = "white",
+    col.sub  = "white",
+    fg = "white")                 # foreground (box, axes)
+
+# Plot dendrogram with white lines and labels
+plot(cluster.average,
+     main = "Dendrogram by Family",
+     xlab = "Families",
+     sub = "",
+     cex = 0.6,
+     col = "white",               # dendrogram lines
+     col.lab = "white",
+     col.main = "white",
+     col.axis = "white",
+     labels = cluster.average$labels,
+     col.lab = "white")
+
+# Draw cluster rectangles in white
+rect.hclust(cluster.average, k = 10, border = "white", lwd = 2)
+
 ```
