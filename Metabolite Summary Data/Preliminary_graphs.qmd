@@ -1383,13 +1383,13 @@ richness_qc <- richness_qc %>% select(MetabolomicRichness, everything())
 ```
 
 ```{r}
-# Calculation to use 2.25 standard deviations below the mean for richness
+# Calculation to use 1.5 standard deviations below the mean for richness
 # Restricting "Low Richness" labels only to the phylum Cnidaria
 richness_qc <- richness_qc %>%
   mutate(
     mean_richness = mean(MetabolomicRichness, na.rm = TRUE),
     sd_richness   = sd(MetabolomicRichness, na.rm = TRUE),
-    # Define threshold: standard deviations below the mean
+    # Define threshold: 1.5 standard deviations below the mean
     threshold = mean_richness - (1.5 * sd_richness), 
     # Label as "Low Richness" ONLY if below threshold AND host_phylum is Cnidaria
     is_outlier = if_else(
