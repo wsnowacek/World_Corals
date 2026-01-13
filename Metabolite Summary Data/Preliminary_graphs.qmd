@@ -1716,3 +1716,194 @@ ggplot(richness_df_qc, aes(x = host_phylum, y = MetabolomicRichness, fill = host
     panel.grid.minor = element_line(color = "gray30")
   )
 ```
+
+-   Which samples represent the \~15% of corals that don't have the unique compounds? 
+
+    -   This is using the top ubiquitous Scleractinian metabolite (x40256_908_80758_16_341)
+
+```{r}
+library(dplyr)
+
+# 1. Get the name of the metabolite with the highest coral ubiquity
+# We assume qc_met_summary_scler is sorted, but this finds it regardless
+top_coral_metabolite <- qc_met_summary_scler %>%
+  arrange(desc(percent_in_corals)) %>%
+  slice(1) %>%
+  pull(metabolite)
+
+# 2. Find the Scleractinia samples where this metabolite is MISSING (value == 0)
+samples_missing_top_met <- richness_qc_clean %>%
+  filter(host_order == "Scleractinia") %>%
+  # Filter for where the top metabolite intensity is 0
+  filter(!!sym(top_coral_metabolite) == 0) %>%
+  # Keep metadata columns to identify these samples (adjust column names as needed)
+  select(sample_id, host_phylum, host_order, host_family, host_genus, all_of(top_coral_metabolite))
+
+# 3. View the list
+print(samples_missing_top_met)
+```
+
+-   This is using the top 5 ubiquitous Scleractinian metabolites
+
+```{r}
+# Get the top 5 metabolites
+top_5_mets <- qc_met_summary_scler %>%
+  arrange(desc(percent_in_corals)) %>%
+  head(5) %>%
+  pull(metabolite)
+
+# Find samples missing ANY of the top 5
+samples_missing_any <- richness_qc_clean %>%
+  filter(host_order == "Scleractinia") %>%
+  rowwise() %>%
+  filter(any(c_across(all_of(top_5_mets)) == 0))
+
+View(samples_missing_any)
+```
+
+```{r}
+#| label: permanova_phylum_qc
+
+# Select only numeric metabolite columns
+permanova_numeric_data_qc <- richness_qc_clean[, sapply(richness_qc_clean, is.numeric)]
+
+# Compute Bray-Curtis distance
+bray_curtis <- vegdist(permanova_numeric_data_qc, method = "bray")
+
+# Run PERMANOVA
+phylum_permanova_result_qc <- adonis2(bray_curtis ~ host_phylum, data = richness_qc_clean, permutations = 999)
+
+# Display results
+print(phylum_permanova_result_qc)
+```
+
+```{r}
+#| label: PCoA_phylum_confidence_ellipses_qc
+
+# Select metabolite columns (columns starting with "x")
+met_cols <- grep("^x", names(richness_qc_clean), value = TRUE)
+
+# numeric matrix of metabolite abundances (same selection as PERMANOVA)
+met_mat <- as.matrix(richness_qc_clean[, met_cols])
+mode(met_mat) <- "numeric"
+
+# Bray–Curtis distance calculated from numeric abundances (same as PERMANOVA)
+bc_dist <- vegdist(met_mat, method = "bray")
+
+# --- PCoA (classical MDS)
+pcoa <- cmdscale(bc_dist, eig = TRUE, k = 2)
+
+# calculate percent variance explained (only positive eigenvalues)
+pos_eigs <- pcoa$eig[pcoa$eig > 0]
+var_explained <- round(100 * pcoa$eig[1:2] / sum(pos_eigs), 1)
+
+# build plotting data frame (keep row order consistent with met_mat / bc_dist)
+pcoa_points_phylum <- data.frame(
+  PCoA1 = pcoa$points[, 1],
+  PCoA2 = pcoa$points[, 2],
+  host_phylum = richness_qc_clean$host_phylum,
+  row.names = rownames(richness_qc_clean)
+)
+
+# --- helper for ellipse computation (unchanged)
+veganCovEllipse <- function(cov, center, scale = 1, npoints = 100) {
+  theta <- seq(0, 2 * pi, length.out = npoints)
+  circle <- cbind(cos(theta), sin(theta))
+  ed <- eigen(cov)
+  vect <- ed$vectors %*% diag(sqrt(ed$values)) %*% t(circle) * scale
+  t(vect + center)
+}
+
+# compute ellipses per host_phylum
+ellipses_df <- do.call(rbind, lapply(unique(na.omit(pcoa_points_phylum$host_phylum)), function(g) {
+  pts <- subset(pcoa_points_phylum, host_phylum == g)[, c("PCoA1", "PCoA2")]
+  if (nrow(pts) < 3) return(NULL)
+  cov_mat <- cov(pts)
+  center <- colMeans(pts)
+  el <- veganCovEllipse(cov_mat, center, scale = sqrt(qchisq(0.95, df = 2)), npoints = 200)
+  data.frame(PCoA1 = el[, 1], PCoA2 = el[, 2], host_phylum = g)
+}))
+
+# --- Plot
+ggplot(pcoa_points_phylum, aes(x = PCoA1, y = PCoA2, color = host_phylum)) +
+  geom_point(size = 3, alpha = 0.8) +
+  geom_polygon(data = ellipses_df,
+               aes(x = PCoA1, y = PCoA2, fill = host_phylum),
+               alpha = 0.15, colour = NA) +
+  labs(
+    x = paste0("PCoA 1 (", var_explained[1], "%)"),
+    y = paste0("PCoA 2 (", var_explained[2], "%)"),
+    title = "PCoA of Bray–Curtis Dissimilarity by Phylum",
+    color = "Phylum",
+    fill = "Phylum"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(legend.position = "right")
+```
+
+```{r}
+library(dplyr)
+library(vegan)
+library(ggplot2)
+
+# 1) Filter dataset for Scleractinia only & remove families with < 3 samples
+scler_data <- richness_qc_clean %>%
+  filter(host_order == "Scleractinia") %>%
+  group_by(host_family) %>%
+  filter(n() >= 3) %>%
+  ungroup()
+
+# 2) Identify metabolite columns and create distance matrix
+met_cols <- grep("^x", names(scler_data), value = TRUE)
+met_mat <- as.matrix(scler_data[, met_cols])
+mode(met_mat) <- "numeric"
+
+# Bray–Curtis distance
+bc_dist <- vegdist(met_mat, method = "bray")
+
+# 3) PCoA (classical MDS)
+pcoa <- cmdscale(bc_dist, eig = TRUE, k = 2)
+var_explained <- round(100 * pcoa$eig[1:2] / sum(pcoa$eig[pcoa$eig > 0]), 1)
+
+# 4) Build data frame for individual points
+pcoa_points <- data.frame(
+  PCoA1 = pcoa$points[, 1],
+  PCoA2 = pcoa$points[, 2],
+  host_family = scler_data$host_family
+)
+
+# 5) Calculate Centroids
+family_centroids <- pcoa_points %>%
+  group_by(host_family) %>%
+  summarise(PCoA1 = mean(PCoA1), PCoA2 = mean(PCoA2), .groups = "drop")
+
+# 6) Compute ellipses
+ellipses_df <- do.call(rbind, lapply(unique(pcoa_points$host_family), function(g) {
+  pts <- subset(pcoa_points, host_family == g)[, c("PCoA1", "PCoA2")]
+  cov_mat <- cov(pts)
+  center <- colMeans(pts)
+  el <- veganCovEllipse(cov_mat, center, scale = sqrt(qchisq(0.95, df = 2)), npoints = 200)
+  data.frame(PCoA1 = el[, 1], PCoA2 = el[, 2], host_family = g)
+}))
+
+# 7) Plot
+ggplot(family_centroids, aes(x = PCoA1, y = PCoA2, color = host_family)) +
+  # Confidence Ellipses (95%)
+  geom_polygon(data = ellipses_df, aes(fill = host_family), alpha = 0.15, linetype = 1) +
+  # Centroid Points
+  geom_point(size = 4) +
+  labs(
+    x = paste0("PCoA 1 (", var_explained[1], "%)"),
+    y = paste0("PCoA 2 (", var_explained[2], "%)"),
+    title = "Metabolomic PCoA: Scleractinia Family Clusters",
+    subtitle = "Centroids and 95% Confidence Ellipses (Bray-Curtis)",
+    color = "Host Family",
+    fill = "Host Family"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    legend.position = "right",
+    panel.grid.minor = element_blank(),
+    plot.title = element_text(face = "bold")
+  )
+```
