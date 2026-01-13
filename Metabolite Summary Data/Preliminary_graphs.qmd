@@ -1369,7 +1369,7 @@ openxlsx::write.xlsx(met_summary_coral_only, "ubiquitous_scleractinia_metabolite
 
 ```{r}
 #Identify metabolite columns (start with "x")
-metabolite_cols <- grep("^x", names(qc_data), value = TRUE)
+metabolite_cols <- grep("^x", names(Corals_clean), value = TRUE)
 
 # Compute metabolomic richness per sample
 # Richness = count of metabolites with intensity > 0
@@ -1509,6 +1509,25 @@ qc_met_summary_scler <- read.csv("/Users/ellaandonov/World_Corals/Metabolite Sum
 ```
 
 ```{r}
+# Combine the overall ubiquity with average abundance for EVERY metabolite
+full_metabolite_report <- ubiquity_overall %>%
+  left_join(
+    met_presence_long %>%
+      group_by(metabolite) %>%
+      summarise(avg_abundance = mean(value, na.rm = TRUE), .groups = "drop"),
+    by = "metabolite"
+  ) %>%
+  arrange(desc(ubiquity_overall))
+
+# Export this full report
+write_csv(full_metabolite_report, "qc_metabolite_ubiquity.csv")
+```
+
+```{r}
+qc_metabolite_ubiquity <- read.csv("/Users/ellaandonov/World_Corals/Metabolite Summary Data/qc_metabolite_ubiquity.csv")
+```
+
+```{r}
 # Count unique categories for each taxonomic level
 taxonomic_counts <- richness_qc_clean %>%
   summarise(across(
@@ -1583,4 +1602,117 @@ plot(cluster.average,
 # Draw cluster rectangles in white
 rect.hclust(cluster.average, k = 10, border = "white", lwd = 2)
 
+```
+
+```{r}
+#| label: Metabolomic_Richness_by_Phylum
+
+# 1) Identify metabolite columns (start with "x")
+metabolite_cols <- grep("^x", names(Corals_clean), value = TRUE)
+
+# 2) Compute metabolomic richness per sample
+#    Richness = count of metabolites with intensity > 0
+richness_df <- Corals_clean %>%
+  select(sample_id, host_phylum, all_of(metabolite_cols)) %>%
+  rowwise() %>%
+  mutate(MetabolomicRichness = sum(c_across(all_of(metabolite_cols)) > 0, na.rm = TRUE)) %>%
+  ungroup()
+
+# 3) Build a distinct, readable palette sized to the # of phyla
+n_phyla <- n_distinct(na.omit(richness_df$host_phylum))
+diverse_palette <- grDevices::colorRampPalette(
+  c("#ebf2ff", "#6d9eeb", "#3c78d8",   # blues
+    "#a2d9a2", "#3fa34d", "#145214",   # greens
+    "#e0c2f2", "#9b59b6", "#4b0082")   # purples
+)(n_phyla)
+
+# 4) Box-and-whisker plot (dark background, clear outlines, visible outliers)
+ggplot(richness_df, aes(x = host_phylum, y = MetabolomicRichness, fill = host_phylum)) +
+  geom_boxplot(color = "white", outlier.colour = "white", outlier.shape = 16, outlier.size = 2) +
+  scale_fill_manual(values = diverse_palette) +
+  labs(
+    title = "Metabolomic Richness by Phylum",
+    x = "Phylum",
+    y = "Number of Detected Metabolites"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.background   = element_rect(fill = "#000042", color = NA),
+    panel.background  = element_rect(fill = "#000042", color = NA),
+    legend.position   = "none",
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold", color = "white"),
+    axis.title = element_text(size = 14, color = "white"),
+    axis.text  = element_text(size = 12, color = "white"),
+    panel.grid.major = element_line(color = "gray40"),
+    panel.grid.minor = element_line(color = "gray30")
+  )
+```
+
+```{r}
+library(dplyr)
+
+# 1. Identify the outliers and keep only their IDs
+outlier_ids <- richness_df %>%
+  group_by(host_phylum) %>%
+  mutate(
+    Q1 = quantile(MetabolomicRichness, 0.25, na.rm = TRUE),
+    Q3 = quantile(MetabolomicRichness, 0.75, na.rm = TRUE),
+    IQR = Q3 - Q1,
+    lower_bound = Q1 - (1.5 * IQR),
+    upper_bound = Q3 + (1.5 * IQR),
+    is_outlier = MetabolomicRichness < lower_bound | MetabolomicRichness > upper_bound
+  ) %>%
+  filter(is_outlier == TRUE) %>%
+  select(sample_id) # Keep only the ID for the join
+
+# 2. Join back to Corals_clean to get ALL original columns
+full_outlier_data <- Corals_clean %>%
+  inner_join(outlier_ids, by = "sample_id")
+
+# View the full details of the outliers
+View(full_outlier_data)
+```
+
+```{r}
+#| label: Metabolomic_Richness_by_Phylum
+
+# 1) Identify metabolite columns (start with "x")
+metabolite_cols_qc <- grep("^x", names(richness_qc_clean), value = TRUE)
+
+# 2) Compute metabolomic richness per sample
+#    Richness = count of metabolites with intensity > 0
+richness_df_qc <- richness_qc_clean %>%
+  select(sample_id, host_phylum, all_of(metabolite_cols_qc)) %>%
+  rowwise() %>%
+  mutate(MetabolomicRichness = sum(c_across(all_of(metabolite_cols_qc)) > 0, na.rm = TRUE)) %>%
+  ungroup()
+
+# 3) Build a distinct, readable palette sized to the # of phyla
+n_phyla <- n_distinct(na.omit(richness_df_qc$host_phylum))
+diverse_palette <- grDevices::colorRampPalette(
+  c("#ebf2ff", "#6d9eeb", "#3c78d8",   # blues
+    "#a2d9a2", "#3fa34d", "#145214",   # greens
+    "#e0c2f2", "#9b59b6", "#4b0082")   # purples
+)(n_phyla)
+
+# 4) Box-and-whisker plot (dark background, clear outlines, visible outliers)
+ggplot(richness_df_qc, aes(x = host_phylum, y = MetabolomicRichness, fill = host_phylum)) +
+  geom_boxplot(color = "white", outlier.colour = "white", outlier.shape = 16, outlier.size = 2) +
+  scale_fill_manual(values = diverse_palette) +
+  labs(
+    title = "Metabolomic Richness by Phylum",
+    x = "Phylum",
+    y = "Number of Detected Metabolites"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.background   = element_rect(fill = "#000042", color = NA),
+    panel.background  = element_rect(fill = "#000042", color = NA),
+    legend.position   = "none",
+    plot.title = element_text(hjust = 0.5, size = 16, face = "bold", color = "white"),
+    axis.title = element_text(size = 14, color = "white"),
+    axis.text  = element_text(size = 12, color = "white"),
+    panel.grid.major = element_line(color = "gray40"),
+    panel.grid.minor = element_line(color = "gray30")
+  )
 ```
