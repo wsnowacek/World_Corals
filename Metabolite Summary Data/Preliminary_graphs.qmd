@@ -1404,31 +1404,35 @@ richness_qc <- richness_qc %>%
 table(richness_qc$is_outlier)
 ```
 
+-   New dataset: qc_data
+
+    -   Gets rid of 29 outliers with the lowest richness of metabolites (1.5 standards below the mean richness)
+
 ```{r}
 # Filter the dataframe to remove "Low Richness" samples
-richness_qc_clean <- richness_qc %>%
+qc_data <- richness_qc %>%
   filter(is_outlier != "Low Richness")
 
 # Verify the removal
 # This should show 0 "Low Richness" entries
-table(richness_qc_clean$is_outlier)
+table(qc_data$is_outlier)
 
 # Check how many samples were removed
-print(paste("Samples removed:", nrow(richness_qc) - nrow(richness_qc_clean)))
+print(paste("Samples removed:", nrow(richness_qc) - nrow(qc_data)))
 ```
 
 ```{r}
 library(readr)
 
 # Save the cleaned dataframe to your working directory
-write_csv(richness_qc_clean, "richness_qc_clean.csv")
+write_csv(qc_data, "qc_data.csv")
 ```
 
 ```{r}
 #| label: dataset_with_Scleractinia_metabolites_qc
 
 # 1) Long-format presence/values for all samples
-met_presence_long <- richness_qc_clean %>%
+met_presence_long <- qc_data %>%
   pivot_longer(
     cols = starts_with("x"),
     names_to = "metabolite",
@@ -1493,6 +1497,18 @@ coral_samples_with_coralonly_mets <- Corals_clean %>%
   )
 ```
 
+-   New csv: qc_met_summary_scler
+
+    -   Has the uniquley ubiquitous metabolites only found in Scleractinia
+
+        -   "percent_in_corals" = percent that metabolite is found from all Scleractinian samples
+
+        -    "ubiquity_overall" = percent that metabolite is found out of all samples
+
+        -   "n_corals_present" = total amount of Scleractinian samples that metabolite was found in
+
+        -   "n_corals_total" = the total amount of Scleractinian samples present in the dataset
+
 ```{r}
 #| label: metabolite_for_sclerictinia_csv_qc
 
@@ -1507,6 +1523,10 @@ write.csv(
 ```{r}
 qc_met_summary_scler <- read.csv("/Users/ellaandonov/World_Corals/Metabolite Summary Data/qc_met_summary_scler.csv")
 ```
+
+-   New csv: qc_metabolite_ubiquity
+
+    -   Has the overall ubiquity of a metabolite from all the data (not just Scleractinian samples)
 
 ```{r}
 # Combine the overall ubiquity with average abundance for EVERY metabolite
@@ -1527,9 +1547,11 @@ write_csv(full_metabolite_report, "qc_metabolite_ubiquity.csv")
 qc_metabolite_ubiquity <- read.csv("/Users/ellaandonov/World_Corals/Metabolite Summary Data/qc_metabolite_ubiquity.csv")
 ```
 
+-   Showing counts of classifications in new qc_data
+
 ```{r}
 # Count unique categories for each taxonomic level
-taxonomic_counts <- richness_qc_clean %>%
+taxonomic_counts <- qc_data %>%
   summarise(across(
     c(host_phylum, host_class, host_order, host_genus, host_species), 
     ~n_distinct(.x, na.rm = TRUE)
@@ -1545,10 +1567,10 @@ taxonomic_counts <- richness_qc_clean %>%
 print(taxonomic_counts)
 ```
 
-Testing dendrogram
+**Testing Dendrograms**
 
 ```{r}
-avg_metabolite_values_family <- richness_qc_clean |>
+avg_metabolite_values_family <- qc_data |>
   group_by(host_family) |> 
   filter(!is.na(host_family)) |> 
   summarise(across(starts_with("x"), mean, na.rm = TRUE)) |>
@@ -1604,6 +1626,10 @@ rect.hclust(cluster.average, k = 10, border = "white", lwd = 2)
 
 ```
 
+**Remake Richness Plots**
+
+Original Richness Plot with Corals_clean
+
 ```{r}
 #| label: Metabolomic_Richness_by_Phylum
 
@@ -1648,6 +1674,10 @@ ggplot(richness_df, aes(x = host_phylum, y = MetabolomicRichness, fill = host_ph
   )
 ```
 
+-   New csv: full_outlier_data
+
+    -   Shows the outliers that are in the original Corals_clean richness plot
+
 ```{r}
 library(dplyr)
 
@@ -1672,6 +1702,8 @@ full_outlier_data <- Corals_clean %>%
 # View the full details of the outliers
 View(full_outlier_data)
 ```
+
+-   Showing richness plot for qc_data
 
 ```{r}
 #| label: Metabolomic_Richness_by_Phylum
@@ -1761,6 +1793,8 @@ samples_missing_any <- richness_qc_clean %>%
 View(samples_missing_any)
 ```
 
+**PERMANOVA for qc_data by Phylum**
+
 ```{r}
 #| label: permanova_phylum_qc
 
@@ -1776,6 +1810,8 @@ phylum_permanova_result_qc <- adonis2(bray_curtis ~ host_phylum, data = richness
 # Display results
 print(phylum_permanova_result_qc)
 ```
+
+PCoA for qc_data by Phylum
 
 ```{r}
 #| label: PCoA_phylum_confidence_ellipses_qc
@@ -1840,6 +1876,8 @@ ggplot(pcoa_points_phylum, aes(x = PCoA1, y = PCoA2, color = host_phylum)) +
   theme_minimal(base_size = 14) +
   theme(legend.position = "right")
 ```
+
+PCoA for qc_data by Family
 
 ```{r}
 library(dplyr)
