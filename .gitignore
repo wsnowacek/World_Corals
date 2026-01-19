@@ -6,3 +6,5 @@
 /venv_world_corals/
 .RData*
 /misc/
+*.sh
+/machine_learning/logs/
