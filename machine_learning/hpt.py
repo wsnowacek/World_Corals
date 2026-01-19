@@ -14,12 +14,15 @@ import joblib
 
 print("loaded packages\n")
 
-coral_df = pd.read_csv("corals.csv")
-met_df = pd.read_csv("metabolites.csv")
+coral_df = pd.read_csv("/work/hs325/World_Corals/Cleaned data CSVs/richness_qc_clean.csv")
+met_df = pd.read_csv("/work/hs325/World_Corals/Cleaned data CSVs/metabolite_clean.csv")
 
 coral_df['scleractinia'] = np.where(coral_df['host_order'] == 'Scleractinia', 1, 0)
 met_df['refined_origin'] = met_df['refined_origin'].str.replace('Host', 'Coral')
-met_df_coral = met_df[met_df['refined_origin'] == 'Coral']
+
+# keep this commented if you want to use all metabolites, not just coral-specific ones
+# met_df_coral = met_df[met_df['refined_origin'] == 'Coral']
+met_df_coral = met_df
 
 # coral_df = coral_df[coral_df['bleaching'].isin(['B', 'NB'])]
 # coral_df['bleaching'] = coral_df['bleaching'].map({'NB': 0, 'B': 1})
@@ -35,12 +38,12 @@ y = y.to_numpy()
 scaler = StandardScaler()
 X = scaler.fit_transform(X)
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=88, stratify=y)
-X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=0.2, random_state=88, stratify=y_train)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=123, stratify=y)
+X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=0.2, random_state=123, stratify=y_train)
 
 search_spaces = {
     "RF": (
-        RandomForestClassifier(n_jobs=-1, random_state=88),
+        RandomForestClassifier(n_jobs=-1, random_state=123),
         {
             "n_estimators": Integer(100, 2000),
             "max_depth": Integer(3, 50),
@@ -50,7 +53,7 @@ search_spaces = {
         },
     ),
     "GB": (
-        XGBClassifier(tree_method="hist", eval_metric="logloss", use_label_encoder=False, n_jobs=-1, random_state=88),
+        XGBClassifier(tree_method="hist", eval_metric="logloss", use_label_encoder=False, n_jobs=-1, random_state=123),
         {
             "n_estimators": Integer(100, 2000),
             "max_depth": Integer(3, 15),
@@ -74,7 +77,7 @@ for name, (estimator, space) in search_spaces.items():
         cv=5,
         n_jobs=-1,
         refit=True,
-        random_state=88,
+        random_state=123,
         verbose=0,
     )
     bayes.fit(X_train, y_train)

@@ -8,3 +8,4 @@
 /misc/
 *.sh
 /machine_learning/logs/
+/machine_learning/models/
