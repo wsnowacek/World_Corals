@@ -1,19 +1,19 @@
 ```{r}
 #| label: read_csvs_henry
 
-setwd("/Users/henrysun_1/Desktop/Duke/PhD 2025-2026/World_Corals")
+setwd("/work/hs325/World_Corals")
 # update file path
-Corals_clean <- read.csv("Cleaned\ data\ CSVs/Corals_clean.csv")
-met_df <- read.csv("~/Desktop/Duke/PhD 2025-2026/World_Corals/Raw Data CSVs/Ty_superset_metabolites_coraldb_updated.csv")
-feature_importance_comparison_df <- read.csv("coral_mets_only/featureimportancenov20.csv")
-feature_importance_comparison_all <- read.csv("all_mets/featureimportancedec2.csv")
+Corals_clean <- read.csv("/work/hs325/World_Corals/Cleaned data CSVs/richness_qc_clean.csv")
+met_df <- read.csv("/work/hs325/World_Corals/Cleaned data CSVs/metabolite_clean.csv")
+feature_importance_comparison_coralonly <- read.csv("/work/hs325/World_Corals/machine_learning/coral_mets_only/featureimportancecoralmets.csv")
+feature_importance_comparison_all <- read.csv("/work/hs325/World_Corals/machine_learning/all_mets/featureimportance_allmets.csv")
 ```
 
 ```{r}
 #| label: read_csvs_ella
 
 Corals_clean <- read.csv("/Users/ellaandonov/World_Corals/Cleaned data CSVs/Corals_clean.csv")
-feature_importance_comparison_df <- read.csv("coral_mets_only/featureimportancenov20.csv")
+feature_importance_comparison_coralonly <- read.csv("coral_mets_only/featureimportancenov20.csv")
 feature_importance_comparison_all <- read.csv("all_mets/featureimportancedec2.csv")
 met_df <- read.csv("/Users/ellaandonov/World_Corals/Raw Data CSVs/Ty_superset_metabolites_coraldb_updated.csv")
 ```
@@ -33,13 +33,13 @@ library(stringr)
 ## Models trained on just coral data
 
 ```{r}
-# temp_feature_df <- feature_importance_comparison_df %>%
+# temp_feature_df <- feature_importance_comparison_coralonly %>%
 #   rownames_to_column(var = "metabolite")
-feature_importance_comparison_df <- feature_importance_comparison_df %>%
+feature_importance_comparison_coralonly <- feature_importance_comparison_coralonly %>%
   dplyr::rename(metabolite = Feature)
 
 
-merged_df <- feature_importance_comparison_df %>%
+merged_df <- feature_importance_comparison_coralonly %>%
   inner_join(
     met_df,
     by = "metabolite"
@@ -179,7 +179,7 @@ library(dplyr)
 library(tibble)
 library(stringr)
 
-# temp_feature_df <- feature_importance_comparison_df %>%
+# temp_feature_df <- feature_importance_comparison_coralonly %>%
 #   rownames_to_column(var = "metabolite")
 feature_importance_comparison_all <- feature_importance_comparison_all %>%
   dplyr::rename(metabolite = Feature)
