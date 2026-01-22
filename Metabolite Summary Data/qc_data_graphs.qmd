@@ -1,0 +1,188 @@
+---
+title: "qc_data_graphs"
+format: html
+---
+
+## Library and Data
+
+```{r}
+#| label: library_function 
+
+library(tidyverse)
+library(knitr)
+library(readxl)
+library(data.table)
+library(vegan)
+library(scales)
+```
+
+```{r}
+#| label: read-csvs
+
+qc_data <- read.csv("/Users/ellaandonov/World_Corals/Metabolite Summary Data/qc_data.csv")
+```
+
+## Taxonomic Counts
+
+```{r}
+#| label: taxonomic-counts
+
+# Count unique categories for each taxonomic level
+taxonomic_counts <- qc_data %>%
+  summarise(across(
+    c(host_phylum, host_class, host_order, host_genus, host_species), 
+    ~n_distinct(.x, na.rm = TRUE)
+  )) %>%
+  # Optional: Pivot to long format for a cleaner table view
+  tidyr::pivot_longer(
+    cols = everything(), 
+    names_to = "Taxonomic_Level", 
+    values_to = "Unique_Count"
+  )
+
+# View the counts
+print(taxonomic_counts)
+```
+
+## Dendrograms 
+
+```{r}
+avg_metabolite_values_family <- qc_data |>
+  group_by(host_family) |> 
+  filter(!is.na(host_family)) |> 
+  summarise(across(starts_with("x"), mean, na.rm = TRUE)) |>
+  ungroup()
+```
+
+```{r}
+# turn host_family into rownames and create numeric matrix for vegdist
+mat_family <- avg_metabolite_values_family %>%
+  as.data.frame()                     # ensure data.frame for rownames()
+rownames(mat_family) <- mat_family$host_family
+mat_family <- mat_family[ , setdiff(names(mat_family), "host_family")]  # drop the column now that it's rownames
+
+mat_family[] <- lapply(mat_family, as.numeric)
+
+mat_family <- mat_family %>%
+  mutate_all(~ifelse(is.na(.), 0, .))   # replace NAs with 0s (common for abundance data)
+```
+
+```{r}
+bray_curtis_family <- vegdist (sqrt (mat_family), method = 'bray') 
+# percentage cover data are transformed by square root
+cluster.single <- hclust (d = bray_curtis_family, method = 'single')
+cluster.complete <- hclust (bray_curtis_family, 'complete')
+cluster.average <- hclust (bray_curtis_family, 'average')
+```
+
+```{r}
+# Set background color for the plot area and device
+par(bg = "#000042")               # device background
+par(col = "white",                # axis & text color
+    col.axis = "white",
+    col.lab  = "white",
+    col.main = "white",
+    col.sub  = "white",
+    fg = "white")                 # foreground (box, axes)
+
+# Plot dendrogram with white lines and labels
+plot(cluster.average,
+     main = "Dendrogram by Family",
+     xlab = "Families",
+     sub = "",
+     cex = 0.6,
+     col = "white",               # dendrogram lines
+     col.lab = "white",
+     col.main = "white",
+     col.axis = "white",
+     labels = cluster.average$labels,
+     col.lab = "white")
+
+# Draw cluster rectangles in white
+rect.hclust(cluster.average, k = 10, border = "white", lwd = 2)
+
+```
+
+```{r}
+#| label: dendrogram-host-origin 
+
+# Get the metabolites that are not Host
+not_host_metabolite = metabolite_clean |>
+  filter(!(refined_origin %in% c("Host", "Unknown"))) |>
+  pull(metabolite)
+
+avg_metabolite_values_family_host = avg_metabolite_values_family |>
+  select(-any_of(not_host_metabolite))
+
+# turn host_family into rownames and create numeric matrix for vegdist
+mat_family <- avg_metabolite_values_family_host %>%
+  as.data.frame()                     # ensure data.frame for rownames()
+rownames(mat_family) <- mat_family$host_family
+mat_family <- mat_family[ , setdiff(names(mat_family), "host_family")]  # drop the column now that it's rownames
+
+mat_family[] <- lapply(mat_family, as.numeric)
+
+mat_family <- mat_family %>%
+  mutate_all(~ifelse(is.na(.), 0, .))   # replace NAs with 0s (common for abundance data)
+```
+
+```{r}
+bray_curtis_family <- vegdist (sqrt (mat_family), method = 'bray') 
+# percentage cover data are transformed by square root
+cluster.single <- hclust (d = bray_curtis_family, method = 'single')
+cluster.complete <- hclust (bray_curtis_family, 'complete')
+cluster.average <- hclust (bray_curtis_family, 'average')
+```
+
+```{r}
+# Set background color for the plot area and device
+par(bg = "#000042")               # device background
+par(col = "white",                # axis & text color
+    col.axis = "white",
+    col.lab  = "white",
+    col.main = "white",
+    col.sub  = "white",
+    fg = "white")                 # foreground (box, axes)
+
+# Plot dendrogram with white lines and labels
+plot(cluster.average,
+     main = "Dendrogram by Family, Host Origin Only",
+     xlab = "Families",
+     sub = "",
+     cex = 0.6,
+     col = "white",               # dendrogram lines
+     col.lab = "white",
+     col.main = "white",
+     col.axis = "white",
+     labels = cluster.average$labels,
+     col.lab = "white")
+
+# Draw cluster rectangles in white
+rect.hclust(cluster.average, k = 10, border = "white", lwd = 2)
+
+```
+
+## Collectors Curve 
+
+```{r}
+
+comm_matrix = qc_data |>
+  select(c(sample, grep("^x", names(qc_data), value = TRUE))) |>
+  column_to_rownames(var = "sample")
+
+comm_matrix = comm_matrix |>
+  mutate(across(where(is.numeric), ~ ifelse(.x > 0, 1, 0)))
+
+curve_collector = specaccum(comm_matrix, method = "collector")
+
+```
+
+```{r}
+plot_data = data.frame(
+  samples = curve_collector$sites,
+  richness = curve_collector$richness
+)
+
+ggplot(plot_data, aes(x = samples, y = richness)) +
+  geom_line(color = "darkred")
+```
