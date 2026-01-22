@@ -165,6 +165,7 @@ rect.hclust(cluster.average, k = 10, border = "white", lwd = 2)
 ## Collectors Curve 
 
 ```{r}
+#| label: collectors-curve
 
 comm_matrix = qc_data |>
   select(c(sample, grep("^x", names(qc_data), value = TRUE))) |>
@@ -173,7 +174,7 @@ comm_matrix = qc_data |>
 comm_matrix = comm_matrix |>
   mutate(across(where(is.numeric), ~ ifelse(.x > 0, 1, 0)))
 
-curve_collector = specaccum(comm_matrix, method = "collector")
+curve_collector = specaccum(comm_matrix, method = "random", permutations = 10)
 
 ```
 
@@ -185,4 +186,10 @@ plot_data = data.frame(
 
 ggplot(plot_data, aes(x = samples, y = richness)) +
   geom_line(color = "darkred")
+```
+
+## PCoA
+
+```{r}
+
 ```
