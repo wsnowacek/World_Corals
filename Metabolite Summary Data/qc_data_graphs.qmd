@@ -191,5 +191,334 @@ ggplot(plot_data, aes(x = samples, y = richness)) +
 ## PCoA
 
 ```{r}
+#| label: permanova-location
 
+# 1) select numeric columns (metabolites)
+permanova_numeric_data <- qc_data[, sapply(qc_data, is.numeric)]
+
+# 2) find rows with non-missing location AND non-missing numeric values
+keep_rows <- !is.na(qc_data$location) &
+             apply(permanova_numeric_data, 1, function(x) !any(is.na(x)))
+
+# 3) subset both data objects
+permanova_numeric_data2 <- permanova_numeric_data[keep_rows, , drop = FALSE]
+meta2 <- qc_data[keep_rows, , drop = FALSE]
+
+# 4) compute Bray-Curtis on the filtered numeric table
+bray_curtis2 <- vegdist(permanova_numeric_data2, method = "bray")
+
+# 5) run PERMANOVA with matching metadata
+phylum_permanova_result <- adonis2(bray_curtis2 ~ location, data = meta2, permutations = 999)
+
+# 6) show result
+print(phylum_permanova_result)
+```
+
+```{r}
+#| label: PCoA_location
+
+# PCoA (cmdscale) and percent variance explained
+pcoa_result <- cmdscale(bray_curtis2, eig = TRUE, k = 2)
+pcoa_points <- as.data.frame(pcoa_result$points)
+colnames(pcoa_points) <- c("PCoA1", "PCoA2")
+pcoa_points <- bind_cols(pcoa_points, meta2)
+
+pos_eig <- pcoa_result$eig[pcoa_result$eig > 0]
+var_explained <- round(100 * pcoa_result$eig[1:2] / sum(pos_eig), 1)
+
+#  Plot with 95% confidence ellipses
+ggplot(pcoa_points, aes(x = PCoA1, y = PCoA2, color = location, fill = location)) +
+  geom_point(size = 3, alpha = 0.8) +
+  stat_ellipse(geom = "polygon", alpha = 0.15, level = 0.95, type = "t", colour = NA) +
+  labs(
+    title = "PCoA of Bray–Curtis Dissimilarity by Location",
+    x = paste0("PCoA 1 (", var_explained[1], "%)"),
+    y = paste0("PCoA 2 (", var_explained[2], "%)"), 
+    fill = "Location", 
+    color = "Location"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    legend.position = "right",
+    panel.grid = element_blank(),
+    plot.title = element_text(face = "bold")
+  )
+```
+
+```{r}
+#| label: PCoA_bleaching
+
+# PCoA (cmdscale) and percent variance explained
+pcoa_result <- cmdscale(bray_curtis2, eig = TRUE, k = 2)
+pcoa_points <- as.data.frame(pcoa_result$points)
+colnames(pcoa_points) <- c("PCoA1", "PCoA2")
+pcoa_points <- bind_cols(pcoa_points, meta2)
+
+pos_eig <- pcoa_result$eig[pcoa_result$eig > 0]
+var_explained <- round(100 * pcoa_result$eig[1:2] / sum(pos_eig), 1)
+
+# Plot with 95% confidence ellipses
+p <- ggplot(pcoa_points, aes(x = PCoA1, y = PCoA2, color = bleaching, fill = bleaching)) +
+  geom_point(size = 3, alpha = 0.8) +
+  stat_ellipse(geom = "polygon", alpha = 0.15, level = 0.95, type = "t", colour = NA) +
+  labs(
+    title = "PCoA of Bray–Curtis Dissimilarity by Bleaching Status",
+    x = paste0("PCoA1 (", var_explained[1], "%)"),
+    y = paste0("PCoA2 (", var_explained[2], "%)"), 
+    fill = "Bleaching Status", 
+    color = "Bleaching Status"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(legend.position = "right")
+
+print(p)
+```
+
+```{r}
+#| label: permanova-hawaii-host-family
+
+# 1) select numeric columns (metabolites)
+permanova_numeric_data <- qc_data[, sapply(qc_data, is.numeric)]
+
+# 2) find rows with:
+#    - location == "Hawaii"
+#    - non-missing host_family
+#    - no missing numeric values
+keep_rows <- qc_data$location == "Hawaii" &
+             !is.na(qc_data$host_family) &
+             apply(permanova_numeric_data, 1, function(x) !any(is.na(x)))
+
+# 3) subset both data objects
+permanova_numeric_data2 <- permanova_numeric_data[keep_rows, , drop = FALSE]
+meta2 <- qc_data[keep_rows, , drop = FALSE]
+
+# 4) compute Bray-Curtis on the filtered numeric table
+bray_curtis2 <- vegdist(permanova_numeric_data2, method = "bray")
+
+# 5) run PERMANOVA by host_family (Hawaii samples only)
+host_family_permanova_result <- adonis2(
+  bray_curtis2 ~ host_family,
+  data = meta2,
+  permutations = 999
+)
+
+# 6) show result
+print(host_family_permanova_result)
+```
+
+```{r}
+#| label: PCoA_hawaii_host_family
+
+# ---- compute PCoA  ----
+pcoa_result <- cmdscale(bray_curtis2, eig = TRUE, k = 2)
+pcoa_points <- as.data.frame(pcoa_result$points)
+colnames(pcoa_points) <- c("PCoA1", "PCoA2")
+
+# attach metadata 
+pcoa_points <- bind_cols(pcoa_points, meta2)
+
+# compute percent variance explained (use only positive eigenvalues)
+pos_eig <- pcoa_result$eig[pcoa_result$eig > 0]
+var_explained <- round(100 * pcoa_result$eig[1:2] / sum(pos_eig), 1)
+
+# add group sizes so we can only draw ellipses for groups with >= 3 samples
+library(dplyr)
+pcoa_points <- pcoa_points %>%
+  group_by(host_family) %>%
+  mutate(host_n = n()) %>%
+  ungroup()
+
+ellipse_data <- pcoa_points %>% filter(host_n >= 3)
+
+# ---- Plot: color/fill by host_family; ellipses only for groups with >=3 samples ----
+library(ggplot2)
+p <- ggplot(pcoa_points, aes(x = PCoA1, y = PCoA2, color = host_family, fill = host_family)) +
+  geom_point(size = 3, alpha = 0.9) +
+  # draw ellipses only for groups with enough points
+  stat_ellipse(
+    data = ellipse_data,
+    aes(x = PCoA1, y = PCoA2, fill = host_family),
+    geom = "polygon",
+    alpha = 0.15,
+    level = 0.95,
+    type = "t",
+    colour = NA
+  ) +
+  labs(
+    title = "PCoA (Bray–Curtis) — Hawaii samples, grouped by host_family",
+    x = paste0("PCoA1 (", var_explained[1], "%)"),
+    y = paste0("PCoA2 (", var_explained[2], "%)"),
+    color = "Host family",
+    fill = "Host family"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(legend.position = "right")
+
+print(p)
+```
+
+```{r}
+#| label: permanova-sri-lanka-host-family
+
+# 1) select numeric columns (metabolites)
+permanova_numeric_data <- qc_data[, sapply(qc_data, is.numeric)]
+
+# 2) find rows with:
+#    - location == "Hawaii"
+#    - non-missing host_family
+#    - no missing numeric values
+keep_rows <- qc_data$location == "Sri Lanka" &
+             !is.na(qc_data$host_family) &
+             apply(permanova_numeric_data, 1, function(x) !any(is.na(x)))
+
+# 3) subset both data objects
+permanova_numeric_data2 <- permanova_numeric_data[keep_rows, , drop = FALSE]
+meta2 <- qc_data[keep_rows, , drop = FALSE]
+
+# 4) compute Bray-Curtis on the filtered numeric table
+bray_curtis2 <- vegdist(permanova_numeric_data2, method = "bray")
+
+# 5) run PERMANOVA by host_family (Hawaii samples only)
+host_family_permanova_result <- adonis2(
+  bray_curtis2 ~ host_family,
+  data = meta2,
+  permutations = 999
+)
+
+# 6) show result
+print(host_family_permanova_result)
+```
+
+```{r}
+#| label: PCoA_sri_lanka_host_family
+
+# ---- compute PCoA ----
+pcoa_result <- cmdscale(bray_curtis2, eig = TRUE, k = 2)
+pcoa_points <- as.data.frame(pcoa_result$points)
+colnames(pcoa_points) <- c("PCoA1", "PCoA2")
+
+# attach metadata 
+pcoa_points <- bind_cols(pcoa_points, meta2)
+
+# compute percent variance explained (use only positive eigenvalues)
+pos_eig <- pcoa_result$eig[pcoa_result$eig > 0]
+var_explained <- round(100 * pcoa_result$eig[1:2] / sum(pos_eig), 1)
+
+# add group sizes so we can only draw ellipses for groups with >= 3 samples
+library(dplyr)
+pcoa_points <- pcoa_points %>%
+  group_by(host_family) %>%
+  mutate(host_n = n()) %>%
+  ungroup()
+
+ellipse_data <- pcoa_points %>% filter(host_n >= 3)
+
+# ---- Plot: color/fill by host_family; ellipses only for groups with >=3 samples ----
+library(ggplot2)
+p <- ggplot(pcoa_points, aes(x = PCoA1, y = PCoA2, color = host_family, fill = host_family)) +
+  geom_point(size = 3, alpha = 0.9) +
+  # draw ellipses only for groups with enough points
+  stat_ellipse(
+    data = ellipse_data,
+    aes(x = PCoA1, y = PCoA2, fill = host_family),
+    geom = "polygon",
+    alpha = 0.15,
+    level = 0.95,
+    type = "t",
+    colour = NA
+  ) +
+  labs(
+    title = "PCoA (Bray–Curtis) — Sri Lanka samples, grouped by host_family",
+    x = paste0("PCoA1 (", var_explained[1], "%)"),
+    y = paste0("PCoA2 (", var_explained[2], "%)"),
+    color = "Host family",
+    fill = "Host family"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(legend.position = "right")
+
+print(p)
+```
+
+```{r}
+#| label: permanova-Curaçao-host-family
+
+# 1) select numeric columns (metabolites)
+permanova_numeric_data <- qc_data[, sapply(qc_data, is.numeric)]
+
+# 2) find rows with:
+#    - location == "Hawaii"
+#    - non-missing host_family
+#    - no missing numeric values
+keep_rows <- qc_data$location == "Curaçao" &
+             !is.na(qc_data$host_family) &
+             apply(permanova_numeric_data, 1, function(x) !any(is.na(x)))
+
+# 3) subset both data objects
+permanova_numeric_data2 <- permanova_numeric_data[keep_rows, , drop = FALSE]
+meta2 <- qc_data[keep_rows, , drop = FALSE]
+
+# 4) compute Bray-Curtis on the filtered numeric table
+bray_curtis2 <- vegdist(permanova_numeric_data2, method = "bray")
+
+# 5) run PERMANOVA by host_family (Hawaii samples only)
+host_family_permanova_result <- adonis2(
+  bray_curtis2 ~ host_family,
+  data = meta2,
+  permutations = 999
+)
+
+# 6) show result
+print(host_family_permanova_result)
+```
+
+```{r}
+#| label: PCoA_Curaçao_host_family
+
+# ---- compute PCoA ----
+pcoa_result <- cmdscale(bray_curtis2, eig = TRUE, k = 2)
+pcoa_points <- as.data.frame(pcoa_result$points)
+colnames(pcoa_points) <- c("PCoA1", "PCoA2")
+
+# attach metadata 
+pcoa_points <- bind_cols(pcoa_points, meta2)
+
+# compute percent variance explained (use only positive eigenvalues)
+pos_eig <- pcoa_result$eig[pcoa_result$eig > 0]
+var_explained <- round(100 * pcoa_result$eig[1:2] / sum(pos_eig), 1)
+
+# add group sizes so we can only draw ellipses for groups with >= 3 samples
+library(dplyr)
+pcoa_points <- pcoa_points %>%
+  group_by(host_family) %>%
+  mutate(host_n = n()) %>%
+  ungroup()
+
+ellipse_data <- pcoa_points %>% filter(host_n >= 3)
+
+# ---- Plot: color/fill by host_family; ellipses only for groups with >=3 samples ----
+library(ggplot2)
+p <- ggplot(pcoa_points, aes(x = PCoA1, y = PCoA2, color = host_family, fill = host_family)) +
+  geom_point(size = 3, alpha = 0.9) +
+  # draw ellipses only for groups with enough points
+  stat_ellipse(
+    data = ellipse_data,
+    aes(x = PCoA1, y = PCoA2, fill = host_family),
+    geom = "polygon",
+    alpha = 0.15,
+    level = 0.95,
+    type = "t",
+    colour = NA
+  ) +
+  labs(
+    title = "PCoA (Bray–Curtis) — Curaçao samples, grouped by host_family",
+    x = paste0("PCoA1 (", var_explained[1], "%)"),
+    y = paste0("PCoA2 (", var_explained[2], "%)"),
+    color = "Host family",
+    fill = "Host family"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(legend.position = "right")
+
+print(p)
 ```
