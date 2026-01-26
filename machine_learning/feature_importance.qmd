@@ -6,7 +6,7 @@ setwd("/work/hs325/World_Corals")
 Corals_clean <- read.csv("/work/hs325/World_Corals/Cleaned data CSVs/richness_qc_clean.csv")
 met_df <- read.csv("/work/hs325/World_Corals/Cleaned data CSVs/metabolite_clean.csv")
 feature_importance_comparison_coralonly <- read.csv("/work/hs325/World_Corals/machine_learning/coral_mets_only/featureimportancecoralmets.csv")
-feature_importance_comparison_all <- read.csv("/work/hs325/World_Corals/machine_learning/all_mets/featureimportance_allmets.csv")
+feature_importance_comparison_all <- read.csv("/work/hs325/World_Corals/machine_learning/all_mets/featureimportanceallmets.csv")
 ```
 
 ```{r}
@@ -27,14 +27,17 @@ library(broom)
 library(cowplot)
 library(caret)
 library(tibble)
+library(GGally)
 library(stringr)
+library(RColorBrewer)
+library(forcats)
+library(ggpubr)
+
 ```
 
 ## Models trained on just coral data
 
 ```{r}
-# temp_feature_df <- feature_importance_comparison_coralonly %>%
-#   rownames_to_column(var = "metabolite")
 feature_importance_comparison_coralonly <- feature_importance_comparison_coralonly %>%
   dplyr::rename(metabolite = Feature)
 
@@ -46,20 +49,17 @@ merged_df <- feature_importance_comparison_coralonly %>%
   )
 
 merged_df <- merged_df %>%
-  arrange(desc(XGBoost_Importance))
-
-top20 <- merged_df[1:20, ]
-top20 <- top20 %>%
+  arrange(desc(XGBoost_Importance)) %>%
   mutate(metabolite = fct_reorder(metabolite, XGBoost_Importance, .desc = TRUE))
+
 ```
 
 ```{r}
-#| label: xgboost-feature-importance-top20
+#| label: xgboost-feature-importance-coralmets
 
-# --- use the exact class names in the data ---
-observed <- unique(as.character(top20$compound_superclass))
+xgb_importances <- merged_df[1:30,]
 
-# --- define a named color vector that matches those labels exactly ---
+
 superclass_colors <- c(
   "Glycerolipids"               = "#66C2A5",
   "Glycerophospholipids"        = "#FC8D62",
@@ -72,17 +72,16 @@ superclass_colors <- c(
 
 # --- make sure only the observed classes are used (and in the observed order) ---
 observed <- intersect(observed, names(superclass_colors))    # keep order from data
-top20$compound_superclass <- factor(as.character(top20$compound_superclass),
+xgb_importances$compound_superclass <- factor(as.character(xgb_importances$compound_superclass),
                                     levels = observed)
 
 # --- plot ---
-ggplot(top20, aes(x = metabolite, y = XGBoost_Importance, fill = compound_superclass)) +
+ggplot(xgb_importances, aes(x = metabolite, y = XGBoost_Importance, fill = compound_superclass)) +
   geom_bar(stat = "identity", position = "dodge") +
   scale_fill_manual(values = superclass_colors, drop = FALSE) +
   theme_classic() +
   labs(
-    y = "Relative Feature Importance (Normalized Gain)",
-    title = "Extreme Gradient Boost Feature Importance", 
+    y = "Feature Importance",
     x = "Metabolite",
     fill = "Compound Superclass"
   ) +
@@ -92,19 +91,12 @@ ggplot(top20, aes(x = metabolite, y = XGBoost_Importance, fill = compound_superc
     axis.text.x = element_blank(),
     axis.title.x = element_text(size = 12),   # bigger x title
     axis.title.y = element_text(size = 12),    # bigger y title
-    title = element_text(size = 16)
   )
 ```
 
 ```{r}
 #| label: rf-feature-importance-graph
 
-library(ggplot2)
-library(RColorBrewer)
-library(dplyr)
-library(forcats)
-
-# --- match previous colors on xgboost graph ---
 base_colors <- c(
   "Glycerolipids"               = "#66C2A5",
   "Glycerophospholipids"        = "#FC8D62",
@@ -115,35 +107,26 @@ base_colors <- c(
   "Unknown"                     = "#BEBADA"
 )
 
-# --- find all classes present in full merged_df ---
 all_classes <- unique(as.character(merged_df$compound_superclass))
-
-# --- classes that don't yet have a color in base_colors ---
 missing_classes <- setdiff(all_classes, names(base_colors))
 
-# --- create distinct colors for missing classes using Set3 as a base, expanded as needed ---
 if(length(missing_classes) > 0) {
-  # use up to 12 base brewer colors, then interpolate if more are needed
   palette_base <- brewer.pal(12, "Set3")
   colors_for_missing <- grDevices::colorRampPalette(palette_base)(length(missing_classes))
   names(colors_for_missing) <- missing_classes
 } else {
   colors_for_missing <- character(0)
 }
-
-# --- final named color vector for all classes ---
 superclass_colors_all <- c(base_colors, colors_for_missing)
 
 # --- Prepare the top20 data ---
-merged_df_rf <- merged_df %>%
+rf_importances <- merged_df %>%
   arrange(desc(RandomForest_Importance))
 
-top100 <- merged_df_rf[1:100, ]
+top100 <- rf_importances[1:100, ]
 top100 <- top100 %>%
   mutate(metabolite = fct_reorder(metabolite, RandomForest_Importance, .desc = TRUE))
 
-# --- Ensure factor levels for the plot follow the order of appearance in top20
-# but also ensure levels are actual names present in the color mapping to avoid mismatches
 observed_in_plot <- unique(as.character(top100$compound_superclass))
 plot_levels <- intersect(observed_in_plot, names(superclass_colors_all))
 top100$compound_superclass <- factor(as.character(top20$compound_superclass), levels = plot_levels)
@@ -154,8 +137,7 @@ ggplot(top100, aes(x = metabolite, y = RandomForest_Importance, fill = compound_
   scale_fill_manual(values = superclass_colors_all) +
   theme_classic() +
   labs(
-    title = "Random Forest Feature Importance",
-    y = "Relative Feature Importance (Normalized Gain)", 
+    y = "Feature Importance", 
     x = "Metabolite",
     fill = "Compound Superclass"
   ) +
@@ -169,6 +151,13 @@ ggplot(top100, aes(x = metabolite, y = RandomForest_Importance, fill = compound_
   )
 ```
 
+```{r}
+## faceted by model
+
+```
+
+
+
 ## Models trained on all data
 
 ```{r}
@@ -179,8 +168,6 @@ library(dplyr)
 library(tibble)
 library(stringr)
 
-# temp_feature_df <- feature_importance_comparison_coralonly %>%
-#   rownames_to_column(var = "metabolite")
 feature_importance_comparison_all <- feature_importance_comparison_all %>%
   dplyr::rename(metabolite = Feature)
 
@@ -283,10 +270,10 @@ if(length(missing_classes) > 0) {
 superclass_colors_all <- c(base_colors, colors_for_missing)
 
 # --- Prepare the top100 data ---
-merged_df_rf_all <- merged_df_all %>%
+rf_importances_all <- merged_df_all %>%
   arrange(desc(RandomForest_Importance))
 
-top100_all <- merged_df_rf_all[1:100, ]
+top100_all <- rf_importances_all[1:100, ]
 top100_all <- top100_all %>%
   mutate(metabolite = fct_reorder(metabolite, RandomForest_Importance, .desc = TRUE))
 
