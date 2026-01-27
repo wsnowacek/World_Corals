@@ -22,7 +22,7 @@ met_df['refined_origin'] = met_df['refined_origin'].str.replace('Host', 'Coral')
 
 # keep this commented if you want to use all metabolites, not just coral-specific ones
 # met_df_coral = met_df
-met_df_coral = met_df[met_df['refined_origin'] == 'Coral']
+met_df_coral = met_df[met_df['refined_origin'] == 'Coral'] 
 
 # coral_df = coral_df[coral_df['bleaching'].isin(['B', 'NB'])]
 # coral_df['bleaching'] = coral_df['bleaching'].map({'NB': 0, 'B': 1})
