@@ -94,6 +94,7 @@ active_classes <- ordered_levels[ordered_levels %in% unique(c(
   as.character(rf_plot_df$display_class)
 ))]
 
+origin_shapes <- c("Host" = 16, "Symbiont" = 3, "Both" = 17, "Unknown" = 8)
 p3 <- ggscatter(plot_df_all, 
                 x = "XGBoost_Importance", 
                 y = "RandomForest_Importance",
@@ -108,33 +109,37 @@ p3 <- ggscatter(plot_df_all,
                 cor.method = "pearson",
                 xlab = "XGBoost Feature Importance", 
                 ylab = "RF Feature Importance") +
+                scale_shape_manual(values = origin_shapes) +
   theme_pubr() +
   theme(legend.position = "none")
-
+  
 shared_legend <- get_legend(
-  p3 + 
-    scale_color_manual(
-      values = final_palette, 
-      breaks = active_classes, 
-      name = "Compound Superclass"
-    ) +
-    labs(shape = "Metabolite Origin") +
-    theme(legend.position = "right", 
-          legend.text = element_text(size = 8),
-          legend.title = element_text(size = 12)) +
-    guides(
-      color = guide_legend(
-        ncol = 2, 
-        order = 1,
-        override.aes = list(shape = 15, size = 5) # Shape 15 is a solid square
-      ), 
-      shape = guide_legend(
-        ncol = 2, 
-        order = 2,
-        override.aes = list(size = 3) 
+    p3 + 
+      scale_color_manual(
+        values = final_palette, 
+        breaks = active_classes, 
+        name = "Compound Superclass"
+      ) +
+      scale_shape_manual(
+        values = origin_shapes,
+        name = "Metabolite Origin"
+      ) +
+      theme(legend.position = "right", 
+            legend.text = element_text(size = 8),
+            legend.title = element_text(size = 12)) +
+      guides(
+        color = guide_legend(
+          ncol = 2, 
+          order = 1,
+          override.aes = list(shape = 15, size = 5) 
+        ), 
+        shape = guide_legend(
+          ncol = 2, 
+          order = 2,
+          override.aes = list(size = 4)
+        )
       )
-    )
-)
+  )
 
 #make figure
 top_row <- plot_grid(p1, p2, labels = c("A", "B"), ncol = 2)
