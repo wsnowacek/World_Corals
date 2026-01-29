@@ -44,7 +44,7 @@ taxonomic_counts <- qc_data %>%
 print(taxonomic_counts)
 ```
 
-## Dendrograms 
+## Dendrograms
 
 ```{r}
 avg_metabolite_values_family <- qc_data |>
@@ -162,7 +162,169 @@ rect.hclust(cluster.average, k = 10, border = "white", lwd = 2)
 
 ```
 
-## Collectors Curve 
+```{r}
+#| label: install_package
+
+install.packages("ggdendro")
+```
+
+```{r}
+#| label: load_packages
+
+library(ggdendro)
+library(RColorBrewer)
+```
+
+```{r}
+#| label: dendrogram_colored_by_Scleractinia
+
+library(tidyverse)
+library(vegan)
+library(dendextend)
+library(RColorBrewer)
+
+# --- build matrix (your code, slightly adapted) ---
+avg_metabolite_values_family <- qc_data |>
+  group_by(host_family) |> 
+  filter(!is.na(host_family)) |> 
+  summarise(across(starts_with("x"), mean, na.rm = TRUE)) |>
+  ungroup()
+
+mat_family <- avg_metabolite_values_family %>%
+  as.data.frame()
+rownames(mat_family) <- mat_family$host_family
+mat_family <- mat_family[ , setdiff(names(mat_family), "host_family")]
+mat_family[] <- lapply(mat_family, as.numeric)
+mat_family <- mat_family %>% mutate_all(~ifelse(is.na(.), 0, .))
+
+bray_curtis_family <- vegdist(sqrt(mat_family), method = 'bray')
+cluster.average <- hclust(bray_curtis_family, method = 'average')
+
+# --- get host_order by family from original qc_data ---
+host_order_by_family <- qc_data %>%
+  filter(!is.na(host_family)) %>%
+  group_by(host_family) %>%
+  summarize(host_order = first(na.omit(host_order))) %>%
+  ungroup()
+
+# --- palette: Scleractinia vs Other ---
+pal <- brewer.pal(3, "Set1")[1:2]
+names(pal) <- c("Scleractinia", "Other")
+
+# map ordered labels -> colors
+dend <- as.dendrogram(cluster.average)
+family_order <- labels(dend)
+label_group <- host_order_by_family$host_order[match(family_order, host_order_by_family$host_family)]
+label_group[is.na(label_group)] <- "Other"             # fallback
+label_colors <- ifelse(label_group == "Scleractinia", pal["Scleractinia"], pal["Other"])
+
+# apply colors to labels (and optionally to branches near leaves)
+dend <- dend %>%
+  set("labels_cex", 0.7) %>%
+  set("labels_col", label_colors)
+
+# If you want to color the branches that connect groups you can try coloring branches by cutting
+# the dendrogram into two clusters using the known groups. This is an approximation:
+group_flag <- ifelse(label_group == "Scleractinia", 1, 2)
+# Create cluster id vector by mapping label order -> group flag
+# (note: this will not recolor deeper internal edges perfectly but is useful visually)
+# Convert to colors by label and then color labels already done above
+
+# Plot (base R) with dark background like you used
+par(bg = "#000042", col = "white", col.axis = "white", col.lab = "white",
+    col.main = "white", col.sub = "white", fg = "white")
+plot(dend, main = "Dendrogram by Family",
+     xlab = "", sub = "", ylab = "Height")
+# labels are colored; branches remain default but the leaves show group membership
+
+```
+
+```{r}
+metabolite_clean <- read.csv("/Users/ellaandonov/World_Corals/Cleaned data CSVs/metabolite_clean.csv")
+```
+
+```{r}
+#| label: dendrogram_colored_by_Scleractinia_host_origin_only
+
+library(dendextend)
+library(RColorBrewer)
+library(dplyr)
+library(vegan)    
+
+# Get the metabolites that are not Host
+not_host_metabolite = metabolite_clean |>
+  filter(!(refined_origin %in% c("Host", "Unknown"))) |>
+  pull(metabolite)
+
+avg_metabolite_values_family_host = avg_metabolite_values_family |>
+  select(-any_of(not_host_metabolite))
+
+# turn host_family into rownames and create numeric matrix for vegdist
+mat_family <- avg_metabolite_values_family_host %>%
+  as.data.frame()                     # ensure data.frame for rownames()
+rownames(mat_family) <- mat_family$host_family
+mat_family <- mat_family[ , setdiff(names(mat_family), "host_family")]  # drop the column now that it's rownames
+
+mat_family[] <- lapply(mat_family, as.numeric)
+
+mat_family <- mat_family %>%
+  mutate_all(~ifelse(is.na(.), 0, .))   # replace NAs with 0s (common for abundance data)
+
+bray_curtis_family <- vegdist (sqrt (mat_family), method = 'bray') 
+# percentage cover data are transformed by square root
+cluster.single <- hclust (d = bray_curtis_family, method = 'single')
+cluster.complete <- hclust (bray_curtis_family, 'complete')
+cluster.average <- hclust (bray_curtis_family, 'average')
+
+# host_order per family
+host_order_by_family <- qc_data %>%
+  filter(!is.na(host_family)) %>%
+  group_by(host_family) %>%
+  summarize(host_order = first(na.omit(host_order))) %>%
+  ungroup()
+
+# convert to dendrogram
+dend <- as.dendrogram(cluster.average)
+
+# match label order to host_order
+family_order <- labels(dend)
+label_group <- host_order_by_family$host_order[
+  match(family_order, host_order_by_family$host_family)
+]
+label_group[is.na(label_group)] <- "Other"
+
+# palette: Scleractinia vs Other
+pal <- brewer.pal(3, "Set1")[1:2]
+names(pal) <- c("Scleractinia", "Other")
+
+label_colors <- ifelse(
+  label_group == "Scleractinia",
+  pal["Scleractinia"],
+  pal["Other"]
+)
+
+# apply ONLY label (tip) colours
+dend <- dend %>%
+  set("labels_col", label_colors) %>%
+  set("labels_cex", 0.7)
+
+# plotting (branches stay white)
+par(bg = "#000042",
+    col = "white",
+    col.axis = "white",
+    col.lab  = "white",
+    col.main = "white",
+    col.sub  = "white",
+    fg = "white")
+
+plot(dend,
+     main = "Dendrogram by Family — Host Origin Only",
+     xlab = "",
+     ylab = "Height",
+     sub = "")
+```
+
+## Collectors Curve
 
 ```{r}
 #| label: collectors-curve
@@ -771,7 +933,7 @@ ggplot(plot_data, aes(x = group, y = avg_ubiquity, fill = group)) +
   theme(legend.position = "none")
 ```
 
-## NPC Classifiers 
+## NPC Classifiers
 
 ```{r}
 #| label: read_csv
