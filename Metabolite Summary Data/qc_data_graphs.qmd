@@ -327,7 +327,7 @@ plot(dend,
 ## Collectors Curve
 
 ```{r}
-#| label: collectors-curve
+#| label: collectors-curve-all-metabolites
 
 comm_matrix = qc_data |>
   select(c(sample, grep("^x", names(qc_data), value = TRUE))) |>
@@ -337,11 +337,6 @@ comm_matrix = comm_matrix |>
   mutate(across(where(is.numeric), ~ ifelse(.x > 0, 1, 0)))
 
 curve_collector = specaccum(comm_matrix, method = "random", permutations = 10)
-
-```
-
-```{r}
-#| label: collectors-curve
 
 plot_data = data.frame(
   samples = curve_collector$sites,
@@ -357,6 +352,120 @@ ggplot(plot_data, aes(x = samples, y = richness)) +
   ) +
   theme_minimal(base_size = 13)
 
+```
+
+```{r}
+#| label: collectors-curve-oculina
+
+oculina_matrix = qc_data |>
+  filter(host_genus == "Oculina") |>
+  select(c(sample, grep("^x", names(qc_data), value = TRUE))) |>
+  column_to_rownames(var = "sample")
+
+oculina_matrix = oculina_matrix |>
+  mutate(across(where(is.numeric), ~ ifelse(.x > 0, 1, 0)))
+
+oculina_accum = specaccum(oculina_matrix, method = "random", permutations = 10)
+
+oculina_plot_data = data.frame(
+  samples = oculina_accum$sites,
+  richness = oculina_accum$richness
+)
+
+ggplot(oculina_plot_data, aes(x = samples, y = richness)) +
+  geom_line(color = "darkred", linewidth = 1) +
+  labs(
+    title = "Collectors Curve for Metabolites Sampled (Oculina)",
+    x = "Number of Samples",
+    y = "Metabolite Richness"
+  ) +
+  theme_minimal(base_size = 13)
+```
+
+```{r}
+#| label: collectors-curve-hawaii
+
+hawaii_matrix = qc_data |>
+  filter(location == "Hawaii") |>
+  select(c(sample, grep("^x", names(qc_data), value = TRUE))) |>
+  column_to_rownames(var = "sample")
+
+hawaii_matrix = hawaii_matrix |>
+  mutate(across(where(is.numeric), ~ ifelse(.x > 0, 1, 0)))
+
+hawaii_accum = specaccum(hawaii_matrix, method = "random", permutations = 10)
+
+hawaii_plot_data = data.frame(
+  samples = hawaii_accum$sites,
+  richness = hawaii_accum$richness
+)
+
+ggplot(hawaii_plot_data, aes(x = samples, y = richness)) +
+  geom_line(color = "darkred", linewidth = 1) +
+  labs(
+    title = "Collectors Curve for Metabolites Sampled (Hawaii)",
+    x = "Number of Samples",
+    y = "Metabolite Richness"
+  ) +
+  theme_minimal(base_size = 13)
+```
+
+```{r}
+#| label: collectors-curve-curacao-scleractinia
+
+curacao_matrix = qc_data |>
+  filter(
+    location == "Curaçao",
+    host_order == "Scleractinia"
+  ) |>
+  select(c(sample, grep("^x", names(qc_data), value = TRUE))) |>
+  column_to_rownames(var = "sample")
+
+curacao_matrix = curacao_matrix |>
+  mutate(across(where(is.numeric), ~ ifelse(.x > 0, 1, 0)))
+
+curacao_accum = specaccum(curacao_matrix, method = "random", permutations = 10)
+
+curacao_plot_data = data.frame(
+  samples = curacao_accum$sites,
+  richness = curacao_accum$richness
+)
+
+ggplot(curacao_plot_data, aes(x = samples, y = richness)) +
+  geom_line(color = "darkred", linewidth = 1) +
+  labs(
+    title = "Collectors Curve for Metabolites Sampled (Curaçao, Scleractinia)",
+    x = "Number of Samples",
+   y = "Metabolite Richness") +
+  theme_minimal(base_size = 13)
+```
+
+```{r}
+#| label: collectors-curve-curacao
+
+curacao_comm = qc_data |>
+  filter(location == "Curaçao") |>
+  select(c(sample, grep("^x", names(qc_data), value = TRUE))) |>
+  column_to_rownames(var = "sample")
+
+curacao_comm = curacao_comm |>
+  mutate(across(where(is.numeric), ~ ifelse(.x > 0, 1, 0)))
+
+curacao_curve = specaccum(curacao_comm, method = "random", permutations = 10)
+
+curacao_curve_df = data.frame(
+  samples = curacao_curve$sites,
+  richness = curacao_curve$richness
+)
+
+ggplot(curacao_curve_df, aes(x = samples, y = richness)) +
+  geom_line(color = "darkred", linewidth = 1) +
+  labs(
+    title = "Collectors Curve for Metabolites Sampled (Curaçao)",
+    x = "Number of Samples",
+    y = "Metabolite Richness"
+  ) +
+  theme_minimal(base_size = 13)
 ```
 
 ## PCoA
