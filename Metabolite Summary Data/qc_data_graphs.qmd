@@ -19,7 +19,7 @@ library(scales)
 ```{r}
 #| label: read-csvs
 
-qc_data <- read.csv("/Users/ellaandonov/World_Corals/Metabolite Summary Data/qc_data.csv")
+qc_data <- read.csv("/Users/ellaandonov/World_Corals/Cleaned data CSVs/qc_data.csv")
 ```
 
 ## Taxonomic Counts
@@ -966,6 +966,187 @@ ggplot(met_summary, aes(x = ubiquity_all, y = avg_abundance, fill = category)) +
     legend.text       = element_text(color = "white"),
     legend.background = element_rect(fill = "#000042", color = NA),
     legend.key        = element_rect(fill = "#000042", color = NA)
+  )
+```
+
+Making df turning metabolite columns into rows; includes metabolite abundance.
+
+```{r}
+#| label: read-csv-metabolite-clean
+
+metabolite_clean <- read.csv("/Users/ellaandonov/World_Corals/Cleaned data CSVs/metabolite_clean.csv")
+```
+
+```{r}
+#| label: ubiquity-avg-abundance-all-samples
+
+# Create dataset of ubiquity + average abundance
+ubiquity_avg_abundance_values <- qc_data %>%
+  # select metabolite columns
+  select(starts_with("x")) %>%
+  # reshape to long format
+  pivot_longer(
+    cols = everything(),
+    names_to = "metabolite",
+    values_to = "value"
+  ) %>%
+  # compute ubiquity and average abundance
+  group_by(metabolite) %>%
+  summarise(
+    ubiquity = mean(value > 0) * 100,          # % of samples with metabolite present
+    avg_abundance = mean(value, na.rm = TRUE), # mean abundance across all samples
+    .groups = "drop"
+  )
+
+# merge data
+merged_metabolite_data <- ubiquity_avg_abundance_values %>%
+  left_join(metabolite_clean, by = "metabolite")
+```
+
+```{r}
+#| label: ubiquity-graph-npc-pathway
+
+merged_metabolite_data %>%
+  group_by(npc_number_pathway) %>%
+  summarise(
+    ubiquity = mean(ubiquity, na.rm = TRUE),
+    avg_abundance = mean(avg_abundance, na.rm = TRUE)
+  ) %>%
+  filter(npc_number_pathway != "Unknown") %>%
+  ggplot(aes(x = ubiquity, y = avg_abundance, color = npc_number_pathway)) +
+  
+  geom_point(size = 2.5, alpha = 0.8) +
+  
+  scale_y_continuous(labels = y_labels_fn) +
+  
+  # ---- Same 7-category color palette ----
+  scale_color_manual(
+    values = c(
+      "Fatty acids"                     = "#E69F00",
+      "Polyketides"                     = "#56B4E9",
+      "Shikimates and Phenylpropanoids" = "#009E73",
+      "Terpenoids"                      = "#F0E442",
+      "Alkaloids"                       = "#0072B2",
+      "Amino acids and Peptides"        = "#D55E00",
+      "Carbohydrates"                   = "#CC79A7"
+    ),
+    labels = function(x) stringr::str_wrap(x, width = 18),
+    guide = guide_legend(
+      nrow = 2,
+      byrow = TRUE,
+      keyheight = unit(0.3, "cm"),
+      keywidth  = unit(0.6, "cm"),
+      title = NULL
+    )
+  ) +
+  
+  labs(
+    x = "Ubiquity (% samples present)",
+    y = "Average abundance",
+    title = "Metabolite ubiquity vs average abundance",
+    subtitle = "by pathways of NPClassifiers"
+  ) +
+  
+  theme_minimal(base_size = 14) +
+  theme(
+    # ---- White background ----
+    plot.background  = element_rect(fill = "white", color = NA),
+    panel.background = element_rect(fill = "white", color = NA),
+    
+    # ---- Softer grid ----
+    panel.grid.major = element_line(color = "grey85"),
+    panel.grid.minor = element_blank(),
+    
+    # ---- Text styling ----
+    plot.title    = element_text(hjust = 0.5, face = "bold", color = "black"),
+    plot.subtitle = element_text(hjust = 0.5, color = "grey30", size = 12,
+                                 margin = margin(b = 6)),
+    
+    axis.title = element_text(color = "black"),
+    axis.text  = element_text(color = "black"),
+    
+    # ---- Legend ----
+    legend.position   = "bottom",
+    legend.text       = element_text(color = "black", size = 8),
+    legend.key        = element_rect(fill = "white", color = NA),
+    legend.spacing.y  = unit(0.15, "cm"),
+    legend.spacing.x  = unit(0.2, "cm"),
+    legend.margin     = margin(t = 0, b = 0),
+    legend.box.margin = margin(t = -5),
+    
+    # ---- Margins ----
+    plot.margin = margin(t = 10, r = 10, b = 10, l = 10)
+  )
+```
+
+```{r}
+#| label: ubiquity-graph-npc-superclass
+
+merged_metabolite_data %>%
+  group_by(npc_number_superclass) %>%
+  summarise(
+    ubiquity = mean(ubiquity, na.rm = TRUE),
+    avg_abundance = mean(avg_abundance, na.rm = TRUE)
+  ) %>%
+  filter(npc_number_superclass != "Unknown") %>%
+  ggplot(aes(x = ubiquity, y = avg_abundance, color = npc_number_superclass)) +
+  
+  geom_point(size = 2.5, alpha = 0.8) +
+  
+  scale_y_continuous(labels = y_labels_fn) +
+  
+  # ---- Same color palette ----
+  scale_color_manual(
+    values = c(
+      "Fatty acids"                     = "#E69F00",
+      "Polyketides"                     = "#56B4E9",
+      "Shikimates and Phenylpropanoids" = "#009E73",
+      "Terpenoids"                      = "#F0E442",
+      "Alkaloids"                       = "#0072B2",
+      "Amino acids and Peptides"        = "#D55E00",
+      "Carbohydrates"                   = "#CC79A7"
+    ),
+    labels = function(x) stringr::str_wrap(x, width = 18),
+    guide = guide_legend(
+      nrow = 2,
+      byrow = TRUE,
+      keyheight = unit(0.3, "cm"),
+      keywidth  = unit(0.6, "cm"),
+      title = NULL
+    )
+  ) +
+  
+  labs(
+    x = "Ubiquity (% samples present)",
+    y = "Average abundance",
+    title = "Metabolite ubiquity vs average abundance",
+    subtitle = "by NPClassifier superclasses"
+  ) +
+  
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.background  = element_rect(fill = "white", color = NA),
+    panel.background = element_rect(fill = "white", color = NA),
+    
+    panel.grid.major = element_line(color = "grey85"),
+    panel.grid.minor = element_blank(),
+    
+    plot.title    = element_text(hjust = 0.5, face = "bold", color = "black"),
+    plot.subtitle = element_text(hjust = 0.5, color = "grey30", size = 12,
+                                 margin = margin(b = 6)),
+    
+    axis.title = element_text(color = "black"),
+    axis.text  = element_text(color = "black"),
+    
+    legend.position   = "bottom",
+    legend.text       = element_text(color = "black", size = 8),
+    legend.key        = element_rect(fill = "white", color = NA),
+    legend.spacing.y  = unit(0.15, "cm"),
+    legend.spacing.x  = unit(0.2, "cm"),
+    legend.margin     = margin(t = 0, b = 0),
+    legend.box.margin = margin(t = -5),
+    
+    plot.margin = margin(t = 10, r = 10, b = 10, l = 10)
   )
 ```
 
