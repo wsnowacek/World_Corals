@@ -44,7 +44,7 @@ taxonomic_counts <- qc_data %>%
 print(taxonomic_counts)
 ```
 
-## Dendrograms 
+## Dendrograms
 
 ```{r}
 avg_metabolite_values_family <- qc_data |>
@@ -162,7 +162,20 @@ rect.hclust(cluster.average, k = 10, border = "white", lwd = 2)
 
 ```
 
-## Collectors Curve 
+```{r}
+#| label: install_package
+
+install.packages("ggdendro")
+```
+
+```{r}
+#| label: load_packages
+
+library(ggdendro)
+library(RColorBrewer)
+```
+
+## Collectors Curve
 
 ```{r}
 #| label: collectors-curve
@@ -771,7 +784,7 @@ ggplot(plot_data, aes(x = group, y = avg_ubiquity, fill = group)) +
   theme(legend.position = "none")
 ```
 
-## NPC Classifiers 
+## NPC Classifiers
 
 ```{r}
 #| label: read_csv

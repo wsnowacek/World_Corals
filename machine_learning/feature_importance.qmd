@@ -156,8 +156,6 @@ ggplot(top100, aes(x = metabolite, y = RandomForest_Importance, fill = compound_
 
 ```
 
-
-
 ## Models trained on all data
 
 ```{r}
