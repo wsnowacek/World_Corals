@@ -240,6 +240,113 @@ plot(dend, main = "Dendrogram by Family",
 ```
 
 ```{r}
+#| label: dendrogram_colored_by_host_order
+
+library(tidyverse)
+library(vegan)
+library(dendextend)
+library(RColorBrewer)
+
+# --- build matrix of average metabolite values by family ---
+avg_metabolite_values_family <- qc_data |>
+  group_by(host_family) |> 
+  filter(!is.na(host_family)) |> 
+  summarise(across(starts_with("x"), mean, na.rm = TRUE)) |>
+  ungroup()
+
+mat_family <- avg_metabolite_values_family %>%
+  as.data.frame()
+
+rownames(mat_family) <- mat_family$host_family
+mat_family <- mat_family[, setdiff(names(mat_family), "host_family")]
+mat_family[] <- lapply(mat_family, as.numeric)
+mat_family <- mat_family %>% mutate_all(~ifelse(is.na(.), 0, .))
+
+# --- distance + clustering ---
+bray_curtis_family <- vegdist(sqrt(mat_family), method = "bray")
+cluster.average <- hclust(bray_curtis_family, method = "average")
+
+# --- get host_order by family ---
+host_order_by_family <- qc_data %>%
+  filter(!is.na(host_family)) %>%
+  group_by(host_family) %>%
+  summarize(host_order = first(na.omit(host_order))) %>%
+  ungroup()
+
+# --- prepare dendrogram and label mapping ---
+dend <- as.dendrogram(cluster.average)
+family_order <- labels(dend)
+
+label_order <- host_order_by_family$host_order[
+  match(family_order, host_order_by_family$host_family)
+]
+label_order[is.na(label_order)] <- "Other"
+
+# --- build bold color palette ---
+unique_orders <- unique(label_order)
+n_orders <- length(unique_orders)
+
+max_brewer <- 8
+if (n_orders <= max_brewer) {
+  pal_base <- brewer.pal(max(3, n_orders), "Dark2")[1:n_orders]
+} else {
+  pal_base <- colorRampPalette(brewer.pal(max_brewer, "Dark2"))(n_orders)
+}
+names(pal_base) <- unique_orders
+
+# Force Scleractinia to bright red
+pal <- pal_base
+if ("Scleractinia" %in% names(pal)) {
+  pal["Scleractinia"] <- "#E41A1C"
+}
+
+# --- apply colors ---
+label_colors <- pal[label_order]
+cluster_ids <- as.numeric(factor(label_order, levels = unique_orders))
+
+dend <- dend %>%
+  set("labels_cex", 0.7) %>%
+  set("labels_col", label_colors)
+
+dend_colored <- color_branches(
+  dend,
+  clusters = cluster_ids,
+  col = pal
+)
+
+# --- plot with white background and external legend ---
+par(
+  bg = "white",
+  fg = "black",
+  col = "black",
+  col.axis = "black",
+  col.lab = "black",
+  col.main = "black",
+  mar = c(5, 4, 4, 10),  # space on right for legend
+  xpd = NA
+)
+
+plot(
+  dend_colored,
+  main = "Dendrogram by Family",
+  xlab = "",
+  ylab = "Height",
+  sub = ""
+)
+
+legend(
+  "topright",
+  inset = c(-0.45, 0),
+  legend = unique_orders,
+  fill = pal,
+  border = NA,
+  bty = "n",
+  cex = 0.8,
+  title = "Order"
+)
+```
+
+```{r}
 metabolite_clean <- read.csv("/Users/ellaandonov/World_Corals/Cleaned data CSVs/metabolite_clean.csv")
 ```
 
@@ -324,6 +431,118 @@ plot(dend,
      sub = "")
 ```
 
+```{r}
+#| label: dendrogram_colored_by_Scleractinia_host_origin_only
+
+library(dendextend)
+library(RColorBrewer)
+library(dplyr)
+library(vegan)
+
+# --- select metabolites that are Host-origin only (remove non-host / unknown) ---
+not_host_metabolite <- metabolite_clean |>
+  filter(!(refined_origin %in% c("Host", "Unknown"))) |>
+  pull(metabolite)
+
+avg_metabolite_values_family_host <- avg_metabolite_values_family |>
+  select(-any_of(not_host_metabolite))
+
+# --- prepare matrix for distance calculation ---
+mat_family <- avg_metabolite_values_family_host %>%
+  as.data.frame()
+rownames(mat_family) <- mat_family$host_family
+mat_family <- mat_family[, setdiff(names(mat_family), "host_family")]
+mat_family[] <- lapply(mat_family, as.numeric)
+mat_family <- mat_family %>% mutate_all(~ifelse(is.na(.), 0, .))
+
+# --- distance + clustering (use 'average' for plotting as before) ---
+bray_curtis_family <- vegdist(sqrt(mat_family), method = "bray")
+cluster.single   <- hclust(d = bray_curtis_family, method = "single")
+cluster.complete <- hclust(d = bray_curtis_family, method = "complete")
+cluster.average  <- hclust(d = bray_curtis_family, method = "average")
+
+# --- host_order per family (mapping for coloring) ---
+host_order_by_family <- qc_data %>%
+  filter(!is.na(host_family)) %>%
+  group_by(host_family) %>%
+  summarize(host_order = first(na.omit(host_order))) %>%
+  ungroup()
+
+# --- convert to dendrogram and get ordered family labels ---
+dend <- as.dendrogram(cluster.average)
+family_order <- labels(dend)
+
+# --- map labels -> host_order, fallback to "Other" ---
+label_order <- host_order_by_family$host_order[
+  match(family_order, host_order_by_family$host_family)
+]
+label_order[is.na(label_order)] <- "Other"
+
+# --- build a bold color palette for each unique host_order ---
+unique_orders <- unique(label_order)
+n_orders <- length(unique_orders)
+max_brewer <- 8
+
+if (n_orders <= max_brewer) {
+  pal_base <- brewer.pal(max(3, n_orders), "Dark2")[1:n_orders]
+} else {
+  pal_base <- colorRampPalette(brewer.pal(max_brewer, "Dark2"))(n_orders)
+}
+names(pal_base) <- unique_orders
+
+# Force Scleractinia to bright red (if present)
+pal <- pal_base
+if ("Scleractinia" %in% names(pal)) {
+  pal["Scleractinia"] <- "#E41A1C"
+}
+
+# --- colors for each leaf based on its host_order ---
+label_colors <- pal[label_order]
+
+# numeric cluster ids for branch coloring (one id per leaf in label order)
+cluster_ids <- as.numeric(factor(label_order, levels = unique_orders))
+
+# apply label aesthetics (colored tip labels)
+dend <- dend %>%
+  set("labels_cex", 0.7) %>%
+  set("labels_col", label_colors)
+
+# color branches leading to leaves of the same host_order
+dend_colored <- color_branches(dend, clusters = cluster_ids, col = pal)
+
+# --- plotting: white background, black text, legend far to the right ---
+par(
+  bg = "white",
+  fg = "black",
+  col = "black",
+  col.axis = "black",
+  col.lab = "black",
+  col.main = "black",
+  mar = c(5, 4, 4, 12),  # make extra room on right for legend
+  xpd = NA               # allow legend to be drawn outside the plot region
+)
+
+plot(
+  dend_colored,
+  main = "Dendrogram by Family — Host Origin Only",
+  xlab = "",
+  ylab = "Height",
+  sub = ""
+)
+
+# legend placed well outside the plot area so it does not overlap
+legend(
+  "topright",
+  inset = c(-0.60, 0),   # push legend farther to the right
+  legend = unique_orders,
+  fill = pal,
+  border = NA,
+  bty = "n",
+  cex = 0.85,
+  title = "Order"
+)
+```
+
 ## Collectors Curve
 
 ```{r}
@@ -350,8 +569,16 @@ ggplot(plot_data, aes(x = samples, y = richness)) +
     x = "Number of Samples",
     y = "Metabolite Richness"
   ) +
-  theme_minimal(base_size = 13)
-
+  theme_minimal(base_size = 13) +
+  theme(
+    plot.title = element_text(
+      hjust = 0.5,
+      face  = "bold",
+      color = "black"
+    ),
+    axis.title = element_text(color = "black"),
+    axis.text  = element_text(color = "black")
+  )
 ```
 
 ```{r}
@@ -379,7 +606,16 @@ ggplot(oculina_plot_data, aes(x = samples, y = richness)) +
     x = "Number of Samples",
     y = "Metabolite Richness"
   ) +
-  theme_minimal(base_size = 13)
+  theme_minimal(base_size = 13) +
+  theme(
+    plot.title = element_text(
+      hjust = 0.5,
+      face  = "bold",
+      color = "black"
+    ),
+    axis.title = element_text(color = "black"),
+    axis.text  = element_text(color = "black")
+  )
 ```
 
 ```{r}
@@ -407,7 +643,16 @@ ggplot(hawaii_plot_data, aes(x = samples, y = richness)) +
     x = "Number of Samples",
     y = "Metabolite Richness"
   ) +
-  theme_minimal(base_size = 13)
+  theme_minimal(base_size = 13) +
+  theme(
+    plot.title = element_text(
+      hjust = 0.5,
+      face  = "bold",
+      color = "black"
+    ),
+    axis.title = element_text(color = "black"),
+    axis.text  = element_text(color = "black")
+  )
 ```
 
 ```{r}
@@ -523,6 +768,30 @@ ggplot(pcoa_points, aes(x = PCoA1, y = PCoA2, color = location, fill = location)
     panel.grid = element_blank(),
     plot.title = element_text(face = "bold")
   )
+```
+
+```{r}
+#| label: permanova-bleaching
+
+# 1) select numeric columns (metabolites)
+permanova_numeric_data_bl <- qc_data[, sapply(qc_data, is.numeric)]
+
+# 2) find rows with non-missing location AND non-missing numeric values
+keep_rows <- !is.na(qc_data$bleaching) &
+             apply(permanova_numeric_data_bl, 1, function(x) !any(is.na(x)))
+
+# 3) subset both data objects
+permanova_numeric_data3 <- permanova_numeric_data_bl[keep_rows, , drop = FALSE]
+meta2 <- qc_data[keep_rows, , drop = FALSE]
+
+# 4) compute Bray-Curtis on the filtered numeric table
+bray_curtis3 <- vegdist(permanova_numeric_data3, method = "bray")
+
+# 5) run PERMANOVA with matching metadata
+phylum_permanova_result_1 <- adonis2(bray_curtis3 ~ bleaching, data = meta2, permutations = 999)
+
+# 6) show result
+print(phylum_permanova_result_1)
 ```
 
 ```{r}
@@ -808,7 +1077,6 @@ print(p)
 ```{r}
 #| label: Metabolite_ubiquity_vs_average_abundance
 
-# helper: choose a y-axis label function compatible with the installed 'scales' version
 y_labels_fn <- if (packageVersion("scales") >= "1.2.0") {
   # new API (scales >= 1.2.0)
   label_number(scale_cut = cut_short_scale())
@@ -836,7 +1104,14 @@ metabolite_summary <- metabolite_data %>%
   )
 
 ggplot(metabolite_summary, aes(x = ubiquity, y = avg_abundance)) +
-  geom_point(color = "#6d9eeb", alpha = 0.8, size = 2) +  # circles
+  # use shape=21 (filled circle) so we can have a bold fill + black outline
+  geom_point(shape = 21,
+             aes(fill = NULL),
+             color = "black",       # outline color
+             fill = "#E41A1C",      # bold fill (bright red)
+             alpha = 0.9,
+             size = 2.8,
+             stroke = 0.35) +
   scale_y_continuous(labels = y_labels_fn) +
   labs(
     x = "Ubiquity (% samples present)",
@@ -845,20 +1120,31 @@ ggplot(metabolite_summary, aes(x = ubiquity, y = avg_abundance)) +
   ) +
   theme_minimal(base_size = 14) +
   theme(
-    plot.background   = element_rect(fill = "#000042", color = NA),
-    panel.background  = element_rect(fill = "#000042", color = NA),
-    panel.grid.major  = element_line(color = "gray50"),
+    # white overall background and panel
+    plot.background   = element_rect(fill = "white", color = NA),
+    panel.background  = element_rect(fill = "white", color = NA),
+    # grid and axes
+    panel.grid.major  = element_line(color = "gray85"),
     panel.grid.minor  = element_blank(),
-    plot.title        = element_text(hjust = 0.5, face = "bold", color = "white"),
-    axis.title        = element_text(color = "white"),
-    axis.text         = element_text(color = "white"),
-    axis.line         = element_blank(),   # removes x and y axis lines
+    axis.line         = element_line(color = "black"),
+    # text colors
+    plot.title        = element_text(hjust = 0.5, face = "bold", color = "black"),
+    axis.title        = element_text(color = "black"),
+    axis.text         = element_text(color = "black"),
     legend.position   = "none"
   )
 ```
 
 ```{r}
 #| label: Metabolite_ubiquity_vs_average_abundance_scleractinia
+
+y_labels_fn <- if (packageVersion("scales") >= "1.2.0") {
+  # new API (scales >= 1.2.0)
+  label_number(scale_cut = cut_short_scale())
+} else {
+  # fallback for older scales
+  label_number_si()
+}
 
 # --- Compute presence / ubiquity overall and within coral samples ---
 met_presence_long <- qc_data %>%
@@ -907,40 +1193,48 @@ x_vline_pos <- met_summary %>%
   pull(ubiquity_all) %>%
   { if(length(.) == 0) NA_real_ else max(., na.rm = TRUE) }
 
-# --- Plot: map fill to category so legend is generated; use override.aes to force legend key fills ---
+# --- Aesthetics: white background, bold fills, black outlines ---
+# Choose bold fills: bright red for Coral-only, dark gray for Other
+fill_pal <- c("Coral-only" = "#E41A1C", "Other" = "#4D4D4D")
+outline_col <- "black"
+
 ggplot(met_summary, aes(x = ubiquity_all, y = avg_abundance, fill = category)) +
+  # Other points
   geom_point(
     data = subset(met_summary, category == "Other"),
     aes(x = ubiquity_all, y = avg_abundance),
-    shape = 21, size = 2.8, color = "white",
-    alpha = 0.55, stroke = 0.3, show.legend = TRUE
+    shape = 21, size = 3.0, color = outline_col,
+    alpha = 0.9, stroke = 0.35, show.legend = TRUE
   ) +
+  # Coral-only points
   geom_point(
     data = subset(met_summary, category == "Coral-only"),
     aes(x = ubiquity_all, y = avg_abundance),
-    shape = 21, size = 2.8, color = "white",
-    alpha = 0.6, stroke = 0.35, show.legend = TRUE
+    shape = 21, size = 3.2, color = outline_col,
+    alpha = 0.95, stroke = 0.45, show.legend = TRUE
   ) +
-  { if (!is.na(x_vline_pos)) geom_vline(xintercept = x_vline_pos, color = "white", linetype = "dashed", linewidth = 0.6) else NULL } +
+  # vertical line (if available) in black dashed
+  { if (!is.na(x_vline_pos)) geom_vline(xintercept = x_vline_pos, color = "black", linetype = "dashed", linewidth = 0.6) else NULL } +
   scale_fill_manual(
-    values = c("Coral-only" = "red", "Other" = "white"),
+    values = fill_pal,
     breaks = c("Coral-only", "Other"),
     labels = c("Coral-only (Scleractinia)", "Other")
   ) +
   guides(
     fill = guide_legend(
       override.aes = list(
-        fill = c("red", "white"),
-        color = "white",
+        fill = c(fill_pal["Coral-only"], fill_pal["Other"]),
+        color = c(outline_col, outline_col),
         shape = 21,
-        size = 4,
-        alpha = c(0.6, 0.55),
-        stroke = 0.35
-      )
+        size = c(4, 3.5),
+        alpha = c(0.95, 0.9),
+        stroke = c(0.45, 0.35)
+      ),
+      direction = "horizontal",
+      title = NULL
     )
   ) +
-  # <-- REPLACED LINE: use label_number with scale_cut instead of deprecated label_number_si()
-  scale_y_continuous(labels = label_number(scale_cut = cut_short_scale())) +
+  scale_y_continuous(labels = y_labels_fn) +
   scale_x_continuous(
     limits = c(0, 100),
     breaks = seq(0, 100, by = 20),
@@ -953,19 +1247,26 @@ ggplot(met_summary, aes(x = ubiquity_all, y = avg_abundance, fill = category)) +
   ) +
   theme_minimal(base_size = 14) +
   theme(
-    plot.background   = element_rect(fill = "#000042", color = NA),
-    panel.background  = element_rect(fill = "#000042", color = NA),
-    panel.grid.major  = element_line(color = "gray40"),
+    # white overall background and panel
+    plot.background   = element_rect(fill = "white", color = NA),
+    panel.background  = element_rect(fill = "white", color = NA),
+    # grid and axes (subtle grid on white)
+    panel.grid.major  = element_line(color = "gray90"),
     panel.grid.minor  = element_blank(),
-    plot.title        = element_text(hjust = 0.5, face = "bold", color = "white"),
-    axis.title        = element_text(color = "white"),
-    axis.text         = element_text(color = "white"),
-    axis.line         = element_blank(),
+    axis.line         = element_line(color = "black"),
+    # text colors
+    plot.title        = element_text(hjust = 0.5, face = "bold", color = "black"),
+    axis.title        = element_text(color = "black"),
+    axis.text         = element_text(color = "black"),
+    # legend at bottom, on white background, not overlapping
     legend.position   = "bottom",
+    legend.direction  = "horizontal",
     legend.title      = element_blank(),
-    legend.text       = element_text(color = "white"),
-    legend.background = element_rect(fill = "#000042", color = NA),
-    legend.key        = element_rect(fill = "#000042", color = NA)
+    legend.text       = element_text(color = "black"),
+    legend.background = element_rect(fill = "white", color = NA),
+    legend.key        = element_rect(fill = "white", color = NA),
+    # tighten spacing so legend doesn't overlap points
+    plot.margin = margin(t = 8, r = 8, b = 8, l = 8)
   )
 ```
 
@@ -1004,47 +1305,27 @@ merged_metabolite_data <- ubiquity_avg_abundance_values %>%
 ```
 
 ```{r}
-#| label: ubiquity-graph-npc-pathway
+#| label: ubiquity-graph-coral-compound-family
 
 merged_metabolite_data %>%
-  group_by(npc_number_pathway) %>%
+  group_by(coraldb_compound_family) %>%
   summarise(
     ubiquity = mean(ubiquity, na.rm = TRUE),
-    avg_abundance = mean(avg_abundance, na.rm = TRUE)
+    avg_abundance = mean(avg_abundance, na.rm = TRUE),
+    .groups = "drop"
   ) %>%
-  filter(npc_number_pathway != "Unknown") %>%
-  ggplot(aes(x = ubiquity, y = avg_abundance, color = npc_number_pathway)) +
+  filter(coraldb_compound_family != "Unknown") %>%
+  ggplot(aes(x = ubiquity, y = avg_abundance, color = coraldb_compound_family)) +
   
   geom_point(size = 2.5, alpha = 0.8) +
   
   scale_y_continuous(labels = y_labels_fn) +
   
-  # ---- Same 7-category color palette ----
-  scale_color_manual(
-    values = c(
-      "Fatty acids"                     = "#E69F00",
-      "Polyketides"                     = "#56B4E9",
-      "Shikimates and Phenylpropanoids" = "#009E73",
-      "Terpenoids"                      = "#F0E442",
-      "Alkaloids"                       = "#0072B2",
-      "Amino acids and Peptides"        = "#D55E00",
-      "Carbohydrates"                   = "#CC79A7"
-    ),
-    labels = function(x) stringr::str_wrap(x, width = 18),
-    guide = guide_legend(
-      nrow = 2,
-      byrow = TRUE,
-      keyheight = unit(0.3, "cm"),
-      keywidth  = unit(0.6, "cm"),
-      title = NULL
-    )
-  ) +
-  
   labs(
     x = "Ubiquity (% samples present)",
     y = "Average abundance",
     title = "Metabolite ubiquity vs average abundance",
-    subtitle = "by pathways of NPClassifiers"
+    subtitle = "by coral compound family"
   ) +
   
   theme_minimal(base_size = 14) +
@@ -1059,14 +1340,19 @@ merged_metabolite_data %>%
     
     # ---- Text styling ----
     plot.title    = element_text(hjust = 0.5, face = "bold", color = "black"),
-    plot.subtitle = element_text(hjust = 0.5, color = "grey30", size = 12,
-                                 margin = margin(b = 6)),
+    plot.subtitle = element_text(
+      hjust = 0.5,
+      color = "grey30",
+      size = 12,
+      margin = margin(b = 6)
+    ),
     
     axis.title = element_text(color = "black"),
     axis.text  = element_text(color = "black"),
     
     # ---- Legend ----
     legend.position   = "bottom",
+    legend.title      = element_blank(),
     legend.text       = element_text(color = "black", size = 8),
     legend.key        = element_rect(fill = "white", color = NA),
     legend.spacing.y  = unit(0.15, "cm"),
@@ -1080,79 +1366,77 @@ merged_metabolite_data %>%
 ```
 
 ```{r}
-#| label: ubiquity-graph-npc-superclass
+#| label: ubiquity-graph-coral-compound-superclass
 
 merged_metabolite_data %>%
-  group_by(npc_number_superclass) %>%
+  group_by(coraldb_compound_superclass) %>%
   summarise(
     ubiquity = mean(ubiquity, na.rm = TRUE),
-    avg_abundance = mean(avg_abundance, na.rm = TRUE)
+    avg_abundance = mean(avg_abundance, na.rm = TRUE),
+    .groups = "drop"
   ) %>%
-  filter(npc_number_superclass != "Unknown") %>%
-  ggplot(aes(x = ubiquity, y = avg_abundance, color = npc_number_superclass)) +
-  
-  geom_point(size = 2.5, alpha = 0.8) +
-  
-  scale_y_continuous(labels = y_labels_fn) +
-  
-  # ---- Same color palette ----
-  scale_color_manual(
-    values = c(
-      "Fatty acids"                     = "#E69F00",
-      "Polyketides"                     = "#56B4E9",
-      "Shikimates and Phenylpropanoids" = "#009E73",
-      "Terpenoids"                      = "#F0E442",
-      "Alkaloids"                       = "#0072B2",
-      "Amino acids and Peptides"        = "#D55E00",
-      "Carbohydrates"                   = "#CC79A7"
-    ),
-    labels = function(x) stringr::str_wrap(x, width = 18),
-    guide = guide_legend(
-      nrow = 2,
-      byrow = TRUE,
-      keyheight = unit(0.3, "cm"),
-      keywidth  = unit(0.6, "cm"),
-      title = NULL
+  filter(coraldb_compound_superclass != "Unknown") %>%
+  ggplot(
+    aes(
+      x = ubiquity,
+      y = avg_abundance,
+      color = coraldb_compound_superclass
     )
   ) +
+  
+  geom_point(size = 2.2, alpha = 0.8) +
+  
+  scale_y_continuous(labels = y_labels_fn) +
   
   labs(
     x = "Ubiquity (% samples present)",
     y = "Average abundance",
     title = "Metabolite ubiquity vs average abundance",
-    subtitle = "by NPClassifier superclasses"
+    subtitle = "by coral compound superclass"
   ) +
   
-  theme_minimal(base_size = 14) +
+  theme_minimal(base_size = 12) +
   theme(
+    # ---- White background ----
     plot.background  = element_rect(fill = "white", color = NA),
     panel.background = element_rect(fill = "white", color = NA),
     
+    # ---- Grid ----
     panel.grid.major = element_line(color = "grey85"),
     panel.grid.minor = element_blank(),
     
-    plot.title    = element_text(hjust = 0.5, face = "bold", color = "black"),
-    plot.subtitle = element_text(hjust = 0.5, color = "grey30", size = 12,
-                                 margin = margin(b = 6)),
+    # ---- Text ----
+    plot.title    = element_text(hjust = 0.5, face = "bold", color = "black", size = 13),
+    plot.subtitle = element_text(hjust = 0.5, color = "grey30", size = 10),
+    axis.title    = element_text(color = "black", size = 11),
+    axis.text     = element_text(color = "black", size = 10),
     
-    axis.title = element_text(color = "black"),
-    axis.text  = element_text(color = "black"),
+    # ---- Legend (stacked vertically) ----
+    legend.position    = "bottom",
+    legend.title       = element_blank(),
+    legend.text        = element_text(size = 6),
+    legend.key.height  = unit(0.2, "cm"),
+    legend.key.width   = unit(0.4, "cm"),
+    legend.spacing.y   = unit(0.03, "cm"),
+    legend.spacing.x   = unit(0.1, "cm"),
     
-    legend.position   = "bottom",
-    legend.text       = element_text(color = "black", size = 8),
-    legend.key        = element_rect(fill = "white", color = NA),
-    legend.spacing.y  = unit(0.15, "cm"),
-    legend.spacing.x  = unit(0.2, "cm"),
-    legend.margin     = margin(t = 0, b = 0),
-    legend.box.margin = margin(t = -5),
-    
-    plot.margin = margin(t = 10, r = 10, b = 10, l = 10)
+    # extra room for stacked legend
+    plot.margin = margin(t = 6, r = 8, b = 20, l = 8)
+  ) +
+  
+  guides(
+    color = guide_legend(
+      nrow = 5,      # 👈 stack more than three entries
+      byrow = TRUE
+    )
   )
 ```
 
 ## Box and Whiskers Plots
 
 ```{r}
+#| label: avg-met-abundance-box-and-whisker
+
 library(dplyr)
 library(ggplot2)
 
@@ -1175,7 +1459,6 @@ plot_data <- qc_data %>%
                    "All samples")
   )
 
-# 4) make box & whisker plot
 ggplot(plot_data, aes(x = group, y = avg_abundance, fill = group)) +
   geom_boxplot(alpha = 0.7, width = 0.6, outlier.shape = 16) +
   labs(
@@ -1184,10 +1467,21 @@ ggplot(plot_data, aes(x = group, y = avg_abundance, fill = group)) +
     y = "Average Metabolite Abundance"
   ) +
   theme_minimal(base_size = 13) +
-  theme(legend.position = "none")
+  theme(
+    legend.position = "none",
+    plot.title = element_text(
+      hjust = 0.5,      # center title
+      face = "bold",    # bold title
+      color = "black"
+    ),
+    axis.title = element_text(color = "black"),
+    axis.text  = element_text(color = "black")
+  )
 ```
 
 ```{r}
+#| label: avg-met-ubiquity-box-and-whisker
+
 library(dplyr)
 library(ggplot2)
 
@@ -1211,7 +1505,6 @@ plot_data <- qc_data %>%
                    "All samples")
   )
 
-# 4) make box & whisker plot
 ggplot(plot_data, aes(x = group, y = avg_ubiquity, fill = group)) +
   geom_boxplot(alpha = 0.7, width = 0.6, outlier.shape = 16) +
   labs(
@@ -1220,7 +1513,16 @@ ggplot(plot_data, aes(x = group, y = avg_ubiquity, fill = group)) +
     y = "Proportion of Metabolites Detected"
   ) +
   theme_minimal(base_size = 13) +
-  theme(legend.position = "none")
+  theme(
+    legend.position = "none",
+    plot.title = element_text(
+      hjust = 0.5,      # center title
+      face = "bold",    # bold title
+      color = "black"
+    ),
+    axis.title = element_text(color = "black"),
+    axis.text  = element_text(color = "black")
+  )
 ```
 
 ## NPC Classifiers
