@@ -19,7 +19,8 @@ library(scales)
 ```{r}
 #| label: read-csvs
 
-qc_data <- read.csv("/Users/ellaandonov/World_Corals/Cleaned data CSVs/qc_data.csv")
+# qc_data <- read.csv("/Users/ellaandonov/World_Corals/Cleaned data CSVs/qc_data.csv")
+qc_data <- read.csv("qc_data.csv")
 ```
 
 ## Taxonomic Counts
@@ -50,8 +51,8 @@ print(taxonomic_counts)
 avg_metabolite_values_family <- qc_data |>
   group_by(host_family) |> 
   filter(!is.na(host_family)) |> 
-  summarise(across(starts_with("x"), mean, na.rm = TRUE)) |>
-  ungroup()
+  summarise(across(starts_with("x"), \(x) mean(x, na.rm = TRUE))) |>
+ungroup()
 ```
 
 ```{r}
