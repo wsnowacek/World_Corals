@@ -40,7 +40,8 @@ df <- df %>%
     host_family = factor(host_family)
   )
 # color palettes
-cols_location  <- c("#449DB3FF", "#A3BAC2FF", "#60BFAEFF", "#8C6E5DFF")
+cols_location <-c("#002594FF", "#E0B2CDFF", "#54C4E3FF", "#F3AA4FFF")
+# cols_location  <- c("#449DB3FF", "#A3BAC2FF", "#60BFAEFF", "#8C6E5DFF")
 cols_symbiont  <- c("#D84D16FF", "#FFF800FF", "#8FDA04FF")
 cols_sclero    <- c("1" = "#DE7862FF", "0" = "#D8AF39FF")
 
@@ -56,6 +57,7 @@ keep_rows <- !is.na(df$host_family) &
 
 permanova_numeric_data2 <- permanova_numeric_data[keep_rows, , drop = FALSE]
 meta2 <- df[keep_rows, , drop = FALSE]
+bray_curtis <- vegdist(permanova_numeric_data2, method = "bray")
 
 ################################################################################
 #Scleractinia vs nonScleractinia PERMANOVA
@@ -138,14 +140,13 @@ var_explained <- round(100 * pcoa_result2$eig[1:2] / sum(pos_eig), 1)
 
 p2 <- ggplot(pcoa_points2, aes(x = PCoA1, y = PCoA2, color = location)) +
   # Ellipses only care about location
-  stat_ellipse(
-    aes(fill = location, group = location),
-    geom = "polygon",
-    alpha = 0.1,
-    level = 0.95,
-    colour = NA
-  ) +
-  # Move shape and bleaching mapping here so it doesn't interfere with the ellipse
+  # stat_ellipse(
+  #   aes(fill = location, group = location),
+  #   geom = "polygon",
+  #   alpha = 0.1,
+  #   level = 0.95,
+  #   colour = NA
+  # ) +
   geom_point(aes(shape = bleaching), size = 3, alpha = 0.8) +
   scale_color_manual(values = cols_location) +
   scale_fill_manual(values = cols_location) +
@@ -163,6 +164,65 @@ ggsave("/work/hs325/World_Corals/misc/figs/pcoa_locb.jpg", p2, width = 8, height
 
 ################################################################################
 ## Location by symbiont potential PERMANOVA
+
+keep_rows <- !is.na(meta2$symbiont.potential)
+# subset the metadata and the numeric data simultaneously
+meta_symb <- meta2[keep_rows, , drop = FALSE]
+numeric_symb <- permanova_numeric_data2[keep_rows, , drop = FALSE]
+
+# BC dissimilarity then nested PERMANOVA
+bray_curtis_locS <- vegdist(numeric_symb, method = "bray")
+locS_permanova_result <- adonis2(
+  bray_curtis_locS ~ location / symbiont.potential, 
+  data = meta_symb, 
+  permutations = 999
+)
+print(locS_permanova_result)               
+# adonis2(formula = bray_curtis_locS ~ location/symbiont.potential, data = meta_symb, permutations = 999)
+# Df SumOfSqs      R2      F Pr(>F)    
+# Model      5   46.735 0.33653 53.259  0.001 ***
+#   Residual 525   92.139 0.66347                  
+# Total    530  138.874 1.00000                  
+
+shapes_sym <- c(
+  "Aposymbiotic" = 8,     
+  "Facultative" = 20, 
+  "Symbiotic" = 18   
+)
+
+pcoa_result3 <- cmdscale(bray_curtis_locS, eig = TRUE, k = 2)
+pcoa_points3 <- as.data.frame(pcoa_result3$points)
+colnames(pcoa_points3) <- c("PCoA1", "PCoA2")
+pcoa_points3 <- bind_cols(pcoa_points3, meta_symb)
+
+# compute percent variance explained (use only positive eigenvalues)
+pos_eig <- pcoa_result3$eig[pcoa_result3$eig > 0]
+var_explained <- round(100 * pcoa_result3$eig[1:2] / sum(pos_eig), 1)
+
+p2 <- ggplot(pcoa_points3, aes(x = PCoA1, y = PCoA2, color = location)) +
+  # Ellipses only care about location
+  # stat_ellipse(
+  #   aes(fill = location, group = location),
+  #   geom = "polygon",
+  #   alpha = 0.1,
+  #   level = 0.95,
+  #   colour = NA
+  # ) +
+  geom_point(aes(shape = symbiont.potential), size = 3, alpha = 0.8) +
+  scale_color_manual(values = cols_location) +
+  scale_fill_manual(values = cols_location) +
+  scale_shape_manual(values = shapes_sym) + 
+  labs(
+    x = paste0("PCoA1: (", var_explained[1], "%)"),
+    y = paste0("PCoA2: (", var_explained[2], "%)"),
+    color = "Location",
+    fill = "Location",
+    shape = "Symbiont Potential"
+  ) +
+  theme_cowplot(font_size = 14) +
+  theme(legend.position = "right")
+ggsave("/work/hs325/World_Corals/misc/figs/pcoa_locsym.jpg", p2, width = 8, height = 6, dpi = 300)
+
 
 ################################################################################
 ## Bleaching status alone PERMANOVA
