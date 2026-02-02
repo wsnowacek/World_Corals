@@ -724,7 +724,7 @@ print(final_plot)
 ggsave("/work/hs325/World_Corals/misc/figs/fig2.jpg", final_plot, width = 18, height = 12, dpi = 300)
 
 ################################################################################
-# Extra: density ridges
+# Extra: density ridges ?
 ################################################################################
-# Extra: heatmap
+# Extra: heatmap ?
 
