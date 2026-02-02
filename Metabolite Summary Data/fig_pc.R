@@ -90,8 +90,8 @@ p <- ggplot(pcoa_points, aes(x = PCoA1, y = PCoA2, color = scleractinia, fill = 
     type = "t",
     colour = NA
   ) +
-  scale_color_manual(values = cols_sclero, labels = c("1" = "Scleractinia", "0" = "Non-Scleractinia")) +
-  scale_fill_manual(values = cols_sclero, labels = c("1" = "Scleractinia", "0" = "Non-Scleractinia")) +
+  scale_color_manual(values = cols_sclero, labels = c("1" = "Scleractinia", "0" = "Other")) +
+  scale_fill_manual(values = cols_sclero, labels = c("1" = "Scleractinia", "0" = "Other")) +
   labs(
     x = paste0("PCoA1: (", var_explained[1], "%)"),
     y = paste0("PCoA2: (", var_explained[2], "%)"),
