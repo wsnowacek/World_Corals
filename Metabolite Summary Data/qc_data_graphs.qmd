@@ -682,8 +682,18 @@ ggplot(curacao_plot_data, aes(x = samples, y = richness)) +
   labs(
     title = "Collectors Curve for Metabolites Sampled (Curaçao, Scleractinia)",
     x = "Number of Samples",
-   y = "Metabolite Richness") +
-  theme_minimal(base_size = 13)
+    y = "Metabolite Richness"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title = element_text(
+      hjust = 0.5,
+      face  = "bold",
+      color = "black"
+    ),
+    axis.title = element_text(color = "black"),
+    axis.text  = element_text(color = "black")
+  )
 ```
 
 ```{r}
@@ -711,7 +721,16 @@ ggplot(curacao_curve_df, aes(x = samples, y = richness)) +
     x = "Number of Samples",
     y = "Metabolite Richness"
   ) +
-  theme_minimal(base_size = 13)
+  theme_minimal(base_size = 13) +
+  theme(
+    plot.title = element_text(
+      hjust = 0.5,
+      face  = "bold",
+      color = "black"
+    ),
+    axis.title = element_text(color = "black"),
+    axis.text  = element_text(color = "black")
+  )
 ```
 
 ## PCoA
