@@ -204,7 +204,7 @@ p3 <- ggplot(combined_acc_bleach, aes(x = percent_samples, y = richness, color =
   scale_fill_manual(values = cols_bleaching) +
   scale_linetype_manual(values = c("Bleached" = "solid", 
                                    "Non-Bleached" = "solid", 
-                                   "Not Applicable" = "dotted")) +
+                                   "Not Applicable" = "solid")) +
   
   scale_x_continuous(breaks = seq(0, 100, 25)) +
   labs(
@@ -353,7 +353,8 @@ top_row <- plot_grid(
   label_y=1,
   hjust = 0,   
   vjust = 1.5,
-  ncol = 2
+  ncol = 2,
+  rel_widths = c(1,0.8)
 )
 bottom_row <- plot_grid(
   p2, p3, p4, 
@@ -379,7 +380,6 @@ ggsave("/work/hs325/World_Corals/misc/figs/fig3.jpg", final_plot, width=12,heigh
 # compound superclass (10? levels)
 # NPC classifier pathway 7 levels
 # coral compound family? 9 levels 
-
 # NPC superclass path plot
 
 

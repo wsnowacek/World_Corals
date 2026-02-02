@@ -426,6 +426,11 @@ ggsave("/work/hs325/World_Corals/misc/figs/pcoa_location.jpg", p6, width = 8, he
 metabolite_data <- df %>%
   select(starts_with("x"))
 
+########### abundance
+avg_abundance <- metabolite_data %>%
+  mutate(avg_abundance = rowMeans(., na.rm = TRUE)) %>%
+  select(avg_abundance)
+
 plot_data <- df %>%
   select(host_order) %>%
   bind_cols(avg_abundance) %>%
@@ -436,11 +441,6 @@ plot_data <- df %>%
   )
 plot_data$group[is.na(plot_data$group)] <- 0
 unique(plot_data$group)
-
-########### abundance
-avg_abundance <- metabolite_data %>%
-  mutate(avg_abundance = rowMeans(., na.rm = TRUE)) %>%
-  select(avg_abundance)
 
 plot_data_clean <- plot_data %>%
   mutate(group = factor(group)) %>% # Ensure it's a factor first
@@ -603,21 +603,6 @@ cluster.average <- hclust(bray_curtis_family, method = 'average')
 
 dend_data <- dendro_data(cluster.average, type = "rectangle")
 
-leaf_metadata <- df %>%
-  filter(!is.na(host_family)) %>%
-  group_by(host_family) %>%
-  summarize(
-    phylum = first(host_phylum),
-    is_scler = first(host_order) == "Scleractinia"
-  ) %>%
-  ungroup()
-
-dend_labels_phylum <- dend_data$labels %>%
-  left_join(leaf_metadata, by = c("label" = "host_family")) %>%
-  mutate(
-    text_color_group = if_else(is_scler == TRUE, "Scleractinia_Color", phylum)
-  )
-
 branch_palette <- c(
   "Ochrophyta"         = "#32CD32", # Lime Green
   "Chlorophyta"        = "#00CED1", # Dark Turquoise
@@ -628,47 +613,138 @@ branch_palette <- c(
   "grey40"             = "grey40"   # Internal nodes
 )
 
+#################################### no n=
+# leaf_metadata <- df %>%
+#   filter(!is.na(host_family)) %>%
+#   group_by(host_family) %>%
+#   summarize(
+#     phylum = first(host_phylum),
+#     is_scler = first(host_order) == "Scleractinia"
+#   ) %>%
+#   ungroup()
+# 
+# dend_labels_phylum <- dend_data$labels %>%
+#   left_join(leaf_metadata, by = c("label" = "host_family")) %>%
+#   mutate(
+#     text_color_group = if_else(is_scler == TRUE, "Scleractinia_Color", phylum)
+#   )
+# 
+# p_dendro <- ggplot() +
+#   # Branches
+#   geom_segment(data = dend_segments, 
+#                aes(x = x, y = y, xend = xend, yend = yend, color = branch_color),
+#                linewidth = 0.8) +
+#   # Text labels
+#   geom_text(data = dend_labels_phylum, 
+#             aes(x = x, y = y, label = label, color = text_color_group),
+#             hjust = -0.1, 
+#             size = 3, 
+#             show.legend = FALSE) +
+#   coord_flip() +
+#   scale_y_reverse(
+#     expand = c(0.4, 0),
+#     breaks = seq(0, 0.75, 0.25)
+#   ) +
+#     scale_color_manual(
+#     values = branch_palette,
+#     breaks = c("Scleractinia_Color","Chlorophyta", "Chordata", "Cnidaria", "Ochrophyta","Porifera"),
+#     labels = c("Scleractinia","Chlorophyta", "Chordata", "Cnidaria", "Ochrophyta","Porifera")
+#   ) +
+#   
+#   theme_pubr() +
+#   labs(y = "Bray-Curtis Distance", x = "", color = "Classification") +
+#   theme(
+#     axis.text.y = element_blank(), 
+#     axis.ticks.y = element_blank(),
+#     axis.line.y = element_blank(),
+#     # Optional: Match the legend title style to your other plots
+#     legend.position = c(0.10, 0.5),   # Adjust these values to nudge the legend
+#     legend.background = element_blank(), # Makes legend background transparent
+#     legend.box.background = element_blank(),
+#     legend.title = element_text(face = "bold")
+#   ) +
+#   guides(color = guide_legend(
+#     override.aes = list(alpha = 1, size = 4, shape = 15)
+#   ))
+# 
+# print(p_dendro)
+
+#################################### with n=
+
+family_counts <- df %>%
+  filter(!is.na(host_family)) %>%
+  group_by(host_family) %>%
+  summarise(n = n()) %>%
+  ungroup()
+
+leaf_metadata <- df %>%
+  filter(!is.na(host_family)) %>%
+  group_by(host_family) %>%
+  summarize(
+    phylum = first(host_phylum),
+    is_scler = first(host_order) == "Scleractinia"
+  ) %>%
+  left_join(family_counts, by = "host_family") %>%
+  # Create the label string: "Family (n=X)"
+  mutate(label_with_n = paste0(host_family, " (n=", n, ")")) %>%
+  ungroup()
+
+dend_segments <- dend_data$segments %>%
+  left_join(dend_data$labels %>% select(x, label), by = "x") %>% 
+  left_join(leaf_metadata, by = c("label" = "host_family")) %>%
+  mutate(
+    branch_color = case_when(
+      is_scler == TRUE ~ "Scleractinia_Color",
+      !is.na(phylum)   ~ phylum,
+      TRUE             ~ "grey40" # Internal branches
+    )
+  )
+
+# 4. Create dend_labels_phylum for the text layer
+dend_labels_phylum <- dend_data$labels %>%
+  left_join(leaf_metadata, by = c("label" = "host_family")) %>%
+  mutate(
+    text_color_group = if_else(is_scler == TRUE, "Scleractinia_Color", phylum)
+  )
+# 4. Plot with the new label_with_n column
 p_dendro <- ggplot() +
-  # Branches
   geom_segment(data = dend_segments, 
                aes(x = x, y = y, xend = xend, yend = yend, color = branch_color),
                linewidth = 0.8) +
-  # Text labels
   geom_text(data = dend_labels_phylum, 
-            aes(x = x, y = y, label = label, color = text_color_group),
+            # CHANGED: aes(label = label_with_n)
+            aes(x = x, y = y, label = label_with_n, color = text_color_group),
             hjust = -0.1, 
             size = 3, 
             show.legend = FALSE) +
   coord_flip() +
   scale_y_reverse(
-    expand = c(0.4, 0),
+    expand = c(0.5, 0), # Slightly increased expansion to fit longer text
     breaks = seq(0, 0.75, 0.25)
   ) +
-    scale_color_manual(
+  scale_color_manual(
     values = branch_palette,
     breaks = c("Scleractinia_Color","Chlorophyta", "Chordata", "Cnidaria", "Ochrophyta","Porifera"),
     labels = c("Scleractinia","Chlorophyta", "Chordata", "Cnidaria", "Ochrophyta","Porifera")
   ) +
-  
   theme_pubr() +
   labs(y = "Bray-Curtis Distance", x = "", color = "Classification") +
   theme(
     axis.text.y = element_blank(), 
     axis.ticks.y = element_blank(),
     axis.line.y = element_blank(),
-    # Optional: Match the legend title style to your other plots
-    legend.position = c(0.10, 0.5),   # Adjust these values to nudge the legend
-    legend.background = element_blank(), # Makes legend background transparent
+    legend.position = c(0.10, 0.5),   
+    legend.background = element_blank(), 
     legend.box.background = element_blank(),
     legend.title = element_text(face = "bold")
   ) +
   guides(color = guide_legend(
     override.aes = list(alpha = 1, size = 4, shape = 15)
   ))
-
 print(p_dendro)
 
 ################################################################################
+
 # combine plots with cowplot
 # row 1: legend, p, p2 
 # row 2: p_dendro, p_abundance, p_ubiquity, p_evenness, p_richness (boxplots should be tight)
@@ -723,8 +799,4 @@ final_plot <- plot_grid(
 print(final_plot)
 ggsave("/work/hs325/World_Corals/misc/figs/fig2.jpg", final_plot, width = 18, height = 12, dpi = 300)
 
-################################################################################
-# Extra: density ridges ?
-################################################################################
-# Extra: heatmap ?
 
