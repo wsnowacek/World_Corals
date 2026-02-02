@@ -37,12 +37,14 @@ df <- df %>%
     location = factor(location),
     symbiont.potential = factor(symbiont.potential),
     host_order = fct_relevel(factor(host_order), "Scleractinia"),
-    host_family = factor(host_family)
+    host_family = factor(host_family),
+    host_phylum = factor(host_phylum)
   )
 # color palettes
 cols_location <-c("#002594FF", "#E0B2CDFF", "#54C4E3FF", "#F3AA4FFF")
 # cols_location  <- c("#449DB3FF", "#A3BAC2FF", "#60BFAEFF", "#8C6E5DFF")
 cols_symbiont  <- c("#D84D16FF", "#FFF800FF", "#8FDA04FF")
+cols_phylum <- c("#24492EFF", "#015B58FF", "#2C6184FF", "#59629BFF", "#89689DFF", "#BA7999FF", "#E69B99FF")
 cols_sclero    <- c("1" = "#DE7862FF", "0" = "#D8AF39FF")
 
 permanova_numeric_data <- df %>% select(starts_with("x"))
@@ -81,6 +83,11 @@ pos_eig <- pcoa_result$eig[pcoa_result$eig > 0]
 var_explained <- round(100 * pcoa_result$eig[1:2] / sum(pos_eig), 1)
 # 18.8 14.4
 
+perm_p_val <- scleractinia_permanova_result$`Pr(>F)`[1]
+perm_r2    <- round(scleractinia_permanova_result$R2[1], 3)
+p_label <- if(perm_p_val == 0.001) "p < 0.001" else paste("p =", perm_p_val)
+stats_annotation <- paste0("PERMANOVA: R² = ", perm_r2, ", ", p_label)
+
 p <- ggplot(pcoa_points, aes(x = PCoA1, y = PCoA2, color = scleractinia, fill = scleractinia)) +
   geom_point(size = 3, alpha = 0.8) +
   stat_ellipse(
@@ -90,6 +97,14 @@ p <- ggplot(pcoa_points, aes(x = PCoA1, y = PCoA2, color = scleractinia, fill = 
     type = "t",
     colour = NA
   ) +
+  annotate(
+    "text",
+    x = -Inf,  
+    y = -Inf, 
+    label = stats_annotation,
+    hjust = -0.05,
+    vjust = -0.6,
+    size = 4) +
   scale_color_manual(values = cols_sclero, labels = c("1" = "Scleractinia", "0" = "Other")) +
   scale_fill_manual(values = cols_sclero, labels = c("1" = "Scleractinia", "0" = "Other")) +
   labs(
@@ -128,6 +143,11 @@ print(locB_permanova_result)
 # ---
 #   Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
+perm_p_val <- locB_permanova_result$`Pr(>F)`[1]
+perm_r2    <- round(locB_permanova_result$R2[1], 3)
+p_label <- if(perm_p_val == 0.001) "p < 0.001" else paste("p =", perm_p_val)
+stats_annotation <- paste0("PERMANOVA: R² = ", perm_r2, ", ", p_label)
+
 shapes_bleaching <- c(
   "Bleached" = 4,       # Cross
   "Non-Bleached" = 17,   # Triangle
@@ -144,14 +164,6 @@ pos_eig <- pcoa_result2$eig[pcoa_result2$eig > 0]
 var_explained <- round(100 * pcoa_result2$eig[1:2] / sum(pos_eig), 1)
 
 p2 <- ggplot(pcoa_points2, aes(x = PCoA1, y = PCoA2, color = location)) +
-  # Ellipses only care about location
-  # stat_ellipse(
-  #   aes(fill = location, group = location),
-  #   geom = "polygon",
-  #   alpha = 0.1,
-  #   level = 0.95,
-  #   colour = NA
-  # ) +
   geom_point(aes(shape = bleaching), size = 3, alpha = 0.8) +
   scale_color_manual(values = cols_location) +
   scale_fill_manual(values = cols_location) +
@@ -163,8 +175,16 @@ p2 <- ggplot(pcoa_points2, aes(x = PCoA1, y = PCoA2, color = location)) +
     fill = "Location",
     shape = "Status"
   ) +
-  theme_cowplot(font_size = 14) +
-  theme(legend.position = "right")
+  annotate(
+    "text",
+    x = -Inf,
+    y = -Inf,
+    label = stats_annotation,
+    hjust = -0.05,
+    vjust = -0.6,
+    size = 4) +
+    theme(legend.position = "right") +
+  theme_cowplot(font_size = 14)
 ggsave("/work/hs325/World_Corals/misc/figs/pcoa_locb.jpg", p2, width = 8, height = 6, dpi = 300)
 
 ################################################################################
@@ -583,49 +603,70 @@ cluster.average <- hclust(bray_curtis_family, method = 'average')
 
 dend_data <- dendro_data(cluster.average, type = "rectangle")
 
-family_metadata <- df %>%
+leaf_metadata <- df %>%
   filter(!is.na(host_family)) %>%
   group_by(host_family) %>%
   summarize(
-    group = if_else(first(host_order) == "Scleractinia", "Scleractinia", "Other")
+    phylum = first(host_phylum),
+    is_scler = first(host_order) == "Scleractinia"
   ) %>%
   ungroup()
 
-dend_labels <- dend_data$labels %>%
-  left_join(family_metadata, by = c("label" = "host_family"))
-dend_labels <- dend_labels %>%
-  mutate(group = factor(group, levels = c("Scleractinia", "Other")))
-cols_sclero_named <- c("Scleractinia" = "#DE7862FF", "Other" = "#D8AF39FF")
+dend_labels_phylum <- dend_data$labels %>%
+  left_join(leaf_metadata, by = c("label" = "host_family")) %>%
+  mutate(
+    text_color_group = if_else(is_scler == TRUE, "Scleractinia_Color", phylum)
+  )
+
+branch_palette <- c(
+  "Ochrophyta"         = "#32CD32", # Lime Green
+  "Chlorophyta"        = "#00CED1", # Dark Turquoise
+  "Cnidaria"           = "#304530", # Gold 
+  "Chordata"           = "#9370DB", # Medium Purple
+  "Porifera"           = "#ec93ed", # Hot Pink
+  "Scleractinia_Color" = "#DE7862FF", # Kept your specific Scleractinia color
+  "grey40"             = "grey40"   # Internal nodes
+)
 
 p_dendro <- ggplot() +
-  geom_segment(data = dend_data$segments, 
-               aes(x = x, y = y, xend = xend, yend = yend), 
-               color = "grey40") +
-  geom_text(data = dend_labels, 
-            aes(x = x, y = y, label = label, color = group),
+  # Branches
+  geom_segment(data = dend_segments, 
+               aes(x = x, y = y, xend = xend, yend = yend, color = branch_color),
+               linewidth = 0.8) +
+  # Text labels
+  geom_text(data = dend_labels_phylum, 
+            aes(x = x, y = y, label = label, color = text_color_group),
             hjust = -0.1, 
             size = 3, 
             show.legend = FALSE) +
-  
-  geom_point(data = dend_labels, aes(x = x, y = y, color = group), 
-             alpha = 0) + 
   coord_flip() +
-    scale_y_reverse(
-    expand = c(0.4, 0),        # Keep the expansion for long names
-    breaks = seq(0, 1, 0.25)   # Force ticks only at 0, 0.25, 0.5, 0.75, 1
+  scale_y_reverse(
+    expand = c(0.4, 0),
+    breaks = seq(0, 0.75, 0.25)
   ) +
-  scale_color_manual(values = cols_sclero_named) +
+    scale_color_manual(
+    values = branch_palette,
+    breaks = c("Scleractinia_Color","Chlorophyta", "Chordata", "Cnidaria", "Ochrophyta","Porifera"),
+    labels = c("Scleractinia","Chlorophyta", "Chordata", "Cnidaria", "Ochrophyta","Porifera")
+  ) +
+  
   theme_pubr() +
-  labs(y = "Bray-Curtis Distance", x = "", color = "Order") +
+  labs(y = "Bray-Curtis Distance", x = "", color = "Classification") +
   theme(
     axis.text.y = element_blank(), 
     axis.ticks.y = element_blank(),
     axis.line.y = element_blank(),
-    legend.position = "right"
+    # Optional: Match the legend title style to your other plots
+    legend.position = c(0.10, 0.5),   # Adjust these values to nudge the legend
+    legend.background = element_blank(), # Makes legend background transparent
+    legend.box.background = element_blank(),
+    legend.title = element_text(face = "bold")
   ) +
-  guides(color = guide_legend(override.aes = list(alpha = 1, size = 4, shape = 15)))
+  guides(color = guide_legend(
+    override.aes = list(alpha = 1, size = 4, shape = 15)
+  ))
+
 print(p_dendro)
-ggsave("/work/hs325/World_Corals/misc/figs/dendro.jpg", p_dendro, width=8,height=6,dpi=300)
 
 ################################################################################
 # combine plots with cowplot
@@ -637,19 +678,19 @@ legend_sclero <- get_legend(
     guides(color = guide_legend(title = "Order"), fill = guide_legend(title = "Order")) +
     theme(
       legend.position = "left", 
-      legend.box.margin = margin(0, 0, 0, 12),
+      legend.box.margin = margin(6, 0, 0, 6),
       legend.title = element_text(size = 24, face = "bold"), 
       legend.text = element_text(size = 20),
-      legend.key.size = unit(1.2, "lines") 
-    )
-)
+      legend.title.align = 0.5,
+      legend.text.align = 0.5,
+      legend.key.size = unit(1.2, "lines")))
 clean_theme <- theme(
   legend.position = "none",
   plot.title = element_blank() # Remove titles to keep row 2 clean
 )
 
 p <- p + theme(legend.position = "none")
-p_dendro_clean    <- p_dendro + clean_theme
+# p_dendro_clean    <- p_dendro + clean_theme
 p_abundance_clean <- p_abundance + clean_theme
 p_ubiquity_clean  <- p_ubiquity + clean_theme
 p_entropy_clean  <- p_entropy + clean_theme
@@ -658,15 +699,15 @@ p_richness_clean  <- p_richness + clean_theme
 row1 <- plot_grid(
   legend_sclero, p, p2,
   ncol = 3,
-  rel_widths = c(0.4, 1, 1), # Legend is narrow, plots are equal
+  rel_widths = c(0.4, 1, 1.2), # Legend is narrow, plots are equal
   labels = c("", "A", "B"),
   label_size = 24
 )
 
 row2 <- plot_grid(
-  p_dendro_clean, p_abundance_clean, p_ubiquity_clean, p_entropy_clean, p_richness_clean,
+  p_abundance_clean, p_ubiquity_clean, p_entropy_clean, p_richness_clean,p_dendro,
   nrow = 1,
-  rel_widths = c(1.5, 0.6, 0.6, 0.6, 0.6), # Give Dendro more space
+  rel_widths = c(0.6, 0.6, 0.6, 0.6, 1.5), # Give Dendro more space
   align = 'h', axis = 'tb',
   labels = c("C", "D", "E", "F", "G"),
   label_size = 24
