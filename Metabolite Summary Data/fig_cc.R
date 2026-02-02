@@ -69,13 +69,6 @@ comm_matrix = comm_matrix |>
 ################################################################################
 # Scleractinia vs non-Scleractinia CC
 
-# comm_matrix = df |>
-#   select(c(sample, grep("^x", names(df), value = TRUE))) |>
-#   column_to_rownames(var = "sample")
-# 
-# comm_matrix = comm_matrix |>
-#   mutate(across(where(is.numeric), ~ ifelse(.x > 0, 1, 0)))
-
 sclero_samples <- df %>% filter(scleractinia == "1") %>% pull(sample)
 other_samples  <- df %>% filter(scleractinia == "0" | is.na(scleractinia)) %>% pull(sample)
 
@@ -102,14 +95,26 @@ plot_data_other <- data.frame(
 combined_acc <- bind_rows(plot_data_sclero, plot_data_other) %>%
   mutate(group = factor(group, levels = c("1", "0"))) # Force Scleractinia to the top
 
-p<-ggplot(combined_acc, aes(x = percent_samples, y = richness, color = group, fill = group)) +
+## modify if needed
+n_sclero <- nrow(df %>% filter(scleractinia == "1"))
+n_other  <- nrow(df %>% filter(scleractinia == "0" | is.na(scleractinia)))
+label_sclero <- paste0("Scleractinia (n = ", n_sclero, ")")
+label_other  <- paste0("Other (n = ", n_other, ")")
+
+p <- ggplot(combined_acc, aes(x = percent_samples, y = richness, color = group, fill = group)) +
   geom_ribbon(aes(ymin = richness - sd, ymax = richness + sd), alpha = 0.5, color = NA) +
   geom_line(linewidth = 1.2) +
-  scale_color_manual(values = cols_sclero, labels = c("1" = "Scleractinia", "0" = "Other")) +
-  scale_fill_manual(values = cols_sclero, labels = c("1" = "Scleractinia", "0" = "Other")) +
+  scale_color_manual(
+    values = cols_sclero, 
+    labels = c("1" = label_sclero, "0" = label_other)
+  ) +
+  scale_fill_manual(
+    values = cols_sclero, 
+    labels = c("1" = label_sclero, "0" = label_other)
+  ) +
   scale_x_continuous(breaks = seq(0, 100, 25)) +
   labs(
-    x = "% of Total Samples",
+    x = "Percentage of Total Samples",
     y = "Metabolite Richness",
     color = "Order",
     fill = "Order"
@@ -117,9 +122,9 @@ p<-ggplot(combined_acc, aes(x = percent_samples, y = richness, color = group, fi
   theme_pubr() +
   theme(
     axis.title = element_text(),
-    legend.position = c(0.98, 0.05),     
+    legend.position = c(0.98, 0.05),      
     legend.justification = c(1, 0),      
-    legend.background = element_blank(), 
+    legend.background = element_blank(),  
     legend.box.background = element_blank()
   )
 p
@@ -127,17 +132,14 @@ p
 ################################################################################
 # By location CC
 
+df <- df %>%
+  mutate(location = fct_na_value_to_level(location, level = "Curaçao"))
+
 loc_list <- split(df$sample, df$location)
 
-# 2. Run specaccum for each location and format the data
 plot_data_locs <- lapply(names(loc_list), function(loc) {
-  # Subset community matrix
   comm_sub <- comm_matrix[rownames(comm_matrix) %in% loc_list[[loc]], ]
-  
-  # Run accumulation
   acc <- specaccum(comm_sub, method = "random", permutations = 30)
-  
-  # Return data frame with normalized x-axis
   data.frame(
     percent_samples = (acc$sites / max(acc$sites)) * 100,
     richness = acc$richness,
@@ -148,18 +150,29 @@ plot_data_locs <- lapply(names(loc_list), function(loc) {
 
 combined_acc_loc <- bind_rows(plot_data_locs)
 
-p2<-ggplot(combined_acc_loc, aes(x = percent_samples, y = richness, color = location, fill = location)) +
+loc_counts <- df %>%
+  group_by(location) %>%
+  summarise(n = n()) %>%
+  mutate(label_full = paste0(location, " (n = ", n, ")"))
+
+loc_labels <- setNames(loc_counts$label_full, loc_counts$location)
+
+p2 <- ggplot(combined_acc_loc, aes(x = percent_samples, y = richness, color = location, fill = location)) +
   geom_ribbon(aes(ymin = richness - sd, ymax = richness + sd), alpha = 0.4, color = NA) +
   geom_line(aes(linetype = location), linewidth = 1.2) +
   
-  scale_color_manual(values = cols_location) +
-  scale_fill_manual(values = cols_location) +
-  scale_linetype_manual(values = c("Curaçao" = "solid", "Hawaii" = "dashed", 
-                                   "North Carolina" = "twodash", "Sri Lanka" = "dotted")) +
+  # Map the new labels across all scales to synchronize the legend
+  scale_color_manual(values = cols_location, labels = loc_labels) +
+  scale_fill_manual(values = cols_location, labels = loc_labels) +
+  scale_linetype_manual(
+    values = c("Curaçao" = "solid", "Hawaii" = "dashed", 
+               "North Carolina" = "twodash", "Sri Lanka" = "dotted"),
+    labels = loc_labels
+  ) +
   
   scale_x_continuous(breaks = seq(0, 100, 25)) +
   labs(
-    x = "% of Total Samples",
+    x = "Percentage of Total Samples",
     y = "Metabolite Richness",
     color = "Location",
     fill = "Location",
@@ -172,13 +185,14 @@ p2<-ggplot(combined_acc_loc, aes(x = percent_samples, y = richness, color = loca
     legend.justification = c(1, 0),      
     legend.background = element_blank(), 
     legend.box.background = element_blank(),
-    # Increase legend spacing to make the linetypes visible in the legend
     legend.key.width = unit(1.5, "cm") 
   )
+
 p2
 
 ################################################################################
-# By bleaching status CC
+# By bleaching status CC 
+# (one "pale" sample was removed, so 567 instead of 568 total)
 
 bleach_list <- split(df$sample, df$bleaching)
 plot_data_bleach <- lapply(names(bleach_list), function(status) {
@@ -197,18 +211,30 @@ plot_data_bleach <- lapply(names(bleach_list), function(status) {
 combined_acc_bleach <- bind_rows(plot_data_bleach) %>%
   mutate(bleaching = factor(bleaching, levels = c("Bleached", "Non-Bleached", "Not Applicable")))
 
+bleach_counts <- df %>%
+  group_by(bleaching) %>%
+  summarise(n = n()) %>%
+  mutate(label_full = paste0(bleaching, " (n = ", n, ")")) %>%
+  arrange(factor(bleaching, levels = c("Bleached", "Non-Bleached", "Not Applicable")))
+
+bleach_labels <- setNames(bleach_counts$label_full, bleach_counts$bleaching)
+
 p3 <- ggplot(combined_acc_bleach, aes(x = percent_samples, y = richness, color = bleaching, fill = bleaching)) +
   geom_ribbon(aes(ymin = richness - sd, ymax = richness + sd), alpha = 0.5, color = NA) +
   geom_line(aes(linetype = bleaching), linewidth = 1.2) +
-  scale_color_manual(values = cols_bleaching) +
-  scale_fill_manual(values = cols_bleaching) +
-  scale_linetype_manual(values = c("Bleached" = "solid", 
-                                   "Non-Bleached" = "solid", 
-                                   "Not Applicable" = "solid")) +
+  
+  scale_color_manual(values = cols_bleaching, labels = bleach_labels) +
+  scale_fill_manual(values = cols_bleaching, labels = bleach_labels) +
+  scale_linetype_manual(
+    values = c("Bleached" = "solid", 
+               "Non-Bleached" = "solid", 
+               "Not Applicable" = "solid"),
+    labels = bleach_labels
+  ) +
   
   scale_x_continuous(breaks = seq(0, 100, 25)) +
   labs(
-    x = "% of Total Samples",
+    x = "Percentage of Total Samples",
     y = "Metabolite Richness",
     color = "Bleaching Status",
     fill = "Bleaching Status",
@@ -221,12 +247,14 @@ p3 <- ggplot(combined_acc_bleach, aes(x = percent_samples, y = richness, color =
     legend.justification = c(1, 0),      
     legend.background = element_blank(), 
     legend.box.background = element_blank(),
-    legend.key.width = unit(1.5, "cm") 
+    legend.key.width = unit(1.2, "cm") 
   )
+
 p3
 
 ################################################################################
 # Symbiont potential
+## 30 NAs for symbiont potential are removed in this plot
 
 sym_list <- split(df$sample, df$symbiont.potential)
 plot_data_sym <- lapply(names(sym_list), function(status) {
@@ -246,19 +274,32 @@ combined_acc_sym <- bind_rows(plot_data_sym) %>%
   mutate(symbiont.potential = factor(symbiont.potential, 
                                      levels = c("Aposymbiotic", "Facultative", "Symbiotic")))
 
-p4<-ggplot(combined_acc_sym, aes(x = percent_samples, y = richness, 
-                             color = symbiont.potential, fill = symbiont.potential)) +
+sym_counts <- df %>%
+  group_by(symbiont.potential) %>%
+  summarise(n = n()) %>%
+  mutate(label_full = paste0(symbiont.potential, " (n = ", n, ")"))
+
+sym_labels <- setNames(sym_counts$label_full, sym_counts$symbiont.potential)
+
+# 3. Plot p4
+p4 <- ggplot(combined_acc_sym, aes(x = percent_samples, y = richness, 
+                                   color = symbiont.potential, fill = symbiont.potential)) +
   geom_ribbon(aes(ymin = richness - sd, ymax = richness + sd), alpha = 0.5, color = NA) +
   geom_line(aes(linetype = symbiont.potential), linewidth = 1.2) +
-    scale_color_manual(values = cols_symbiont) +
-  scale_fill_manual(values = cols_symbiont) +
-  scale_linetype_manual(values = c("Aposymbiotic" = "solid", 
-                                   "Facultative" = "solid", 
-                                   "Symbiotic" = "solid")) +
+  
+  scale_color_manual(values = cols_symbiont, labels = sym_labels) +
+  scale_fill_manual(values = cols_symbiont, labels = sym_labels) +
+  
+  scale_linetype_manual(
+    values = c("Aposymbiotic" = "solid", 
+               "Facultative" = "solid", 
+               "Symbiotic" = "solid"),
+    labels = sym_labels
+  ) +
   
   scale_x_continuous(breaks = seq(0, 100, 25)) +
   labs(
-    x = "% of Total Samples",
+    x = "Percentage of Total Samples",
     y = "Metabolite Richness",
     color = "Symbiont Potential",
     fill = "Symbiont Potential",
@@ -273,7 +314,8 @@ p4<-ggplot(combined_acc_sym, aes(x = percent_samples, y = richness,
     legend.box.background = element_blank(),
     legend.key.width = unit(1.2, "cm") 
   )
-p4
+
+print(p4)
 
 ################################################################################
 # Refined_origin path plot
@@ -285,9 +327,13 @@ p4
 
 cols_origin <- c("Host" = "#97B9CBFF", "Symbiont" = "#9057C6FF", 
                  "Both" = "#FFE1BDFF", "Unknown" = "#8DC657FF")
+# 
 
 met_df$refined_origin <- factor(met_df$refined_origin, 
                                 levels = c("Host", "Symbiont", "Both", "Unknown"))
+
+origin_counts <- met_df %>%
+  count(refined_origin, .drop = FALSE)
 
 # compute the accumulation order using 'random' method
 acc_total <- specaccum(comm_matrix, method = "random", permutations = 100)
@@ -325,20 +371,41 @@ plot_data_long <- plot_data_stacked %>%
     percent_samples = (samples / max(samples)) * 100
   )
 
+present_metabolites <- df %>% 
+  select(starts_with("x")) %>% 
+  colnames()
+
+met_df_filtered <- met_df %>%
+  filter(met_df$metabolite %in% present_metabolites)
+
+origin_counts <- met_df_filtered %>%
+  count(refined_origin, .drop = FALSE)
+
+# print(origin_counts)
+
+origin_labels <- origin_counts %>%
+  mutate(label_full = paste0(refined_origin, " (n = ", n, ")")) %>%
+  { setNames(.$label_full, .$refined_origin) }
+
 p5 <- ggplot(plot_data_long, aes(x = percent_samples, y = Richness, fill = Origin)) +
-  geom_area(alpha = 0.85, color = "white", linewidth = 0.2) +
-  scale_fill_manual(values = cols_origin) +
+  geom_area(alpha = 0.7, color = "black", linewidth = 0.3) +
+  scale_fill_manual(
+    values = cols_origin, 
+    labels = origin_labels
+  ) +
+  
   scale_x_continuous(expand = c(0, 0), breaks = seq(0, 100, 25)) +
   scale_y_continuous(expand = c(0, 0)) +
   labs(
-    x = "% of Total Samples",
+    x = "Percentage of Total Samples",
     y = "Metabolite Richness",
     fill = "Metabolic Origin"
   ) +
   theme_pubr() +
   theme(
     axis.title = element_text(),
-    legend.position = "right"
+    legend.position = "right",
+    legend.title = element_text()
   )
 p5
 

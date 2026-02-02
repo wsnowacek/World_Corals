@@ -689,6 +689,15 @@ leaf_metadata <- df %>%
   mutate(label_with_n = paste0(host_family, " (n=", n, ")")) %>%
   ungroup()
 
+dend <- as.dendrogram(cluster.average)
+
+target_metadata <- leaf_metadata %>%
+  arrange(desc(is_scler), phylum, host_family)
+target_order <- target_metadata$host_family
+
+dend <- dendextend::rotate(dend, target_order)
+dend_data <- dendro_data(dend, type = "rectangle")
+
 dend_segments <- dend_data$segments %>%
   left_join(dend_data$labels %>% select(x, label), by = "x") %>% 
   left_join(leaf_metadata, by = c("label" = "host_family")) %>%
@@ -696,23 +705,21 @@ dend_segments <- dend_data$segments %>%
     branch_color = case_when(
       is_scler == TRUE ~ "Scleractinia_Color",
       !is.na(phylum)   ~ phylum,
-      TRUE             ~ "grey40" # Internal branches
+      TRUE             ~ "grey40" 
     )
   )
 
-# 4. Create dend_labels_phylum for the text layer
 dend_labels_phylum <- dend_data$labels %>%
   left_join(leaf_metadata, by = c("label" = "host_family")) %>%
   mutate(
     text_color_group = if_else(is_scler == TRUE, "Scleractinia_Color", phylum)
   )
-# 4. Plot with the new label_with_n column
+
 p_dendro <- ggplot() +
   geom_segment(data = dend_segments, 
                aes(x = x, y = y, xend = xend, yend = yend, color = branch_color),
                linewidth = 0.8) +
   geom_text(data = dend_labels_phylum, 
-            # CHANGED: aes(label = label_with_n)
             aes(x = x, y = y, label = label_with_n, color = text_color_group),
             hjust = -0.1, 
             size = 3, 
@@ -743,6 +750,9 @@ p_dendro <- ggplot() +
   ))
 print(p_dendro)
 
+# current_order <- labels(dend)
+# print(current_order)
+# dend <- click_rotate(dend)
 ################################################################################
 
 # combine plots with cowplot
@@ -781,7 +791,7 @@ row1 <- plot_grid(
 )
 
 row2 <- plot_grid(
-  p_abundance_clean, p_ubiquity_clean, p_entropy_clean, p_richness_clean,p_dendro,
+  p_richness_clean,p_entropy_clean,p_ubiquity_clean,p_abundance_clean,p_dendro,
   nrow = 1,
   rel_widths = c(0.6, 0.6, 0.6, 0.6, 1.5), # Give Dendro more space
   align = 'h', axis = 'tb',
