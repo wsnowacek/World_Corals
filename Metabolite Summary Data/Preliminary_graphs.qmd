@@ -1503,7 +1503,7 @@ coral_samples_with_coralonly_mets <- Corals_clean %>%
 
         -   "percent_in_corals" = percent that metabolite is found from all Scleractinian samples
 
-        -    "ubiquity_overall" = percent that metabolite is found out of all samples
+        -   "ubiquity_overall" = percent that metabolite is found out of all samples
 
         -   "n_corals_present" = total amount of Scleractinian samples that metabolite was found in
 

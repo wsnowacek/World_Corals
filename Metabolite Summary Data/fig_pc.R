@@ -18,8 +18,8 @@ df<- read.csv("qc_data.csv")
 met_df<- read.csv("/work/hs325/World_Corals/Cleaned data CSVs/metabolite_clean.csv")
 
 cols_bleaching <- c(
-  "Bleached" = "#019875FF", 
-  "Non-Bleached" = "#FF847CFF", 
+  "Bleached" = "#FF847CFF", 
+  "Non-Bleached" = "#019875FF", 
   "Not Applicable" = "#D3D3D3")
 
 df <- df %>%
@@ -45,36 +45,30 @@ cols_location <-c("#002594FF", "#E0B2CDFF", "#54C4E3FF", "#F3AA4FFF")
 cols_symbiont  <- c("#D84D16FF", "#FFF800FF", "#8FDA04FF")
 cols_sclero    <- c("1" = "#DE7862FF", "0" = "#D8AF39FF")
 
-## for metabolites TBA later
-# refined origin (4 levels) -> host, symbiont, both, unknown
-# compound superclass (10? levels)
-# NPC classifier pathway 7 levels
-# TBD coral compound family? 9 levels 
-
 permanova_numeric_data <- df %>% select(starts_with("x"))
 keep_rows <- !is.na(df$host_family) & 
   complete.cases(permanova_numeric_data)
 
 permanova_numeric_data2 <- permanova_numeric_data[keep_rows, , drop = FALSE]
-meta2 <- df[keep_rows, , drop = FALSE]
 bray_curtis <- vegdist(permanova_numeric_data2, method = "bray")
 
-################################################################################
-#Scleractinia vs nonScleractinia PERMANOVA
+# ################################################################################
+# #Scleractinia vs nonScleractinia PERMANOVA
+meta2 <- df[keep_rows, , drop = FALSE]
 
 # compute BC dissimilarity
 bray_curtis_scleractinia <- vegdist(permanova_numeric_data2, method = "bray")
 scleractinia_permanova_result <- adonis2(
-  bray_curtis_scleractinia ~ scleractinia, 
-  data = meta2, 
+  bray_curtis_scleractinia ~ scleractinia,
+  data = meta2,
   permutations = 999
 )
 print(scleractinia_permanova_result)
 # adonis2(formula = bray_curtis_scleractinia ~ scleractinia, data = meta2, permutations = 999)
-#           Df SumOfSqs      R2      F Pr(>F)    
+#           Df SumOfSqs      R2      F Pr(>F)
 # Model      1   13.447 0.09373 55.846  0.001 ***
-# Residual 540  130.028 0.90627                  
-# Total    541  143.476 1.00000        
+# Residual 540  130.028 0.90627
+# Total    541  143.476 1.00000
 
 ################ plot
 pcoa_result <- cmdscale(bray_curtis_scleractinia, eig = TRUE, k = 2)
@@ -106,22 +100,33 @@ p <- ggplot(pcoa_points, aes(x = PCoA1, y = PCoA2, color = scleractinia, fill = 
   ) +
   theme_cowplot(font_size = 14) +
   theme(legend.position = "right")
-ggsave("/work/hs325/World_Corals/misc/figs/pcoa_scler.jpg", p)
+ggsave("/work/hs325/World_Corals/misc/figs/pcoa_scler.jpg", p, width = 8, height = 6, dpi=300)
 
 ################################################################################
 #Location + bleaching status PERMANOVA
 
-bray_curtis_locB <- vegdist(permanova_numeric_data2, method = "bray")
+# drop NAs for bleaching
+keep_rows <- complete.cases(permanova_numeric_data2) & 
+  !is.na(meta2$location) & 
+  !is.na(meta2$bleaching)
+
+# 2. Synchronize the metadata and numeric data
+meta_clean <- meta2[keep_rows, ]
+numeric_clean <- permanova_numeric_data2[keep_rows, ]
+
+bray_curtis_clean <- vegdist(numeric_clean, method = "bray")
 locB_permanova_result <- adonis2(
-  bray_curtis_locB ~ location / bleaching, 
-  data = meta2, 
+  bray_curtis_clean ~ location / bleaching, 
+  data = meta_clean, 
   permutations = 999
 )
-locB_permanova_result
-#           Df SumOfSqs      R2      F Pr(>F)    
-# Model      8   51.266 0.35731 37.041  0.001 ***
-#   Residual 533   92.210 0.64269                  
-# Total    541  143.476 1.00000                  
+print(locB_permanova_result)          
+# Df SumOfSqs      R2      F Pr(>F)    
+# Model      8   51.264 0.35811 37.101  0.001 ***
+#   Residual 532   91.886 0.64189                  
+# Total    540  143.150 1.00000                  
+# ---
+#   Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
 shapes_bleaching <- c(
   "Bleached" = 4,       # Cross
@@ -129,10 +134,10 @@ shapes_bleaching <- c(
   "Not Applicable" = 1   # Open Circle
 )
 
-pcoa_result2 <- cmdscale(bray_curtis_locB, eig = TRUE, k = 2)
+pcoa_result2 <- cmdscale(bray_curtis_clean, eig = TRUE, k = 2)
 pcoa_points2 <- as.data.frame(pcoa_result2$points)
 colnames(pcoa_points2) <- c("PCoA1", "PCoA2")
-pcoa_points2 <- bind_cols(pcoa_points2, meta2)
+pcoa_points2 <- bind_cols(pcoa_points2, meta_clean)
 
 # compute percent variance explained (use only positive eigenvalues)
 pos_eig <- pcoa_result2$eig[pcoa_result2$eig > 0]
@@ -199,12 +204,11 @@ pcoa_points3 <- bind_cols(pcoa_points3, meta_symb)
 pos_eig <- pcoa_result3$eig[pcoa_result3$eig > 0]
 var_explained <- round(100 * pcoa_result3$eig[1:2] / sum(pos_eig), 1)
 
-p2 <- ggplot(pcoa_points3, aes(x = PCoA1, y = PCoA2, color = location)) +
-  # Ellipses only care about location
+p3 <- ggplot(pcoa_points3, aes(x = PCoA1, y = PCoA2, color = location)) +
   # stat_ellipse(
   #   aes(fill = location, group = location),
   #   geom = "polygon",
-  #   alpha = 0.1,
+  #   alpha = 0.3,
   #   level = 0.95,
   #   colour = NA
   # ) +
@@ -221,23 +225,465 @@ p2 <- ggplot(pcoa_points3, aes(x = PCoA1, y = PCoA2, color = location)) +
   ) +
   theme_cowplot(font_size = 14) +
   theme(legend.position = "right")
-ggsave("/work/hs325/World_Corals/misc/figs/pcoa_locsym.jpg", p2, width = 8, height = 6, dpi = 300)
+ggsave("/work/hs325/World_Corals/misc/figs/pcoa_locsym.jpg", p3, width = 8, height = 6, dpi = 300)
 
 
 ################################################################################
 ## Bleaching status alone PERMANOVA
 
+desired_levels <- c("Bleached", "Non-Bleached", "Not Applicable")
+permanova_numeric_data <- df %>% select(starts_with("x"))
+keep_rows <- df$bleaching %in% desired_levels & complete.cases(permanova_numeric_data)
+
+# subset numeric matrix and metadata
+permanova_numeric_data2 <- permanova_numeric_data[keep_rows, , drop = FALSE]
+meta_bleach <- df[keep_rows, ] %>%
+  mutate(bleaching = factor(as.character(bleaching), levels = desired_levels))
+
+# compute Bray–Curtis dissimilarity
+bray_curtis_bleach <- vegdist(permanova_numeric_data2, method = "bray")
+# PERMANOVA: bleaching alone
+bleaching_permanova_result <- adonis2(
+  bray_curtis_bleach ~ bleaching,
+  data = meta_bleach,
+  permutations = 999
+)
+print(bleaching_permanova_result)
+# Df SumOfSqs     R2      F Pr(>F)    
+# Model      2   19.568 0.1284 41.541  0.001 ***
+#   Residual 564  132.838 0.8716                  
+# Total    566  152.407 1.0000                  
+# ---
+#   Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+pcoa_result <- cmdscale(bray_curtis_bleach, eig = TRUE, k = 2)
+pcoa_points <- as.data.frame(pcoa_result$points)
+colnames(pcoa_points) <- c("PCoA1", "PCoA2")
+pcoa_points <- bind_cols(pcoa_points, meta_bleach)
+
+# compute percent variance explained using only positive eigenvalues
+pos_eig <- pcoa_result$eig[pcoa_result$eig > 0]
+var_explained <- round(100 * pcoa_result$eig[1:2] / sum(pos_eig), 1)
+
+p4 <- ggplot(pcoa_points, aes(x = PCoA1, y = PCoA2, color = bleaching, fill = bleaching)) +
+  geom_point(size = 3, alpha = 0.9) +
+  stat_ellipse(
+    geom = "polygon",
+    alpha = 0.15,
+    level = 0.95,
+    type = "t",
+    colour = NA
+  ) +
+  scale_color_manual(values = cols_bleaching) +
+  scale_fill_manual(values = cols_bleaching) +
+  labs(
+    x = paste0("PCoA1: (", var_explained[1], "%)"),
+    y = paste0("PCoA2: (", var_explained[2], "%)"),
+    color = "Bleaching status",
+    fill = "Bleaching status"
+  ) +
+  theme_cowplot(font_size = 14) +
+  theme(legend.position = "right")
+ggsave("/work/hs325/World_Corals/misc/figs/pcoa_bleaching.jpg", p4, width = 8, height = 6, dpi = 300)
+
+
+################################################################################
+## Symbiont potential alone PERMANOVA
+
+desired_levels <- na.omit(unique(as.character(df$symbiont.potential)))
+permanova_numeric_data <- df %>% select(starts_with("x"))
+keep_rows <- !is.na(df$symbiont.potential) & complete.cases(permanova_numeric_data)
+
+permanova_numeric_data2 <- permanova_numeric_data[keep_rows, , drop = FALSE]
+meta_sym <- df[keep_rows, ] %>%
+  mutate(symbiont.potential = factor(as.character(symbiont.potential), levels = desired_levels))
+
+# Bray–Curtis dissimilarity
+bray_curtis_sym <- vegdist(permanova_numeric_data2, method = "bray")
+
+symbiont_permanova_result <- adonis2(
+  bray_curtis_sym ~ symbiont.potential,
+  data = meta_sym,
+  permutations = 999
+)
+print(symbiont_permanova_result)
+
+pcoa_result <- cmdscale(bray_curtis_sym, eig = TRUE, k = 2)
+pcoa_points <- as.data.frame(pcoa_result$points)
+colnames(pcoa_points) <- c("PCoA1", "PCoA2")
+pcoa_points <- bind_cols(pcoa_points, meta_sym)
+
+# percent variance explained (positive eigenvalues only)
+pos_eig <- pcoa_result$eig[pcoa_result$eig > 0]
+var_explained <- round(100 * pcoa_result$eig[1:2] / sum(pos_eig), 1)
+
+p5 <- ggplot(pcoa_points, aes(x = PCoA1, y = PCoA2, color = symbiont.potential, fill = symbiont.potential)) +
+  geom_point(size = 3, alpha = 0.9) +
+  stat_ellipse(
+    geom = "polygon",
+    alpha = 0.15,
+    level = 0.95,
+    type = "t",
+    colour = NA
+  ) +
+  scale_color_manual(values = cols_symbiont) +
+  scale_fill_manual(values = cols_symbiont) +
+  labs(
+    x = paste0("PCoA1: (", var_explained[1], "%)"),
+    y = paste0("PCoA2: (", var_explained[2], "%)"),
+    color = "Symbiont potential",
+    fill = "Symbiont potential"
+  ) +
+  theme_cowplot(font_size = 14) +
+  theme(legend.position = "right")
+
+# save plot
+ggsave("/work/hs325/World_Corals/misc/figs/pcoa_symbiont.jpg", p5, width = 8, height = 6, dpi = 300)
+
 ################################################################################
 ## Location alone PERMANOVA
+
+desired_levels <- na.omit(unique(as.character(df$location)))
+permanova_numeric_data <- df %>% select(starts_with("x"))
+keep_rows <- !is.na(df$location) & complete.cases(permanova_numeric_data)
+
+permanova_numeric_data2 <- permanova_numeric_data[keep_rows, , drop = FALSE]
+meta_loc <- df[keep_rows, ] %>%
+  mutate(location = factor(as.character(location), levels = desired_levels))
+
+# Bray–Curtis dissimilarity
+bray_curtis_loc <- vegdist(permanova_numeric_data2, method = "bray")
+
+location_permanova_result <- adonis2(
+  bray_curtis_loc ~ location,
+  data = meta_loc,
+  permutations = 999
+)
+print(location_permanova_result)
+# Df SumOfSqs      R2     F Pr(>F)    
+# Model      3    39.27 0.26013 65.28  0.001 ***
+#   Residual 557   111.69 0.73987                 
+# Total    560   150.96 1.00000                 
+# ---
+
+pcoa_result <- cmdscale(bray_curtis_loc, eig = TRUE, k = 2)
+pcoa_points <- as.data.frame(pcoa_result$points)
+colnames(pcoa_points) <- c("PCoA1", "PCoA2")
+pcoa_points <- bind_cols(pcoa_points, meta_loc)
+
+# percent variance explained (positive eigenvalues only)
+pos_eig <- pcoa_result$eig[pcoa_result$eig > 0]
+var_explained <- round(100 * pcoa_result$eig[1:2] / sum(pos_eig), 1)
+
+p6 <- ggplot(pcoa_points, aes(x = PCoA1, y = PCoA2, color = location, fill = location)) +
+  geom_point(size = 3, alpha = 0.9) +
+  stat_ellipse(
+    geom = "polygon",
+    alpha = 0.3,
+    level = 0.95,
+    type = "t",
+    colour = NA
+  ) +
+  scale_color_manual(values = cols_location) +
+  scale_fill_manual(values = cols_location) +
+  labs(
+    x = paste0("PCoA1: (", var_explained[1], "%)"),
+    y = paste0("PCoA2: (", var_explained[2], "%)"),
+    color = "Location",
+    fill = "Location"
+  ) +
+  theme_cowplot(font_size = 14) +
+  theme(legend.position = "right")
+
+# save plot
+ggsave("/work/hs325/World_Corals/misc/figs/pcoa_location.jpg", p6, width = 8, height = 6, dpi = 300)
 
 
 ################################################################################
 ################################################################################
 # Box plots
 
+metabolite_data <- df %>%
+  select(starts_with("x"))
+
+plot_data <- df %>%
+  select(host_order) %>%
+  bind_cols(avg_abundance) %>%
+  mutate(
+    group = ifelse(host_order == "Scleractinia",
+                   "1",
+                   "0")
+  )
+plot_data$group[is.na(plot_data$group)] <- 0
+unique(plot_data$group)
+
+########### abundance
+avg_abundance <- metabolite_data %>%
+  mutate(avg_abundance = rowMeans(., na.rm = TRUE)) %>%
+  select(avg_abundance)
+
+plot_data_clean <- plot_data %>%
+  mutate(group = factor(group)) %>% # Ensure it's a factor first
+  mutate(group = fct_recode(group, 
+                            "Scleractinia" = "1", 
+                            "Other" = "0")) %>%
+  mutate(group = fct_relevel(group, "Scleractinia", "Other"))
+cols_sclero_named <- c("Scleractinia" = "#DE7862FF", "Other" = "#D8AF39FF")
+
+p_abundance <- ggplot(plot_data_clean, aes(x = group, y = avg_abundance, fill = group, color = group)) +
+  geom_jitter(width = 0.2, alpha = 0.5, size = 1.5, show.legend = FALSE) +
+  geom_boxplot(alpha = 0.7, width = 0.6, outlier.shape = NA, color = "black") + 
+  stat_compare_means(
+    method = "wilcox.test", 
+    label = "p.format",
+    label.x = 1.4,
+    symnum.args = list(
+      cutpoints = c(0, 0.0001, 0.001, 0.01, 0.05, 1), 
+      symbols = c("****", "***", "**", "*", "ns")
+    )
+  ) +
+  scale_fill_manual(values = cols_sclero_named) +
+  scale_color_manual(values = cols_sclero_named) +
+  labs(
+    y = "Average Abundance"
+  ) +
+  theme_pubr(base_size = 13) +
+  theme(
+    legend.position = "none",
+    axis.title.x = element_blank(),
+    plot.title = element_text(hjust = 0.5, face = "bold")
+  )
+p_abundance <- p_abundance + scale_y_continuous(
+  labels = label_number(scale_cut = cut_short_scale()) # Formats as K, M, etc.
+)
+print(p_abundance)
+
+
+########### ubiquity
+
+plot_data_clean <- plot_data %>%
+  mutate(group = factor(group)) %>% # Ensure it's a factor first
+  mutate(group = fct_recode(group, 
+                            "Scleractinia" = "1", 
+                            "Other" = "0")) %>%
+  mutate(group = fct_relevel(group, "Scleractinia", "Other"))
+cols_sclero_named <- c("Scleractinia" = "#DE7862FF", "Other" = "#D8AF39FF")
+
+ubiquity_values <- metabolite_data %>%
+  mutate(avg_ubiquity = rowMeans(. > 0, na.rm = TRUE)) %>%
+  pull(avg_ubiquity) # pull() extracts the column as a vector
+plot_data_clean$avg_ubiquity <- ubiquity_values
+
+
+p_ubiquity <- ggplot(plot_data_clean, aes(x = group, y = avg_ubiquity, fill = group, color = group)) +
+  geom_jitter(width = 0.2, alpha = 0.5, size = 1.5, show.legend = FALSE) +
+  geom_boxplot(alpha = 0.7, width = 0.6, outlier.shape = NA, color = "black") + 
+  stat_compare_means(
+    method = "wilcox.test", 
+    label = "p.format",
+    label.x = 1.4,
+    symnum.args = list(
+      cutpoints = c(0, 0.0001, 0.001, 0.01, 0.05, 1), 
+      symbols = c("****", "***", "**", "*", "ns")
+    )
+  ) +
+  scale_fill_manual(values = cols_sclero_named) +
+  scale_color_manual(values = cols_sclero_named) +
+  labs(
+    y = "Average Ubiquity"
+  ) +
+  theme_pubr(base_size = 13) +
+  theme(
+    legend.position = "none",
+    axis.title.x = element_blank(),
+    plot.title = element_text(hjust = 0.5, face = "bold")
+  )
+print(p_ubiquity)
+
+
+########### richness
+richness_values <- rowSums(metabolite_data > 0, na.rm = TRUE)
+plot_data_clean$richness <- richness_values
+
+p_richness <- ggplot(plot_data_clean, aes(x = group, y = richness, fill = group, color = group)) +
+  geom_jitter(width = 0.2, alpha = 0.5, size = 1.5, show.legend = FALSE) +
+  geom_boxplot(alpha = 0.7, width = 0.6, outlier.shape = NA, color = "black") + 
+  stat_compare_means(
+    method = "wilcox.test", 
+    label = "p.format",
+    label.x = 1.4,
+    symnum.args = list(
+      cutpoints = c(0, 0.0001, 0.001, 0.01, 0.05, 1), 
+      symbols = c("****", "***", "**", "*", "ns")
+    )
+  ) +
+  scale_fill_manual(values = cols_sclero_named) +
+  scale_color_manual(values = cols_sclero_named) +
+  labs(
+    y = "Average Metabolic Richness"
+  ) +
+  theme_pubr(base_size = 13) +
+  theme(
+    legend.position = "none",
+    axis.title.x = element_blank(),
+    plot.title = element_text(hjust = 0.5, face = "bold")
+  )
+print(p_richness)
+
+
+############ shannon
+shannon_values <- diversity(metabolite_data, index = "shannon")
+plot_data_clean$shannon  <- shannon_values
+
+p_entropy <- ggplot(plot_data_clean, aes(x = group, y = shannon, fill = group, color = group)) +
+  geom_jitter(width = 0.2, alpha = 0.5, size = 1.5, show.legend = FALSE) +
+  geom_boxplot(alpha = 0.7, width = 0.6, outlier.shape = NA, color = "black") + 
+  stat_compare_means(
+    method = "wilcox.test", 
+    label = "p.format",
+    label.x = 1.4,
+    symnum.args = list(
+      cutpoints = c(0, 0.0001, 0.001, 0.01, 0.05, 1), 
+      symbols = c("****", "***", "**", "*", "ns")
+    )
+  ) +
+  scale_fill_manual(values = cols_sclero_named) +
+  scale_y_continuous(breaks = c(5, 6, 7), limits = c(4.5, 7.5)) +
+  scale_color_manual(values = cols_sclero_named) +
+  labs(
+    y = "Average Shannon Entropy"
+  ) +
+  theme_pubr(base_size = 13) +
+  theme(
+    legend.position = "none",
+    axis.title.x = element_blank(),
+    plot.title = element_text(hjust = 0.5, face = "bold")
+  )
+print(p_entropy)
+
 ################################################################################
 ################################################################################
 # Dendrograms
 
+avg_metabolite_values_family <- df |> 
+  group_by(host_family) |> 
+  filter(!is.na(host_family)) |> 
+  summarise(across(starts_with("x"), mean, na.rm = TRUE)) |>
+  ungroup()
 
+mat_family <- avg_metabolite_values_family %>%
+  as.data.frame()
+rownames(mat_family) <- mat_family$host_family
+mat_family <- mat_family[ , setdiff(names(mat_family), "host_family")]
+mat_family[] <- lapply(mat_family, as.numeric)
+mat_family <- mat_family %>% mutate_all(~ifelse(is.na(.), 0, .))
+
+bray_curtis_family <- vegdist(sqrt(mat_family), method = 'bray')
+cluster.average <- hclust(bray_curtis_family, method = 'average')
+
+dend_data <- dendro_data(cluster.average, type = "rectangle")
+
+family_metadata <- df %>%
+  filter(!is.na(host_family)) %>%
+  group_by(host_family) %>%
+  summarize(
+    group = if_else(first(host_order) == "Scleractinia", "Scleractinia", "Other")
+  ) %>%
+  ungroup()
+
+dend_labels <- dend_data$labels %>%
+  left_join(family_metadata, by = c("label" = "host_family"))
+dend_labels <- dend_labels %>%
+  mutate(group = factor(group, levels = c("Scleractinia", "Other")))
+cols_sclero_named <- c("Scleractinia" = "#DE7862FF", "Other" = "#D8AF39FF")
+
+p_dendro <- ggplot() +
+  geom_segment(data = dend_data$segments, 
+               aes(x = x, y = y, xend = xend, yend = yend), 
+               color = "grey40") +
+  geom_text(data = dend_labels, 
+            aes(x = x, y = y, label = label, color = group),
+            hjust = -0.1, 
+            size = 3, 
+            show.legend = FALSE) +
+  
+  geom_point(data = dend_labels, aes(x = x, y = y, color = group), 
+             alpha = 0) + 
+  coord_flip() +
+    scale_y_reverse(
+    expand = c(0.4, 0),        # Keep the expansion for long names
+    breaks = seq(0, 1, 0.25)   # Force ticks only at 0, 0.25, 0.5, 0.75, 1
+  ) +
+  scale_color_manual(values = cols_sclero_named) +
+  theme_pubr() +
+  labs(y = "Bray-Curtis Distance", x = "", color = "Order") +
+  theme(
+    axis.text.y = element_blank(), 
+    axis.ticks.y = element_blank(),
+    axis.line.y = element_blank(),
+    legend.position = "right"
+  ) +
+  guides(color = guide_legend(override.aes = list(alpha = 1, size = 4, shape = 15)))
+print(p_dendro)
+ggsave("/work/hs325/World_Corals/misc/figs/dendro.jpg", p_dendro, width=8,height=6,dpi=300)
+
+################################################################################
+# combine plots with cowplot
+# row 1: legend, p, p2 
+# row 2: p_dendro, p_abundance, p_ubiquity, p_evenness, p_richness (boxplots should be tight)
+
+legend_sclero <- get_legend(
+  p + 
+    guides(color = guide_legend(title = "Order"), fill = guide_legend(title = "Order")) +
+    theme(
+      legend.position = "left", 
+      legend.box.margin = margin(0, 0, 0, 12),
+      legend.title = element_text(size = 24, face = "bold"), 
+      legend.text = element_text(size = 20),
+      legend.key.size = unit(1.2, "lines") 
+    )
+)
+clean_theme <- theme(
+  legend.position = "none",
+  plot.title = element_blank() # Remove titles to keep row 2 clean
+)
+
+p <- p + theme(legend.position = "none")
+p_dendro_clean    <- p_dendro + clean_theme
+p_abundance_clean <- p_abundance + clean_theme
+p_ubiquity_clean  <- p_ubiquity + clean_theme
+p_entropy_clean  <- p_entropy + clean_theme
+p_richness_clean  <- p_richness + clean_theme
+
+row1 <- plot_grid(
+  legend_sclero, p, p2,
+  ncol = 3,
+  rel_widths = c(0.4, 1, 1), # Legend is narrow, plots are equal
+  labels = c("", "A", "B"),
+  label_size = 24
+)
+
+row2 <- plot_grid(
+  p_dendro_clean, p_abundance_clean, p_ubiquity_clean, p_entropy_clean, p_richness_clean,
+  nrow = 1,
+  rel_widths = c(1.5, 0.6, 0.6, 0.6, 0.6), # Give Dendro more space
+  align = 'h', axis = 'tb',
+  labels = c("C", "D", "E", "F", "G"),
+  label_size = 24
+)
+
+final_plot <- plot_grid(
+  row1, 
+  row2, 
+  ncol = 1, 
+  rel_heights = c(1, 1) 
+)
+
+print(final_plot)
+ggsave("/work/hs325/World_Corals/misc/figs/fig2.jpg", final_plot, width = 18, height = 12, dpi = 300)
+
+################################################################################
+# Extra: density ridges
+################################################################################
+# Extra: heatmap
 
