@@ -94,6 +94,10 @@ top_20_classes <- met_df %>%
   mutate(class_label = paste0(coraldb_compound_class, " (n=", n, ")"))
 top_20_classes # remove NA
 
+comm_long <- as.data.frame(comm_matrix) %>%
+  mutate(sample = rownames(.)) %>%
+  pivot_longer(-sample, names_to = "metabolite", values_to = "abundance")
+
 class_abundance <- comm_long %>%
   inner_join(met_df %>% select(metabolite, coraldb_compound_class), by = "metabolite") %>%
   filter(coraldb_compound_class %in% top_20_classes$coraldb_compound_class) %>%
@@ -173,8 +177,7 @@ p_ridge_full <- ggplot(plot_data_ridge_full,
                       scale = 1.2, 
                       rel_min_height = 0.01, # lowered slightly to capture rare metabolites
                       bandwidth = 0.1,
-                      show.legend = FALSE,
-                      trim = TRUE) + 
+                      show.legend = FALSE) + 
   
   scale_fill_manual(values = ridge_cols) +
   scale_color_manual(values = ridge_cols) +
@@ -382,7 +385,7 @@ top_row <- plot_grid(
 )
 p_ridge_superclass_noleg <- p_ridge_superclass + theme(legend.position = "none")
 bottom_row <- plot_grid(
-  p_ridge_npc, p_ridge_superclass, 
+  p_ridge_npc, p_ridge_superclass_noleg, 
   labels = c("C", "D"), 
   label_size = 20,
   label_x=0,

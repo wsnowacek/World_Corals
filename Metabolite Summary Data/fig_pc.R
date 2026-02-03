@@ -694,6 +694,10 @@ dend <- as.dendrogram(cluster.average)
 target_metadata <- leaf_metadata %>%
   arrange(desc(is_scler), phylum, host_family)
 target_order <- target_metadata$host_family
+# 
+# target_metadata <- leaf_metadata %>%
+#   arrange(phylum, is_scler, host_family)
+# target_order <- target_metadata$host_family
 
 dend <- dendextend::rotate(dend, target_order)
 dend_data <- dendro_data(dend, type = "rectangle")
