@@ -17,6 +17,7 @@ library(tibble)
 library(GGally)
 library(stringr)
 library(RColorBrewer)
+library(Polychrome)
 
 setwd("/work/hs325/World_Corals/Metabolite Summary Data")
 df<- read.csv("qc_data.csv")
@@ -60,16 +61,35 @@ cols_phylum <- c("#24492EFF", "#015B58FF", "#2C6184FF", "#59629BFF", "#89689DFF"
 cols_sclero    <- c("1" = "#DE7862FF", "0" = "#D8AF39FF")
 
 target_classes <- trimws(c(
-  "Diacylglycerols", "Fatty amides", "Fatty esters", "Glycerolipids", 
-  "Glycerophospholipids", "Monoalkyldiacylglycerols", "Phosphatidylglycerocholines", 
-  "Sphingolipids", "Steroids", "Triacylglycerols", "Unknown"))
+  "Glycerophospholipids", 
+  "Sphingolipids", 
+  "Oligopeptides", 
+  "Glycerolipids", 
+  "Triacylglycerols", 
+  "Steroids", 
+  "Carotenoids (C40)", 
+  "Fatty esters", 
+  "Diacylglyceryl-carboxyhydroxymethylcholines", 
+  "Triterpenoids", 
+  "Fatty amides", 
+  "Phosphatidylglycerocholines", 
+  "Monogalactosyldiacylglycerol", 
+  "Phosphatidylglyceroethanolamines", 
+  "Monoalkyldiacylglycerols", 
+  "Meroterpenoids",
+  "Unknown"
+))
 
-spec_colors <- c("#FFBB78FF", "#D62728FF", 
-                 "#9467BDFF", "#8C564BFF", "#E377C2FF", "#BCBD22FF", 
-                 "#17BECFFF", "#2CA02CFF", "#FF9896FF", "#98DF8AFF", "#1F77B4FF")
+# 2. Provided Hex Colors
+provided_hex <- c(
+  "#BEAED4", "#FDC086", "#FFFF99", "#386CB0", "#F0027F", "#BF5B17", "#1B9E77",
+"#D95F02", "#7570B3", "#984EA3", "#66A61E", "#E6AB02", "#666666", "#A6CEE3", "#B2DF8A",
+"#FB9A99", "#CBD5E8")
+# "#E5D8BD" "#FDDAEC"
+spec_colors <- setNames(provided_hex, target_classes)
 
-names(spec_colors) <- target_classes
-final_palette <- c(spec_colors, "Other" = "#D3D3D3")
+final_palette <- c(spec_colors, "Other" = "gray60")
+ordered_levels <- c(target_classes, "Other")
 
 process_importance_data <- function(df) {
   df %>%
@@ -118,11 +138,6 @@ noncoral_present <- met_presence_long %>%
 
 coral_only <- setdiff(coral_present$metabolite, noncoral_present$metabolite)
 
-x_vline_pos <- met_summary %>%
-  filter(category == "Coral-only") %>%
-  pull(ubiquity_all) %>%
-  { if(length(.) == 0) NA_real_ else max(., na.rm = TRUE) }
-
 met_summary <- met_summary %>%
   left_join(
     met_presence_long %>%
@@ -132,6 +147,11 @@ met_summary <- met_summary %>%
   ) %>%
   mutate(category = ifelse(metabolite %in% coral_only, "Coral-only", "Other"))
 met_plot_df$display_class <- factor(met_plot_df$display_class, levels = ordered_levels)
+
+x_vline_pos <- met_summary %>%
+  filter(category == "Coral-only") %>%
+  pull(ubiquity_all) %>%
+  { if(length(.) == 0) NA_real_ else max(., na.rm = TRUE) }
 
 class_mapping <- met_plot_df %>%
   select(metabolite, display_class) %>%
@@ -175,7 +195,6 @@ pa <- ggplot(met_summary_classed, aes(x = ubiquity_all, y = avg_abundance)) +
     legend.text       = element_text(size = 9),
     plot.title        = element_text(hjust = 0.5, face = "bold", size = 16)
   )
-   
 pa
 
 #################################################################################
@@ -255,44 +274,48 @@ feature_importance_comparison_all <- feature_importance_comparison_all %>%
 merged_df_all <- feature_importance_comparison_all %>%
   inner_join(met_df, by = "metabolite")
 
+importance_scores <- merged_df_all %>%
+  select(metabolite, XGBoost_Importance, RandomForest_Importance)
 
-process_importance_data <- function(df, importance_col) {
-  df %>%
-    mutate(compound_superclass = trimws(as.character(compound_superclass))) %>%
-    mutate(display_class = if_else(compound_superclass %in% names(final_palette), 
-                                   compound_superclass, 
-                                   "Other")) %>%
-    mutate(display_class = fct_relevel(factor(display_class), "Other", after = Inf)) %>%
-    mutate(metabolite = fct_reorder(metabolite, !!sym(importance_col), .desc = TRUE))
-}
-
-xgb_plot_df <- process_importance_data(merged_df_all[1:40,], "XGBoost_Importance")
-rf_plot_df  <- process_importance_data(merged_df_all[1:120,], "RandomForest_Importance")
-plot_df_all <- process_importance_data(merged_df_all, "XGBoost_Importance")
+met_plot_df <- met_plot_df %>%
+  left_join(importance_scores, by = "metabolite") %>%
+  mutate(
+    XGBoost_Importance = replace_na(XGBoost_Importance, 0),
+    RandomForest_Importance = replace_na(RandomForest_Importance, 0)
+  )
 
 ordered_levels <- c(target_classes, "Other")
+met_plot_df$display_class <- factor(met_plot_df$display_class, levels = ordered_levels)
+
+## change # of metabolites to plot here
+xgb_plot_data <- met_plot_df %>%
+  arrange(desc(XGBoost_Importance)) %>%
+  slice_head(n = 60) %>%
+  mutate(metabolite = fct_reorder(metabolite, XGBoost_Importance, .desc = TRUE))
+
+rf_plot_data <- met_plot_df %>%
+  arrange(desc(RandomForest_Importance)) %>%
+  slice_head(n = 120) %>%
+  mutate(metabolite = fct_reorder(metabolite, RandomForest_Importance, .desc = TRUE))
 
 xgb_plot_df$display_class <- factor(xgb_plot_df$display_class, levels = ordered_levels)
 rf_plot_df$display_class  <- factor(rf_plot_df$display_class,  levels = ordered_levels)
 plot_df_all$display_class <- factor(plot_df_all$display_class, levels = ordered_levels)
 
 #################### make CDE plots ###########################
-
-#xgb importance
-p1 <- ggbarplot(xgb_plot_df, x = "metabolite", y = "XGBoost_Importance",
+p1 <- ggbarplot(xgb_plot_data, x = "metabolite", y = "XGBoost_Importance",
                 fill = "display_class", color = "transparent",
                 xlab = "Metabolite", ylab = "XGBoost Importance") +
   theme_pubr() +
-  #  how to remove spaces between or add spaces between axes and plot!
   scale_fill_manual(values = final_palette) +
   scale_y_continuous(expand = expansion(mult = c(0, 0.1))) + 
   scale_x_discrete(expand = expansion(add = c(1, 0.5))) + 
   theme(axis.text.x = element_blank(), 
         axis.ticks.x = element_blank(),
         legend.position = "none")
+p1
 
-#rf importance
-p2 <- ggbarplot(rf_plot_df, x = "metabolite", y = "RandomForest_Importance",
+p2 <- ggbarplot(rf_plot_data, x = "metabolite", y = "RandomForest_Importance",
                 fill = "display_class", color = "transparent",
                 xlab = "Metabolite", ylab = "RF Importance") +
   theme_pubr() +
@@ -300,42 +323,75 @@ p2 <- ggbarplot(rf_plot_df, x = "metabolite", y = "RandomForest_Importance",
   scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
   scale_x_discrete(expand = expansion(add = c(1, 0.5))) +
   theme(axis.text.x = element_blank(), 
-        axis.ticks.x = element_blank()
-        ,legend.position = "none"
-        )
+        axis.ticks.x = element_blank(),
+        legend.position = "none")
 p2
 
-# for p3 - only label top text
-ordered_levels <- c(target_classes, "Other")
-top <- plot_df_all %>%
+top_labels <- met_plot_df %>%
   mutate(dist = sqrt(XGBoost_Importance^2 + RandomForest_Importance^2)) %>%
   arrange(desc(dist)) %>%
   slice_head(n = 5) %>%
   pull(metabolite)
 
-active_classes <- ordered_levels[ordered_levels %in% unique(c(
-  as.character(xgb_plot_df$display_class), 
-  as.character(rf_plot_df$display_class)
-))]
-
-origin_shapes <- c("Host" = 16, "Symbiont" = 3, "Both" = 17, "Unknown" = 8)
-p3 <- ggscatter(plot_df_all, 
+p3 <- ggscatter(met_plot_df, 
                 x = "XGBoost_Importance", 
                 y = "RandomForest_Importance",
                 color = "display_class", 
                 shape = "refined_origin", 
                 palette = final_palette,
                 label = "metabolite", 
-                label.select = top,
-                repel = TRUE,                     
+                label.select = top_labels,
+                repel = TRUE,                      
                 font.label = c(10, "italic"),      
                 cor.coeff = TRUE, 
                 cor.method = "pearson",
                 xlab = "XGBoost Feature Importance", 
                 ylab = "RF Feature Importance") +
   scale_shape_manual(values = origin_shapes) +
-  theme_pubr() +
-  theme(legend.position = "none")
+  theme_pubr() + 
+  theme(legend.position = "right") +
+  guides(
+    color = "none",
+    fill = "none",
+    shape = guide_legend(title = "Metabolite Origin", override.aes = list(size = 4))
+  )
+p3
+#################################################################################
+
+## add a column to the met_plot_df that has the ubiquity 
+# of the metabolite in Scleractinia in the entire dataset
+# and of the metabolite in non-Scleractinia in the entire dataset
+
+target_mets <- unique(as.character(met_plot_df$metabolite))
+
+scler_ubiquity_df <- df %>%
+  filter(scleractinia == 1) %>%
+  select(all_of(intersect(names(.), target_mets))) %>%
+  summarise(across(everything(), ~ mean(.x > 0, na.rm = TRUE) * 100)) %>%
+  # Reshape for joining
+  pivot_longer(everything(), names_to = "metabolite", values_to = "scler_ubiquity")
+
+met_plot_df <- met_plot_df %>%
+  left_join(scler_ubiquity_df, by = "metabolite") %>%
+  # Handle any metabolites that might have 0 presence in the Scleractinian subset
+  mutate(scler_ubiquity = replace_na(scler_ubiquity, 0))
+
+non_scler_ubiquity_df <- df %>%
+  filter(scleractinia != 1) %>%
+  select(all_of(intersect(names(.), target_mets))) %>%
+  summarise(across(everything(), ~ mean(.x > 0, na.rm = TRUE) * 100)) %>%
+  # Reshape for joining
+  pivot_longer(everything(), names_to = "metabolite", values_to = "non_scler_ubiquity")
+
+met_plot_df <- met_plot_df %>%
+  left_join(non_scler_ubiquity_df, by = "metabolite") %>%
+  # Handle any metabolites that might have 0 presence in the Scleractinian subset
+  mutate(non_scler_ubiquity = replace_na(non_scler_ubiquity, 0))
+
+met_plot_df %>%
+  select(metabolite, scler_ubiquity, non_scler_ubiquity) %>%
+  arrange(desc(scler_ubiquity)) %>%
+  head(10)
 
 #################################################################################
 
@@ -346,34 +402,27 @@ ubiquity_pal <- c(
   "(60,80]"  = "#5DC863FF", # Green
   "(80,100]" = "#FDE725FF"  # Yellow
 )
-target_mets <- unique(c(as.character(xgb_plot_df$metabolite), 
-                        as.character(rf_plot_df$metabolite)))
 
-# Ubiquity = (count of samples where value > 0) / (total samples) * 100
-global_ubiquity <- df %>%
-  select(all_of(intersect(names(.), target_mets))) %>%
-  summarise(across(everything(), ~ mean(.x > 0, na.rm = TRUE) * 100)) %>%
-  pivot_longer(everything(), names_to = "metabolite", values_to = "ubiquity_all")
+# Helper to prepare data for ubiquity-colored barplots
+prep_ubiq_plot <- function(df, importance_col, n_slice) {
+  df %>%
+    arrange(desc(!!sym(importance_col))) %>%
+    slice_head(n = n_slice) %>%
+    mutate(
+      ubiquity_bin = cut(scler_ubiquity, 
+                         breaks = c(-Inf, 20, 40, 60, 80, 100), 
+                         labels = names(ubiquity_pal), 
+                         include.lowest = TRUE),
+      metabolite = fct_reorder(metabolite, !!sym(importance_col), .desc = TRUE)
+    )
+}
 
-xgb_binned_df <- xgb_plot_df %>%
-  select(-any_of("ubiquity_all")) %>% 
-  left_join(global_ubiquity, by = "metabolite") %>%
-  bin_ubiquity()
+xgb_ubiq_data <- prep_ubiq_plot(met_plot_df, "XGBoost_Importance", 60)
+rf_ubiq_data  <- prep_ubiq_plot(met_plot_df, "RandomForest_Importance", 120)
 
-rf_binned_df <- rf_plot_df %>%
-  select(-any_of("ubiquity_all")) %>% 
-  left_join(global_ubiquity, by = "metabolite") %>%
-  bin_ubiquity()
-
-xgb_binned_df <- xgb_binned_df %>%
-  mutate(metabolite = fct_reorder(metabolite, XGBoost_Importance, .desc = TRUE))
-
-rf_binned_df <- rf_binned_df %>%
-  mutate(metabolite = fct_reorder(metabolite, RandomForest_Importance, .desc = TRUE))
-
-p_xgb_ubiq <- ggplot(xgb_binned_df, aes(x = metabolite, y = XGBoost_Importance, fill = ubiquity_bin)) +
+p_xgb_ubiq <- ggplot(xgb_ubiq_data, aes(x = metabolite, y = XGBoost_Importance, fill = ubiquity_bin)) +
   geom_bar(stat = "identity", color = "black", linewidth = 0.1) +
-  scale_fill_manual(values = ubiquity_pal) +
+  scale_fill_manual(values = ubiquity_pal, drop = FALSE) +
   scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
   theme_pubr() +
   labs(
@@ -387,9 +436,10 @@ p_xgb_ubiq <- ggplot(xgb_binned_df, aes(x = metabolite, y = XGBoost_Importance, 
     legend.position = "right"
   )
 
-p_rf_ubiq <- ggplot(rf_binned_df, aes(x = metabolite, y = RandomForest_Importance, fill = ubiquity_bin)) +
+# --- Random Forest Importance colored by Scleractinian Ubiquity ---
+p_rf_ubiq <- ggplot(rf_ubiq_data, aes(x = metabolite, y = RandomForest_Importance, fill = ubiquity_bin)) +
   geom_bar(stat = "identity", color = "black", linewidth = 0.1) +
-  scale_fill_manual(values = ubiquity_pal) +
+  scale_fill_manual(values = ubiquity_pal, drop = FALSE) +
   scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
   theme_pubr() +
   labs(
@@ -403,7 +453,6 @@ p_rf_ubiq <- ggplot(rf_binned_df, aes(x = metabolite, y = RandomForest_Importanc
     legend.position = "right"
   )
 
-# Display separately or as a grid
 print(p_xgb_ubiq)
 print(p_rf_ubiq)
 
@@ -412,55 +461,89 @@ print(p_rf_ubiq)
 ## final plot: two ubiquity-abundance plots with only the most important metabolites from 
 # XGBoost Importance and RF importance
 
-top_xgb_mets <- xgb_plot_df %>% head(40) %>% pull(metabolite)
-top_rf_mets  <- rf_plot_df  %>% head(100) %>% pull(metabolite)
-met_summary_xgb <- met_summary_classed_scler %>% filter(metabolite %in% top_xgb_mets)
-met_summary_rf  <- met_summary_classed_scler %>% filter(metabolite %in% top_rf_mets)
+top_xgb_mets <- met_plot_df %>% arrange(desc(XGBoost_Importance)) %>% head(60) %>% pull(metabolite)
+top_rf_mets  <- met_plot_df %>% arrange(desc(RandomForest_Importance)) %>% head(120) %>% pull(metabolite)
 
-# Helper function to generate the plot to ensure consistency
-plot_important_ubiquity <- function(data) {
-  ggplot(data, aes(x = ubiquity_all, y = avg_abundance)) +
-    geom_point(
-      aes(fill = display_class),
-      shape = 21, size = 4, stroke = 0.5, alpha = 0.9, color = "black"
-    ) +
-    geom_text_repel(
-      data = data %>% arrange(desc(ubiquity_all)) %>% head(5),
-      aes(label = metabolite),
-      size = 3, fontface = "italic", max.overlaps = 15
-    ) +
-    scale_fill_manual(values = final_palette) +
-    scale_y_continuous(labels = label_number(scale_cut = cut_short_scale())) +
-    scale_x_continuous(limits = c(60, 100), breaks = seq(60, 100, by = 20)) +
-    labs(x = "Scleractinian Ubiquity", 
-         y = "Average Abundance", 
-         fill = "Superclass") +
-    theme_pubr() +
-    theme(legend.position = "right", legend.text = element_text(size = 8))
-}
+met_summary_xgb <- met_plot_df %>% filter(metabolite %in% top_xgb_mets)
+met_summary_rf  <- met_plot_df %>% filter(metabolite %in% top_rf_mets)
 
-p_xgb_ubiq_scatter <- plot_important_ubiquity(met_summary_xgb)
-p_rf_ubiq_scatter  <- plot_important_ubiquity(met_summary_rf)
+
+p_xgb_ubiq_scatter <- ggplot(met_summary_xgb, aes(x = non_scler_ubiquity, y = scler_ubiquity)) +
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "gray60") +
+  geom_point(
+    aes(fill = display_class),
+    shape = 21, size = 4, stroke = 0.5, alpha = 0.9, color = "black"
+  ) +
+  scale_fill_manual(values = final_palette) +
+  scale_y_continuous(limits = c(0, 100), breaks = seq(0, 100, by = 20)) +
+  scale_x_continuous(limits = c(0, 100), breaks = seq(0, 100, by = 20)) +
+  labs(
+    x = "Non-Scleractinian Ubiquity", 
+    y = "Scleractinian Ubiquity", 
+    fill = "Compound Superclass"
+  ) +
+  theme_pubr() +
+  theme(
+    legend.position = "none", # Set to none if using shared legend
+    plot.title = element_text(size = 12, face = "bold")
+  )
+p_xgb_ubiq_scatter
+
+
+p_rf_ubiq_scatter <- ggplot(met_summary_rf, aes(x = non_scler_ubiquity, y = scler_ubiquity)) +
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "gray60") +
+  geom_point(
+    aes(fill = display_class),
+    shape = 21, size = 4, stroke = 0.5, alpha = 0.9, color = "black"
+  ) +
+  scale_fill_manual(values = final_palette) +
+  scale_y_continuous(limits = c(0, 100), breaks = seq(0, 100, by = 20)) +
+  scale_x_continuous(limits = c(0, 100), breaks = seq(0, 100, by = 20)) +
+  labs(
+    x = "Non-Scleractinian Ubiquity", 
+    y = "Scleractinian Ubiquity", 
+    fill = "Compound Superclass"
+  ) +
+  theme_pubr() +
+  theme(
+    legend.position = "none", # Set to none if using shared legend
+    plot.title = element_text(size = 12, face = "bold")
+  )
 p_rf_ubiq_scatter
 
 
 #################################################################################
-unified_legend <- get_legend(
-  p2 + 
-    # Use scale_fill_manual because barplots use the 'fill' aesthetic
-    scale_fill_manual(values = final_palette, name = "Compound Superclass") +
-    scale_shape_manual(values = origin_shapes, name = "Metabolite Origin") +
-    theme(legend.position = "top", 
-          legend.direction = "horizontal",
-          legend.box = "vertical",
-          legend.text = element_text(size = 12),
-          legend.title = element_text(size = 15)) +
-    guides(
-      # Match 'fill' here to the scale above
-      fill = guide_legend(nrow=2, order = 1, override.aes = list(shape = 22, size = 6))
-    )
-)
+levels(met_plot_df$display_class) <- str_wrap(levels(met_plot_df$display_class), width = 20)
+names(final_palette) <- str_wrap(names(final_palette), width = 20)
 
+# 2. Re-run the dummy plot with a more flexible guide
+legend_dummy <- ggplot(met_plot_df, aes(x = XGBoost_Importance, y = RandomForest_Importance)) +
+  geom_point(aes(fill = display_class)) +
+  scale_fill_manual(
+    values = final_palette, 
+    name = "Compound Superclass", 
+    drop = FALSE
+  ) +
+  theme_pubr() +
+  theme(
+    legend.position = "top",
+    legend.direction = "horizontal",
+    legend.box = "vertical",
+    legend.text = element_text(size = 9, lineheight = 0.8), # lineheight handles wrapped text
+    legend.title = element_text(size = 12, face = "bold"),
+    legend.key.height = unit(0.8, "cm"), # Increase height to fit wrapped text
+    legend.spacing.x = unit(0.2, "cm")
+  ) +
+  guides(
+    fill = guide_legend(
+      ncol = 6,           # Set columns to 6; with 18 items, it MUST show 3 rows
+      byrow = TRUE,
+      order = 1,
+      override.aes = list(shape = 21, size = 5, stroke = 0.5)
+    )
+    )
+
+unified_legend <- get_legend(legend_dummy)
 
 row_ab <- plot_grid(
   pa + theme(legend.position = "none"), 
@@ -477,7 +560,7 @@ row_cd <- plot_grid(
 
 # Row 3: Scatter Importance (E) - Centered or full width
 row_e <- plot_grid(
-  p3 + theme(legend.position = "none"), 
+  p3, 
   labels = c("E"), label_size = 18, ncol = 1
 )
 
@@ -503,7 +586,7 @@ true_final_figure <- plot_grid(
   row_fg,
   row_hi,
   ncol = 1,
-  rel_heights = c(0.2, 1, 1, 1.2, 1, 1) # Adjust heights based on content density
+  rel_heights = c(0.4, 1, 1, 1.2, 1, 1) # Adjust heights based on content density
 )
 
 # Save high-resolution for publication
