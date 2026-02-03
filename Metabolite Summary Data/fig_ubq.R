@@ -161,32 +161,45 @@ met_plot_df$display_class <- factor(met_plot_df$display_class, levels = ordered_
 class_mapping <- met_plot_df %>%
   select(metabolite, display_class) %>%
   distinct()
+
 met_summary_classed <- met_summary %>%
   left_join(class_mapping, by = "metabolite") %>%
   mutate(display_class = replace_na(display_class, "Other"))
 
+met_summary_classed <- met_summary_classed %>%
+  left_join(met_df %>% select(metabolite, refined_origin), by = "metabolite") 
+
+met_summary_classed$refined_origin <- factor(
+  met_summary_classed$refined_origin, 
+  levels = c("Host", "Symbiont", "Both", "Unknown")
+)
+
 pa <- ggplot(met_summary_classed, aes(x = ubiquity_all, y = avg_abundance)) +
   geom_point(
-    aes(fill = display_class),
-    shape = 21,    # Filled circle with border
-    size = 3,      # Uniform size for all points
-    stroke = 0.4,  # Thin black outline
-    color = "black",
+    aes(color = display_class, shape = refined_origin), # Changed fill to color
+    size = 3,      
+    stroke = 0.8,  # Increased slightly for better visibility of shapes 3 and 8
     alpha = 0.85
   ) +
   
-  scale_fill_manual(values = final_palette) +
+  # Use scale_color_manual to match the scatter plots H and I
+  scale_color_manual(values = final_palette) +
+  scale_shape_manual(values = origin_shapes) +
+  
   scale_y_continuous(
     labels = label_number(scale_cut = cut_short_scale())
-  ) + scale_x_continuous(
+  ) + 
+  scale_x_continuous(
     limits = c(0, 100), 
     breaks = seq(0, 100, by = 20)
   ) +
   labs(
     x = "Ubiquity",
     y = "Average Abundance",
-    fill = "Compound Superclass",
-  ) + theme_pubr() + 
+    color = "Compound Superclass", # Updated label
+    shape = "Metabolite Origin"
+  ) + 
+  theme_pubr() + 
   theme(
     plot.background   = element_rect(fill = "white", color = NA),
     panel.background  = element_rect(fill = "white", color = NA),
@@ -195,6 +208,7 @@ pa <- ggplot(met_summary_classed, aes(x = ubiquity_all, y = avg_abundance)) +
     legend.text       = element_text(size = 9),
     plot.title        = element_text(hjust = 0.5, face = "bold", size = 16)
   )
+
 pa
 
 #################################################################################
@@ -467,46 +481,49 @@ top_rf_mets  <- met_plot_df %>% arrange(desc(RandomForest_Importance)) %>% head(
 met_summary_xgb <- met_plot_df %>% filter(metabolite %in% top_xgb_mets)
 met_summary_rf  <- met_plot_df %>% filter(metabolite %in% top_rf_mets)
 
-
 p_xgb_ubiq_scatter <- ggplot(met_summary_xgb, aes(x = non_scler_ubiquity, y = scler_ubiquity)) +
   geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "gray60") +
   geom_point(
-    aes(fill = display_class),
-    shape = 21, size = 4, stroke = 0.5, alpha = 0.9, color = "black"
+    aes(color = display_class, shape = refined_origin), 
+    size = 4, stroke = 1, alpha = 0.9
   ) +
-  scale_fill_manual(values = final_palette) +
+  # Using scale_color_manual because shapes 3 and 8 only take color
+  scale_color_manual(values = final_palette) +
+  scale_shape_manual(values = origin_shapes) + 
   scale_y_continuous(limits = c(0, 100), breaks = seq(0, 100, by = 20)) +
   scale_x_continuous(limits = c(0, 100), breaks = seq(0, 100, by = 20)) +
   labs(
-    x = "Non-Scleractinian Ubiquity", 
-    y = "Scleractinian Ubiquity", 
-    fill = "Compound Superclass"
+    x = "Non-Scleractinian Ubiquity (%)", 
+    y = "Scleractinian Ubiquity (%)", 
+    color = "Compound Superclass",
+    shape = "Metabolite Origin"
   ) +
   theme_pubr() +
   theme(
-    legend.position = "none", # Set to none if using shared legend
+    legend.position = "none", 
     plot.title = element_text(size = 12, face = "bold")
   )
 p_xgb_ubiq_scatter
 
-
 p_rf_ubiq_scatter <- ggplot(met_summary_rf, aes(x = non_scler_ubiquity, y = scler_ubiquity)) +
   geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "gray60") +
   geom_point(
-    aes(fill = display_class),
-    shape = 21, size = 4, stroke = 0.5, alpha = 0.9, color = "black"
+    aes(color = display_class, shape = refined_origin), 
+    size = 4, stroke = 1, alpha = 0.9
   ) +
-  scale_fill_manual(values = final_palette) +
+  scale_color_manual(values = final_palette) +
+  scale_shape_manual(values = origin_shapes) + 
   scale_y_continuous(limits = c(0, 100), breaks = seq(0, 100, by = 20)) +
   scale_x_continuous(limits = c(0, 100), breaks = seq(0, 100, by = 20)) +
   labs(
-    x = "Non-Scleractinian Ubiquity", 
-    y = "Scleractinian Ubiquity", 
-    fill = "Compound Superclass"
+    x = "Non-Scleractinian Ubiquity (%)", 
+    y = "Scleractinian Ubiquity (%)", 
+    color = "Compound Superclass",
+    shape = "Metabolite Origin"
   ) +
   theme_pubr() +
   theme(
-    legend.position = "none", # Set to none if using shared legend
+    legend.position = "none", 
     plot.title = element_text(size = 12, face = "bold")
   )
 p_rf_ubiq_scatter
@@ -518,11 +535,15 @@ names(final_palette) <- str_wrap(names(final_palette), width = 20)
 
 # 2. Re-run the dummy plot with a more flexible guide
 legend_dummy <- ggplot(met_plot_df, aes(x = XGBoost_Importance, y = RandomForest_Importance)) +
-  geom_point(aes(fill = display_class)) +
+  geom_point(aes(fill = display_class, shape = refined_origin)) +
   scale_fill_manual(
     values = final_palette, 
     name = "Compound Superclass", 
     drop = FALSE
+  ) +
+  scale_shape_manual(
+    values = origin_shapes, 
+    name = "Metabolite Origin"
   ) +
   theme_pubr() +
   theme(
@@ -540,8 +561,12 @@ legend_dummy <- ggplot(met_plot_df, aes(x = XGBoost_Importance, y = RandomForest
       byrow = TRUE,
       order = 1,
       override.aes = list(shape = 21, size = 5, stroke = 0.5)
+    ),
+    shape = guide_legend(
+      nrow = 1,
+      order = 2
     )
-    )
+  )
 
 unified_legend <- get_legend(legend_dummy)
 
@@ -560,7 +585,7 @@ row_cd <- plot_grid(
 
 # Row 3: Scatter Importance (E) - Centered or full width
 row_e <- plot_grid(
-  p3, 
+  p3 + theme(legend.position = "none"), 
   labels = c("E"), label_size = 18, ncol = 1
 )
 
