@@ -291,12 +291,12 @@ merged_df_all <- feature_importance_comparison_all %>%
 importance_scores <- merged_df_all %>%
   select(metabolite, XGBoost_Importance, RandomForest_Importance)
 
-met_plot_df <- met_plot_df %>%
-  left_join(importance_scores, by = "metabolite") %>%
-  mutate(
-    XGBoost_Importance = replace_na(XGBoost_Importance, 0),
-    RandomForest_Importance = replace_na(RandomForest_Importance, 0)
-  )
+# met_plot_df <- met_plot_df %>%
+#   left_join(importance_scores, by = "metabolite") %>%
+#   mutate(
+#     XGBoost_Importance = replace_na(XGBoost_Importance, 0),
+#     RandomForest_Importance = replace_na(RandomForest_Importance, 0)
+#   )
 
 ordered_levels <- c(target_classes, "Other")
 met_plot_df$display_class <- factor(met_plot_df$display_class, levels = ordered_levels)
@@ -312,9 +312,10 @@ rf_plot_data <- met_plot_df %>%
   slice_head(n = 120) %>%
   mutate(metabolite = fct_reorder(metabolite, RandomForest_Importance, .desc = TRUE))
 
-xgb_plot_df$display_class <- factor(xgb_plot_df$display_class, levels = ordered_levels)
-rf_plot_df$display_class  <- factor(rf_plot_df$display_class,  levels = ordered_levels)
-plot_df_all$display_class <- factor(plot_df_all$display_class, levels = ordered_levels)
+# 
+# xgb_plot_df$display_class <- factor(xgb_plot_df$display_class, levels = ordered_levels)
+# rf_plot_df$display_class  <- factor(rf_plot_df$display_class,  levels = ordered_levels)
+# plot_df_all$display_class <- factor(plot_df_all$display_class, levels = ordered_levels)
 
 #################### make CDE plots ###########################
 p1 <- ggbarplot(xgb_plot_data, x = "metabolite", y = "XGBoost_Importance",
@@ -346,6 +347,8 @@ top_labels <- met_plot_df %>%
   arrange(desc(dist)) %>%
   slice_head(n = 5) %>%
   pull(metabolite)
+
+origin_shapes <- c("Host" = 16, "Symbiont" = 3, "Both" = 17, "Unknown" = 8)
 
 p3 <- ggscatter(met_plot_df, 
                 x = "XGBoost_Importance", 
