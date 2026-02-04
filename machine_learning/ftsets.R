@@ -44,8 +44,8 @@ perm_df_clean <- perm_df %>%
   left_join(met_plot_df %>% select(metabolite, refined_origin), by = "metabolite") %>%
   mutate(
     feature_set = recode(feature_set, 
-                         "coral_only_pruned_rf" = "Coral RF",
-                         "coral_only_pruned_gb" = "Coral XGB",
+                         "coral_only_pruned_rf" = "Host RF",
+                         "coral_only_pruned_gb" = "Host XGB",
                          "all_pruned_rfgb"      = "All RF/XGB"),
     # Reorder metabolite for the lollipops
     metabolite = reorder(metabolite, importance_mean)
@@ -83,8 +83,8 @@ perm_df_display <- perm_df %>%
   left_join(met_plot_df %>% select(metabolite, display_class, refined_origin), by = "metabolite") %>%
   mutate(
     feature_set = recode(feature_set, 
-                         "coral_only_pruned_rf" = "Coral RF",
-                         "coral_only_pruned_gb" = "Coral XGB",
+                         "coral_only_pruned_rf" = "Host RF",
+                         "coral_only_pruned_gb" = "Host XGB",
                          "all_pruned_rfgb"      = "All RF/XGB"),
     # Reorder metabolite for the lollipops
     metabolite = reorder(metabolite, importance_mean)
@@ -124,7 +124,7 @@ ggsave("/work/hs325/World_Corals/misc/figs/perm_importance_class.jpg",
 final_plot <- plot_grid(
   p_perm, p_perm_class,
   nrow=2,
-  rel_heights=1,1.2
+  rel_heights=c(1,1.2),
   labels=c('A', 'B'),
   label_size=24
 )
