@@ -54,9 +54,10 @@ keep_rows <- !is.na(df$host_family) &
 permanova_numeric_data2 <- permanova_numeric_data[keep_rows, , drop = FALSE]
 bray_curtis <- vegdist(permanova_numeric_data2, method = "bray")
 
+meta2 <- df[keep_rows, , drop = FALSE]
+
 # ################################################################################
 # #Scleractinia vs nonScleractinia PERMANOVA
-meta2 <- df[keep_rows, , drop = FALSE]
 
 # compute BC dissimilarity
 bray_curtis_scleractinia <- vegdist(permanova_numeric_data2, method = "bray")
@@ -187,67 +188,190 @@ p2 <- ggplot(pcoa_points2, aes(x = PCoA1, y = PCoA2, color = location)) +
   theme_cowplot(font_size = 14)
 ggsave("/work/hs325/World_Corals/misc/figs/pcoa_locb.jpg", p2, width = 8, height = 6, dpi = 300)
 
+
+
 ################################################################################
 ## Location by symbiont potential PERMANOVA
 
 keep_rows <- !is.na(meta2$symbiont.potential)
-# subset the metadata and the numeric data simultaneously
 meta_symb <- meta2[keep_rows, , drop = FALSE]
 numeric_symb <- permanova_numeric_data2[keep_rows, , drop = FALSE]
 
-# BC dissimilarity then nested PERMANOVA
 bray_curtis_locS <- vegdist(numeric_symb, method = "bray")
 locS_permanova_result <- adonis2(
   bray_curtis_locS ~ location / symbiont.potential, 
   data = meta_symb, 
   permutations = 999
 )
-print(locS_permanova_result)               
-# adonis2(formula = bray_curtis_locS ~ location/symbiont.potential, data = meta_symb, permutations = 999)
-# Df SumOfSqs      R2      F Pr(>F)    
-# Model      5   46.735 0.33653 53.259  0.001 ***
-#   Residual 525   92.139 0.66347                  
-# Total    530  138.874 1.00000                  
 
-shapes_sym <- c(
-  "Aposymbiotic" = 8,     
-  "Facultative" = 20, 
-  "Symbiotic" = 18   
-)
+# global model stats
+perm_p_val <- locS_permanova_result$`Pr(>F)`[1]
+perm_r2    <- round(locS_permanova_result$R2[1], 3)
+p_label    <- if(perm_p_val <= 0.001) "p < 0.001" else paste("p =", perm_p_val)
+stats_annotation <- paste0("PERMANOVA: R² = ", perm_r2, ", ", p_label)
 
 pcoa_result3 <- cmdscale(bray_curtis_locS, eig = TRUE, k = 2)
 pcoa_points3 <- as.data.frame(pcoa_result3$points)
 colnames(pcoa_points3) <- c("PCoA1", "PCoA2")
 pcoa_points3 <- bind_cols(pcoa_points3, meta_symb)
 
-# compute percent variance explained (use only positive eigenvalues)
 pos_eig <- pcoa_result3$eig[pcoa_result3$eig > 0]
 var_explained <- round(100 * pcoa_result3$eig[1:2] / sum(pos_eig), 1)
 
 p3 <- ggplot(pcoa_points3, aes(x = PCoA1, y = PCoA2, color = location)) +
-  # stat_ellipse(
-  #   aes(fill = location, group = location),
-  #   geom = "polygon",
-  #   alpha = 0.3,
-  #   level = 0.95,
-  #   colour = NA
-  # ) +
   geom_point(aes(shape = symbiont.potential), size = 3, alpha = 0.8) +
   scale_color_manual(values = cols_location) +
-  scale_fill_manual(values = cols_location) +
   scale_shape_manual(values = shapes_sym) + 
   labs(
     x = paste0("PCoA1: (", var_explained[1], "%)"),
     y = paste0("PCoA2: (", var_explained[2], "%)"),
     color = "Location",
-    fill = "Location",
     shape = "Symbiont Potential"
+  ) +
+  # PERMANOVA annotation to the bottom-left
+  annotate(
+    "text",
+    x = -Inf, y = -Inf,
+    label = stats_annotation,
+    hjust = -0.05, vjust = -0.6,
+    size = 4
   ) +
   theme_cowplot(font_size = 14) +
   theme(legend.position = "right")
-ggsave("/work/hs325/World_Corals/misc/figs/pcoa_locsym.jpg", p3, width = 8, height = 6, dpi = 300)
 
+# Save
+ggsave("/work/hs325/World_Corals/misc/figs/pcoa_locsym_annotated.jpg", p3, width = 8, height = 6, dpi = 300)
 
+# keep_rows <- !is.na(meta2$symbiont.potential)
+# # subset the metadata and the numeric data simultaneously
+# meta_symb <- meta2[keep_rows, , drop = FALSE]
+# numeric_symb <- permanova_numeric_data2[keep_rows, , drop = FALSE]
+# 
+# # BC dissimilarity then nested PERMANOVA
+# bray_curtis_locS <- vegdist(numeric_symb, method = "bray")
+# locS_permanova_result <- adonis2(
+#   bray_curtis_locS ~ location / symbiont.potential, 
+#   data = meta_symb, 
+#   permutations = 999
+# )
+# print(locS_permanova_result)               
+# # adonis2(formula = bray_curtis_locS ~ location/symbiont.potential, data = meta_symb, permutations = 999)
+# # Df SumOfSqs      R2      F Pr(>F)    
+# # Model      5   46.735 0.33653 53.259  0.001 ***
+# #   Residual 525   92.139 0.66347                  
+# # Total    530  138.874 1.00000                  
+# 
+# shapes_sym <- c(
+#   "Aposymbiotic" = 8,     
+#   "Facultative" = 20, 
+#   "Symbiotic" = 18   
+# )
+# 
+# pcoa_result3 <- cmdscale(bray_curtis_locS, eig = TRUE, k = 2)
+# pcoa_points3 <- as.data.frame(pcoa_result3$points)
+# colnames(pcoa_points3) <- c("PCoA1", "PCoA2")
+# pcoa_points3 <- bind_cols(pcoa_points3, meta_symb)
+# 
+# # compute percent variance explained (use only positive eigenvalues)
+# pos_eig <- pcoa_result3$eig[pcoa_result3$eig > 0]
+# var_explained <- round(100 * pcoa_result3$eig[1:2] / sum(pos_eig), 1)
+# 
+# p3 <- ggplot(pcoa_points3, aes(x = PCoA1, y = PCoA2, color = location)) +
+#   # stat_ellipse(
+#   #   aes(fill = location, group = location),
+#   #   geom = "polygon",
+#   #   alpha = 0.3,
+#   #   level = 0.95,
+#   #   colour = NA
+#   # ) +
+#   geom_point(aes(shape = symbiont.potential), size = 3, alpha = 0.8) +
+#   scale_color_manual(values = cols_location) +
+#   scale_fill_manual(values = cols_location) +
+#   scale_shape_manual(values = shapes_sym) + 
+#   labs(
+#     x = paste0("PCoA1: (", var_explained[1], "%)"),
+#     y = paste0("PCoA2: (", var_explained[2], "%)"),
+#     color = "Location",
+#     fill = "Location",
+#     shape = "Symbiont Potential"
+#   ) +
+#   theme_cowplot(font_size = 14) +
+#   theme(legend.position = "right")
+# ggsave("/work/hs325/World_Corals/misc/figs/pcoa_locsym.jpg", p3, width = 8, height = 6, dpi = 300)
+
+################################################################################
+
+## Permanova bleaching by symbiont potential
+
+keep_rows <- !is.na(meta2$bleaching) & !is.na(meta2$symbiont.potential)
+meta_sub <- meta2[keep_rows, , drop = FALSE]
+numeric_sub <- permanova_numeric_data2[keep_rows, , drop = FALSE]
+
+bray_curtis_sub <- vegdist(numeric_sub, method = "bray")
+bleach_sym_permanova <- adonis2(
+  bray_curtis_sub ~ bleaching / symbiont.potential, 
+  data = meta_sub, 
+  permutations = 999
+)
+# adonis2(formula = bray_curtis_sub ~ bleaching/symbiont.potential, data = meta_sub, permutations = 999)
+# Df SumOfSqs     R2      F Pr(>F)    
+# Model      4   35.994 0.2598 46.067  0.001 ***
+#   Residual 525  102.550 0.7402                  
+# Total    529  138.543 1.0000                  
+# ---
+
+perm_p_val <- bleach_sym_permanova$`Pr(>F)`[1]
+perm_r2    <- round(bleach_sym_permanova$R2[1], 3)
+p_label    <- if(perm_p_val <= 0.001) "p < 0.001" else paste("p =", perm_p_val)
+stats_annotation <- paste0("PERMANOVA: R² = ", perm_r2, ", ", p_label)
+
+pcoa_res <- cmdscale(bray_curtis_sub, eig = TRUE, k = 2)
+pcoa_pts <- as.data.frame(pcoa_res$points)
+colnames(pcoa_pts) <- c("PCoA1", "PCoA2")
+pcoa_pts <- bind_cols(pcoa_pts, meta_sub)
+
+pos_eig <- pcoa_res$eig[pcoa_res$eig > 0]
+var_explained <- round(100 * pcoa_res$eig[1:2] / sum(pos_eig), 1)
+
+p_bleach_sym <- ggplot(pcoa_pts, aes(x = PCoA1, y = PCoA2, color = bleaching)) +
+  geom_point(aes(shape = symbiont.potential), size = 3, alpha = 0.8) +
+  scale_color_manual(values = cols_bleaching) +
+  scale_shape_manual(values = shapes_sym) + 
+  labs(
+    x = paste0("PCoA1: (", var_explained[1], "%)"),
+    y = paste0("PCoA2: (", var_explained[2], "%)"),
+    color = "Bleaching Status",
+    shape = "Symbiont Potential"
+  ) +
+  annotate(
+    "text",
+    x = -Inf, y = -Inf,
+    label = stats_annotation,
+    hjust = -0.05, vjust = -0.6,
+    size = 4
+  ) +
+  theme_cowplot(font_size = 14) +
+  theme(legend.position = "right")
+
+# Save the result
+ggsave("/work/hs325/World_Corals/misc/figs/pcoa_bsym.jpg", p_bleach_sym, width = 8, height = 6, dpi = 300)
+
+################################################################################
+pcoa_supp <- plot_grid(
+  p3 + theme(legend.position = "right"), 
+  p_bleach_sym + theme(legend.position = "right"), 
+  labels = c("A", "B"), 
+  label_size = 20,
+  ncol = 1,              
+  align = "v",
+  axis = "lr"
+)
+
+ggsave("/work/hs325/World_Corals/misc/figs/pcoa_supp.jpg", 
+       pcoa_supp, 
+       width = 10, 
+       height = 12, 
+       dpi = 300)
 ################################################################################
 ## Bleaching status alone PERMANOVA
 
@@ -813,4 +937,137 @@ final_plot <- plot_grid(
 print(final_plot)
 ggsave("/work/hs325/World_Corals/misc/figs/fig2.jpg", final_plot, width = 18, height = 12, dpi = 300)
 
+################################################################################
 
+# PERMANOVA by df$scleractinia for Curacao
+# PERMANOVA by df$bleaching for all
+# color points by cols_sclero for the first three, cols_bleaching for last one
+# make combined plot with PERMANOVA values inset for each
+
+keep_cur <- meta2$location == "Curaçao" & !is.na(meta2$scleractinia)
+meta_cur <- meta2[keep_cur, ]
+num_cur  <- permanova_numeric_data2[keep_cur, ]
+
+bc_cur <- vegdist(num_cur, method = "bray")
+perm_cur <- adonis2(bc_cur ~ scleractinia, data = meta_cur, permutations = 999)
+
+p_val_cur <- perm_cur[["Pr(>F)"]][1]
+r2_cur    <- round(perm_cur[["R2"]][1], 3)
+p_lab_cur <- if(is.na(p_val_cur)) "p = NA" else if(p_val_cur <= 0.001) "p < 0.001" else paste("p =", p_val_cur)
+stats_cur <- paste0("PERMANOVA: R² = ", r2_cur, ", ", p_lab_cur)
+
+pcoa_cur <- cmdscale(bc_cur, eig = TRUE, k = 2)
+df_cur   <- cbind(as.data.frame(pcoa_cur$points), meta_cur)
+var_cur  <- round(100 * pcoa_cur$eig[1:2] / sum(pcoa_cur$eig[pcoa_cur$eig > 0]), 1)
+
+p_cur <- ggplot(df_cur, aes(x = V1, y = V2)) +
+  geom_point(
+    aes(
+      color = as.factor(scleractinia), 
+      shape = "Curaçao"  # Mapping a constant string creates the legend entry
+    ), 
+    size = 3, 
+    alpha = 0.7
+  ) +
+  scale_color_manual(
+    values = cols_sclero, 
+    labels = c("1" = "Scleractinia", "0" = "Other"),
+    name = "Order"
+  ) +
+  scale_shape_manual(
+    values = c("Curaçao" = 16), # Choose the shape (16 is solid circle)
+    name = "Location"           # This becomes the header for the shape legend
+  ) +
+  labs(
+    x = paste0("PCoA1: (", var_cur[1], "%)"), 
+    y = paste0("PCoA2: (", var_cur[2], "%)")
+  ) +
+  annotate(
+    "text", x = Inf, y = -Inf, 
+    label = stats_cur, 
+    hjust = 1.05, vjust = -1.2, 
+    size = 3.5, fontface = "italic"
+  ) +
+  theme_cowplot()
+p_cur
+ggsave("/work/hs325/World_Corals/misc/figs/pcoa_cur_scler.jpg", p_cur, width = 8, height = 6, dpi = 300)
+
+################################################################################
+### bleaching within  each location (Hawaii has no bleached samples)
+
+locs_bleach <- c("Sri Lanka", "North Carolina", "Curaçao")
+bleach_plots <- list()
+
+for (loc in locs_bleach) {
+  
+  keep_idx <- meta2$location == loc & !is.na(meta2$bleaching)
+  if(sum(keep_idx) < 3 || length(unique(meta2$bleaching[keep_idx])) < 2) next
+  
+  m_sub <- meta2[keep_idx, ]
+  n_sub <- permanova_numeric_data2[keep_idx, ]
+  
+  # BC & PERMANOVA
+  bc_sub <- vegdist(n_sub, method = "bray")
+  perm_sub <- adonis2(bc_sub ~ bleaching, data = m_sub, permutations = 999)
+  
+  # Extract Stats
+  p_val <- perm_sub[["Pr(>F)"]][1]
+  r2_val <- round(perm_sub[["R2"]][1], 3)
+  p_lab <- if(is.na(p_val)) "p = NA" else if(p_val <= 0.001) "p < 0.001" else paste("p =", p_val)
+  stats_label <- paste0("PERMANOVA: R² = ", r2_val, ", ", p_lab)
+  
+  # PCoA
+  pcoa_res <- cmdscale(bc_sub, eig = TRUE, k = 2)
+  var_exp  <- round(100 * pcoa_res$eig[1:2] / sum(pcoa_res$eig[pcoa_res$eig > 0]), 1)
+  pcoa_df  <- cbind(as.data.frame(pcoa_res$points), m_sub)
+  
+  # Generate Plot
+  p <- ggplot(pcoa_df, aes(x = V1, y = V2, color = bleaching)) +
+    geom_point(size = 3, alpha = 0.7) +
+    scale_color_manual(values = cols_bleaching) +
+    labs(
+      title = loc,
+      x = paste0("PCoA1: (", var_exp[1], "%)"), 
+      y = paste0("PCoA2: (", var_exp[2], "%)")
+    ) +
+    annotate(
+      "text", x = Inf, y = -Inf, 
+      label = stats_label, 
+      hjust = 1.05, vjust = -1.2, 
+      size = 3, fontface = "italic"
+    ) +
+    theme_cowplot() +
+    theme(legend.position = "none") 
+  
+  bleach_plots[[loc]] <- p
+}
+
+#combine
+shared_legend <- get_legend(
+  ggplot(meta2[!is.na(meta2$bleaching),], aes(x=1, y=1, color=bleaching)) +
+    geom_point(size = 4) + 
+    scale_color_manual(values = cols_bleaching, name = "Status") +
+    theme_cowplot() + 
+    theme(
+      legend.position = "bottom",
+      legend.direction = "horizontal",
+      legend.justification = "center",
+      legend.box.just = "center"
+    )
+)
+
+plot_grid <- plot_grid(
+  plotlist = bleach_plots,
+  labels = c("A", "B", "C"),
+  label_size=24,
+  ncol = 1,
+  align = "v",
+  axis = "lr"
+)
+
+# 4. Final assembly with the legend at the bottom
+final_bleaching_fig <- plot_grid(plot_grid, shared_legend, ncol = 1, nrow = 2, rel_heights = c(1, 0.05))
+
+# Save the result
+ggsave("/work/hs325/World_Corals/misc/figs/pcoa_bleachbyloc.jpg", 
+       final_bleaching_fig, width = 12, height = 11, dpi = 300)
