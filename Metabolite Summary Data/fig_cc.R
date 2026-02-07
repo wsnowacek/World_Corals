@@ -384,7 +384,7 @@ origin_counts <- met_df_filtered %>%
 # print(origin_counts)
 
 origin_labels <- origin_counts %>%
-  mutate(label_full = paste0(refined_origin, " (n = ", n, ")")) %>%
+  mutate(label_full = paste0(refined_origin, " (", n, " mets)" )) %>%
   { setNames(.$label_full, .$refined_origin) }
 
 p5 <- ggplot(plot_data_long, aes(x = percent_samples, y = Richness, fill = Origin)) +

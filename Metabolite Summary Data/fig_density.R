@@ -415,6 +415,10 @@ final_plot <- plot_grid(
 ggsave("/work/hs325/World_Corals/misc/figs/fig4.jpg", final_plot, width=15,height=12,dpi=300)
 
 ################################################################################
+
+f4ppt <- plot_grid(p_ridge_superclass_noleg, shared_legend, ncol = 1, rel_heights = c(1,0.1))  
+ggsave("/work/hs325/World_Corals/misc/figs/fig4_ppt.jpg", f4ppt, width=12,height=7,dpi=300)
+
 ## TBA: boxplots for specific categories of coraldb compound class?
 # triacylglycerols
 # MADAG

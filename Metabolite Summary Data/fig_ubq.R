@@ -105,6 +105,8 @@ met_plot_df <- process_importance_data(met_df)
 ordered_levels <- c(target_classes, "Other")
 met_plot_df$display_class <- factor(met_plot_df$display_class, levels = ordered_levels)
 
+origin_shapes <- c("Host" = 16, "Symbiont" = 3, "Both" = 17, "Unknown" = 8)
+
 #################################################################################
 
 met_presence_long <- df %>%
@@ -195,7 +197,7 @@ pa <- ggplot(met_summary_classed, aes(x = ubiquity_all, y = avg_abundance)) +
   ) +
   labs(
     x = "Ubiquity",
-    y = "Average Abundance",
+    y = "Abundance",
     color = "Compound Superclass", # Updated label
     shape = "Metabolite Origin"
   ) + 
@@ -263,7 +265,7 @@ pb <- ggplot(met_summary_classed_scler, aes(x = ubiquity_all, y = avg_abundance)
   ) +
   labs(
     x = "Scleractinian Ubiquity",
-    y = "Average Abundance",
+    y = "Abundance",
     fill = "Compound Superclass",
   ) + 
   theme_pubr() + 
@@ -291,12 +293,12 @@ merged_df_all <- feature_importance_comparison_all %>%
 importance_scores <- merged_df_all %>%
   select(metabolite, XGBoost_Importance, RandomForest_Importance)
 
-# met_plot_df <- met_plot_df %>%
-#   left_join(importance_scores, by = "metabolite") %>%
-#   mutate(
-#     XGBoost_Importance = replace_na(XGBoost_Importance, 0),
-#     RandomForest_Importance = replace_na(RandomForest_Importance, 0)
-#   )
+met_plot_df <- met_plot_df %>%
+  left_join(importance_scores, by = "metabolite") %>%
+  mutate(
+    XGBoost_Importance = replace_na(XGBoost_Importance, 0),
+    RandomForest_Importance = replace_na(RandomForest_Importance, 0)
+  )
 
 ordered_levels <- c(target_classes, "Other")
 met_plot_df$display_class <- factor(met_plot_df$display_class, levels = ordered_levels)
@@ -320,7 +322,7 @@ rf_plot_data <- met_plot_df %>%
 #################### make CDE plots ###########################
 p1 <- ggbarplot(xgb_plot_data, x = "metabolite", y = "XGBoost_Importance",
                 fill = "display_class", color = "transparent",
-                xlab = "Metabolite", ylab = "XGBoost Importance") +
+                xlab = "Metabolite", ylab = "XGBoost Feature Importance") +
   theme_pubr() +
   scale_fill_manual(values = final_palette) +
   scale_y_continuous(expand = expansion(mult = c(0, 0.1))) + 
@@ -332,7 +334,7 @@ p1
 
 p2 <- ggbarplot(rf_plot_data, x = "metabolite", y = "RandomForest_Importance",
                 fill = "display_class", color = "transparent",
-                xlab = "Metabolite", ylab = "RF Importance") +
+                xlab = "Metabolite", ylab = "RF Feature Importance") +
   theme_pubr() +
   scale_fill_manual(values = final_palette) +
   scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
@@ -444,7 +446,7 @@ p_xgb_ubiq <- ggplot(xgb_ubiq_data, aes(x = metabolite, y = XGBoost_Importance, 
   theme_pubr() +
   labs(
     x = "Metabolite",
-    y = "XGBoost Importance Score",
+    y = "XGBoost Feature Importance",
     fill = "Ubiquity Percentage"
   ) +
   theme(
@@ -461,8 +463,8 @@ p_rf_ubiq <- ggplot(rf_ubiq_data, aes(x = metabolite, y = RandomForest_Importanc
   theme_pubr() +
   labs(
     x = "Metabolite",
-    y = "RF Importance",
-    fill = "Ubiquity Percentage"
+    y = "RF Feature Importance",
+    fill = "Scleractinian Ubiquity Percentage"
   ) +
   theme(
     axis.text.x = element_blank(),
@@ -478,8 +480,9 @@ print(p_rf_ubiq)
 ## final plot: two ubiquity-abundance plots with only the most important metabolites from 
 # XGBoost Importance and RF importance
 
-top_xgb_mets <- met_plot_df %>% arrange(desc(XGBoost_Importance)) %>% head(60) %>% pull(metabolite)
-top_rf_mets  <- met_plot_df %>% arrange(desc(RandomForest_Importance)) %>% head(120) %>% pull(metabolite)
+top_xgb_mets <- met_plot_df %>% arrange(desc(XGBoost_Importance)) %>% head(43) %>% pull(metabolite)
+top_rf_mets  <- met_plot_df %>% arrange(desc(RandomForest_Importance)) %>% head(50) %>% pull(metabolite)
+## 268: #of mets with importance > 0.001
 
 met_summary_xgb <- met_plot_df %>% filter(metabolite %in% top_xgb_mets)
 met_summary_rf  <- met_plot_df %>% filter(metabolite %in% top_rf_mets)
@@ -618,5 +621,17 @@ true_final_figure <- plot_grid(
 )
 
 # Save high-resolution for publication
-ggsave("/work/hs325/World_Corals/misc/figs/crazyfig5.jpg", 
+ggsave("/work/hs325/World_Corals/misc/figs/fig5.jpg", 
        true_final_figure, width = 16, height = 24, dpi = 300, bg = "white")
+
+
+################################################################################
+
+#save each row
+temp_save <- plot_grid(
+  unified_legend, row_hi,
+  ncol = 1,
+  rel_heights = c(0.5, 1) 
+)
+ggsave("/work/hs325/World_Corals/misc/figs/fig5_ppt.jpg", 
+       temp_save, width = 14, height = 8, dpi = 600, bg = "white")

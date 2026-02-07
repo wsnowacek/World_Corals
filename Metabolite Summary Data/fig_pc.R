@@ -193,6 +193,7 @@ ggsave("/work/hs325/World_Corals/misc/figs/pcoa_locb.jpg", p2, width = 8, height
 ################################################################################
 ## Location by symbiont potential PERMANOVA
 
+
 keep_rows <- !is.na(meta2$symbiont.potential)
 meta_symb <- meta2[keep_rows, , drop = FALSE]
 numeric_symb <- permanova_numeric_data2[keep_rows, , drop = FALSE]
@@ -217,6 +218,12 @@ pcoa_points3 <- bind_cols(pcoa_points3, meta_symb)
 
 pos_eig <- pcoa_result3$eig[pcoa_result3$eig > 0]
 var_explained <- round(100 * pcoa_result3$eig[1:2] / sum(pos_eig), 1)
+
+shapes_sym <- c(
+  "Aposymbiotic" = 8,
+  "Facultative" = 20,
+  "Symbiotic" = 18
+)
 
 p3 <- ggplot(pcoa_points3, aes(x = PCoA1, y = PCoA2, color = location)) +
   geom_point(aes(shape = symbiont.potential), size = 3, alpha = 0.8) +
@@ -439,8 +446,10 @@ permanova_numeric_data <- df %>% select(starts_with("x"))
 keep_rows <- !is.na(df$symbiont.potential) & complete.cases(permanova_numeric_data)
 
 permanova_numeric_data2 <- permanova_numeric_data[keep_rows, , drop = FALSE]
+desired_levels <- c("Aposymbiotic", "Facultative", "Symbiotic")
 meta_sym <- df[keep_rows, ] %>%
-  mutate(symbiont.potential = factor(as.character(symbiont.potential), levels = desired_levels))
+  mutate(symbiont.potential = factor(as.character(symbiont.potential), 
+                                     levels = desired_levels))
 
 # Bray–Curtis dissimilarity
 bray_curtis_sym <- vegdist(permanova_numeric_data2, method = "bray")
@@ -457,9 +466,12 @@ pcoa_points <- as.data.frame(pcoa_result$points)
 colnames(pcoa_points) <- c("PCoA1", "PCoA2")
 pcoa_points <- bind_cols(pcoa_points, meta_sym)
 
-# percent variance explained (positive eigenvalues only)
-pos_eig <- pcoa_result$eig[pcoa_result$eig > 0]
-var_explained <- round(100 * pcoa_result$eig[1:2] / sum(pos_eig), 1)
+r2_val <- round(symbiont_permanova_result$R2[1], 3)
+p_val  <- symbiont_permanova_result$`Pr(>F)`[1]
+
+# Format the p-value label
+p_lab <- if(p_val <= 0.001) "p < 0.001" else paste0("p = ", round(p_val, 3))
+stats_label <- paste0("PERMANOVA: R² = ", r2_val, ", ", p_lab)
 
 p5 <- ggplot(pcoa_points, aes(x = PCoA1, y = PCoA2, color = symbiont.potential, fill = symbiont.potential)) +
   geom_point(size = 3, alpha = 0.9) +
@@ -472,6 +484,15 @@ p5 <- ggplot(pcoa_points, aes(x = PCoA1, y = PCoA2, color = symbiont.potential, 
   ) +
   scale_color_manual(values = cols_symbiont) +
   scale_fill_manual(values = cols_symbiont) +
+  annotate(
+    "text", 
+    x = -Inf, y = -Inf, 
+    label = stats_label, 
+    hjust = -0.1, # Shift slightly right from the edge
+    vjust = -1.2, # Shift slightly up from the edge
+    size = 4, 
+    fontface = "italic"
+  ) +
   labs(
     x = paste0("PCoA1: (", var_explained[1], "%)"),
     y = paste0("PCoA2: (", var_explained[2], "%)"),
@@ -480,9 +501,8 @@ p5 <- ggplot(pcoa_points, aes(x = PCoA1, y = PCoA2, color = symbiont.potential, 
   ) +
   theme_cowplot(font_size = 14) +
   theme(legend.position = "right")
-
-# save plot
-ggsave("/work/hs325/World_Corals/misc/figs/pcoa_symbiont.jpg", p5, width = 8, height = 6, dpi = 300)
+ggsave("/work/hs325/World_Corals/misc/figs/pcoa_symbiont.jpg", 
+       p5, width = 8, height = 6, dpi = 300)
 
 ################################################################################
 ## Location alone PERMANOVA
@@ -589,7 +609,7 @@ p_abundance <- ggplot(plot_data_clean, aes(x = group, y = avg_abundance, fill = 
   scale_fill_manual(values = cols_sclero_named) +
   scale_color_manual(values = cols_sclero_named) +
   labs(
-    y = "Average Abundance"
+    y = "Metabolite Abundance"
   ) +
   theme_pubr(base_size = 13) +
   theme(
@@ -634,7 +654,7 @@ p_ubiquity <- ggplot(plot_data_clean, aes(x = group, y = avg_ubiquity, fill = gr
   scale_fill_manual(values = cols_sclero_named) +
   scale_color_manual(values = cols_sclero_named) +
   labs(
-    y = "Average Ubiquity"
+    y = "Metabolite Ubiquity"
   ) +
   theme_pubr(base_size = 13) +
   theme(
@@ -664,7 +684,7 @@ p_richness <- ggplot(plot_data_clean, aes(x = group, y = richness, fill = group,
   scale_fill_manual(values = cols_sclero_named) +
   scale_color_manual(values = cols_sclero_named) +
   labs(
-    y = "Average Metabolic Richness"
+    y = "Metabolite Richness"
   ) +
   theme_pubr(base_size = 13) +
   theme(
@@ -695,7 +715,7 @@ p_entropy <- ggplot(plot_data_clean, aes(x = group, y = shannon, fill = group, c
   scale_y_continuous(breaks = c(5, 6, 7), limits = c(4.5, 7.5)) +
   scale_color_manual(values = cols_sclero_named) +
   labs(
-    y = "Average Shannon Entropy"
+    y = "Shannon Entropy"
   ) +
   theme_pubr(base_size = 13) +
   theme(
@@ -723,7 +743,8 @@ mat_family[] <- lapply(mat_family, as.numeric)
 mat_family <- mat_family %>% mutate_all(~ifelse(is.na(.), 0, .))
 
 bray_curtis_family <- vegdist(sqrt(mat_family), method = 'bray')
-cluster.average <- hclust(bray_curtis_family, method = 'average')
+cluster.average <- hclust(bray_curtis_family, method = 'ward.D') 
+#method = average uses upgma
 
 dend_data <- dendro_data(cluster.average, type = "rectangle")
 
@@ -818,10 +839,6 @@ dend <- as.dendrogram(cluster.average)
 target_metadata <- leaf_metadata %>%
   arrange(desc(is_scler), phylum, host_family)
 target_order <- target_metadata$host_family
-# 
-# target_metadata <- leaf_metadata %>%
-#   arrange(phylum, is_scler, host_family)
-# target_order <- target_metadata$host_family
 
 dend <- dendextend::rotate(dend, target_order)
 dend_data <- dendro_data(dend, type = "rectangle")
@@ -855,7 +872,7 @@ p_dendro <- ggplot() +
   coord_flip() +
   scale_y_reverse(
     expand = c(0.5, 0), # Slightly increased expansion to fit longer text
-    breaks = seq(0, 0.75, 0.25)
+    breaks = seq(0, 5, 1)
   ) +
   scale_color_manual(
     values = branch_palette,
@@ -881,8 +898,63 @@ print(p_dendro)
 # current_order <- labels(dend)
 # print(current_order)
 # dend <- click_rotate(dend)
-################################################################################
 
+################################################################################
+## combine plots with cowplot for talk
+# row 1 legend, p, p_dendro
+
+
+legend_sclero <- get_legend(
+  p + 
+    guides(color = guide_legend(title = "Order"), fill = guide_legend(title = "Order")) +
+    theme(
+      legend.position = "left", 
+      legend.box.margin = margin(6, 0, 0, 6),
+      legend.title = element_text(size = 24, face = "bold"), 
+      legend.text = element_text(size = 20),
+      legend.title.align = 0.5,
+      legend.text.align = 0.5,
+      legend.key.size = unit(1.2, "lines")))
+clean_theme <- theme(
+  legend.position = "none",
+  plot.title = element_blank() # Remove titles to keep row 2 clean
+)
+
+p <- p + theme(legend.position = "none")
+
+row1 <- plot_grid(
+  legend_sclero, p, p_dendro,
+  ncol = 3,
+  rel_widths = c(0.4, 1, 1.2), # Legend is narrow, plots are equal
+  labels = c("", "A", "B"),
+  label_size = 24
+)
+
+p_abundance_clean <- p_abundance + clean_theme
+p_ubiquity_clean  <- p_ubiquity + clean_theme
+p_entropy_clean  <- p_entropy + clean_theme
+p_richness_clean  <- p_richness + clean_theme
+
+
+row2 <- plot_grid(
+  p_richness_clean,p_entropy_clean,p_ubiquity_clean,p_abundance_clean,
+  nrow = 1,
+  rel_widths = c(1,1,1,1), # Give Dendro more space
+  align = 'h', axis = 'tb',
+  labels = c("C", "D", "E", "F"),
+  label_size = 24
+)
+
+final_plot <- plot_grid(
+  row1, 
+  row2, 
+  ncol = 1, 
+  rel_heights = c(1, 1) 
+)
+ggsave("/work/hs325/World_Corals/misc/figs/fig2_ppt.jpg", final_plot, width = 18, height = 12, dpi = 300)
+
+
+################################################################################
 # combine plots with cowplot
 # row 1: legend, p, p2 
 # row 2: p_dendro, p_abundance, p_ubiquity, p_evenness, p_richness (boxplots should be tight)
@@ -943,6 +1015,8 @@ ggsave("/work/hs325/World_Corals/misc/figs/fig2.jpg", final_plot, width = 18, he
 # PERMANOVA by df$bleaching for all
 # color points by cols_sclero for the first three, cols_bleaching for last one
 # make combined plot with PERMANOVA values inset for each
+
+##
 
 keep_cur <- meta2$location == "Curaçao" & !is.na(meta2$scleractinia)
 meta_cur <- meta2[keep_cur, ]

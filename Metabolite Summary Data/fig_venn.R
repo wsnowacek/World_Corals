@@ -79,8 +79,8 @@ get_venn_list <- function(data) {
 
 # Define the subsets
 list_all <- get_venn_list(met_df_filtered)
-list_xgb <- get_venn_list(met_df_filtered %>% arrange(desc(XGBoost_Importance)) %>% head(50))
-list_rf  <- get_venn_list(met_df_filtered %>% arrange(desc(RandomForest_Importance)) %>% head(500))
+list_xgb <- get_venn_list(met_df_filtered %>% arrange(desc(XGBoost_Importance)) %>% head(43))
+list_rf  <- get_venn_list(met_df_filtered %>% arrange(desc(RandomForest_Importance)) %>% head(1541))
 
 ### plot
 cols_origin <- c("Host" = "#97B9CBFF", "Symbiont" = "#9057C6FF", 
