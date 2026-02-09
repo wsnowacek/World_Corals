@@ -440,18 +440,33 @@ plot_data_volcano <- volcano_results %>%
 
 classes <- sort(unique(plot_data_volcano$display_class))
 class_colors <- final_palette[classes]
+class_order <- c(target_classes, "Other")
 
-plot_data_volcano <- plot_data_volcano %>%
+plot_data_volcano <- volcano_results %>%
+  inner_join(
+    met_df %>% select(metabolite, display_class, refined_origin),
+    by = "metabolite"
+  ) %>%
   mutate(
-    p_adj_safe = if_else(!is.na(p_adj) & p_adj == 0, .Machine$double.xmin, p_adj),
-    neg_log_p_adj = -log10(p_adj_safe)
+    display_class = as.character(display_class),
+    refined_origin = as.character(refined_origin),
+        display_class = if_else(
+      is.na(display_class) | !(display_class %in% names(final_palette)),
+      "Other",
+      display_class
+    ),
+    display_class = factor(display_class, levels = class_order),
+    refined_origin = if_else(is.na(refined_origin), "Unknown", refined_origin)
   )
+
+classes <- levels(plot_data_volcano$display_class)
+class_colors <- final_palette[classes]
 
 sig_threshold <- -log10(0.05)
 
 # build plot
 p_volcano <- ggplot(plot_data_volcano, aes(x = log2FC, y = neg_log_p_adj)) +
-  geom_vline(xintercept = c(-1, 1), linetype = "dashed", color = "grey70") +
+  geom_vline(xintercept = c(-2, 2), linetype = "dashed", color = "grey70") +
   geom_hline(yintercept = sig_threshold, linetype = "dashed", color = "grey70", linewidth = 0.8) +
   geom_point(aes(color = display_class, shape = refined_origin), alpha = 0.75, size = 2.5) +
   scale_color_manual(
@@ -478,7 +493,7 @@ p_volcano <- ggplot(plot_data_volcano, aes(x = log2FC, y = neg_log_p_adj)) +
     legend.position = "right",
     plot.title = element_text(face = "bold", hjust = 0.5)
   )
-ggsave("/work/hs325/World_Corals/misc/figs/volcano.jpg", p_volcano, width=14,height=6,dpi=300)
+ggsave("/work/hs325/World_Corals/misc/figs/volcano.jpg", p_volcano, width=10,height=6,dpi=300)
 
 # # add labels for Bonferroni-significant points (adjust label column as desired)
 # p_volcano <- p_volcano +
