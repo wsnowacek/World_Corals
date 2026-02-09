@@ -125,7 +125,7 @@ plot_data_ridge_full <- comm_long %>%
                               levels = c("Scleractinia", "Other"))) %>%
   filter(!is.na(scler_label))
 
-#################################################################################
+############################
 
 p_ridge <- ggplot(plot_data_ridge, 
                   aes(x = log10(mean_abundance + 1), 
@@ -325,10 +325,21 @@ cols_origin <- c("Host" = "#97B9CBFF", "Symbiont" = "#9057C6FF",
 met_df$refined_origin <- factor(met_df$refined_origin, 
                                 levels = c("Host", "Symbiont", "Both", "Unknown"))
 
+comm_long <- df %>%
+  pivot_longer(
+    cols = starts_with("x"), 
+    names_to  = "metabolite",
+    values_to = "abundance"
+  )
+
+comm_long <- comm_long %>%
+  mutate(abundance = as.numeric(as.character(abundance)))
+
 stats_data <- comm_long %>%
+  select(-scleractinia) %>%                    
   left_join(df %>% select(sample, scleractinia), by = "sample") %>%
   filter(!is.na(scleractinia)) %>%
-  mutate(group = if_else(scleractinia == "1", "Scleractinia", "Other"))
+  mutate(group = if_else(as.character(scleractinia) == "1", "Scleractinia", "Other"))
 
 # compute L2FC and p-values per metabolite
 volcano_results <- stats_data %>%
@@ -349,19 +360,20 @@ volcano_results <- stats_data %>%
 plot_data_volcano <- volcano_results %>%
   inner_join(met_df %>% select(metabolite, refined_origin), by = "metabolite")
 
-sig_threshold <- -log10(0.05)
+m <- nrow(volcano_results)   
+sig_threshold <- -log10(0.05 / m)
 
 p_volcano <- ggplot(plot_data_volcano, aes(x = log2FC, y = neg_log_p_adj, color = refined_origin)) +
   # Vertical lines for 2-fold change
-  geom_vline(xintercept = c(-1, 1), linetype = "dashed", color = "grey70") +
+  geom_vline(xintercept = c(-2, 2), linetype = "dashed", color = "grey70") +
   geom_hline(yintercept = sig_threshold, linetype = "dashed", color = "grey70", linewidth = 0.8) +
   geom_point(alpha = 0.6, size = 2.5) +
-  xlim(-2,2) +
+  xlim(-20,20) +
   scale_color_manual(values = cols_origin) +
   labs(
     x = "log2 Fold Change",
-    y = "-log10(p-value)",
-    color = "Origin",
+    y = "-log10(adj. p-value)",
+    color = "Metabolite Origin",
   ) +
   theme_pubr() +
   theme(
@@ -369,6 +381,73 @@ p_volcano <- ggplot(plot_data_volcano, aes(x = log2FC, y = neg_log_p_adj, color 
     plot.title = element_text(face = "bold", hjust = 0.5)
   )
 print(p_volcano)
+## 110 rows outside
+
+################################################################################
+
+## color the points using this met_df's "display_class" and shape by origin
+met_df<- read.csv("/work/hs325/World_Corals/Cleaned data CSVs/metabolite_plot_df.csv")
+provided_hex <- c(
+  "#BEAED4", "#FDC086", "#FFFF99", "#386CB0", "#F0027F", "#BF5B17", "#1B9E77",
+  "#D95F02", "#7570B3", "#984EA3", "#66A61E", "#E6AB02", "#666666", "#A6CEE3", "#B2DF8A",
+  "#FB9A99", "#CBD5E8")
+origin_shapes <- c("Host" = 16, "Symbiont" = 3, "Both" = 17, "Unknown" = 8)
+
+plot_data_volcano <- volcano_results %>%
+  inner_join(
+    met_df %>% select(metabolite, display_class, refined_origin),
+    by = "metabolite"
+  ) %>%
+  # ensure factors/columns are clean
+  mutate(
+    display_class = as.character(display_class),
+    display_class = if_else(is.na(display_class), "Unknown_class", display_class),
+    # use the metadata column name you have for origin; we use refined_origin here
+    refined_origin = as.character(refined_origin)
+  )
+
+classes <- sort(unique(plot_data_volcano$display_class))
+class_colors <- setNames(provided_hex[seq_along(classes)], classes)
+
+sig_threshold <- -log10(0.05)
+
+# # optional: flag Bonferroni-significant metabolites for labeling / emphasis
+# plot_data_volcano <- plot_data_volcano %>%
+#   mutate(significant_bonf = if_else(is.finite(neg_log_p_adj) & (p_adj < 0.05), TRUE, FALSE))
+
+p_volcano <- ggplot(plot_data_volcano, aes(x = log2FC, y = neg_log_p_adj)) +
+  geom_vline(xintercept = c(-1, 1), linetype = "dashed", color = "grey70") +
+  geom_hline(yintercept = sig_threshold, linetype = "dashed", color = "grey70", linewidth = 0.8) +
+  geom_point(aes(color = display_class, shape = refined_origin), alpha = 0.7, size = 2.5) +
+  scale_color_manual(name = "Compound Superclass", values = class_colors, breaks = classes) +
+  scale_shape_manual(name = "Metabolite Origin", values = origin_shapes) +
+  labs(
+    x = "log2 Fold Change",
+    y = "-log10(adj. p-value)") +
+  theme_pubr() +
+  theme(
+    legend.position = "right",
+    plot.title = element_text(face = "bold", hjust = 0.5)
+  ) 
+p_volcano <- p_volcano +
+  guides(
+    color = guide_legend(ncol = 2),
+    shape = guide_legend(ncol = 1)
+  )
+ggsave("/work/hs325/World_Corals/misc/figs/volcano.jpg", p_volcano, width=14,height=6,dpi=300)
+
+# # add labels for Bonferroni-significant points (adjust label column as desired)
+# p_volcano <- p_volcano +
+#   geom_text_repel(
+#     data = filter(plot_data_volcano, significant_bonf),
+#     aes(label = metabolite),
+#     size = 3,
+#     max.overlaps = 20,
+#     segment.size = 0.2
+#   )
+# 
+# print(p_volcano)
+
 
 ################################################################################
 
