@@ -357,6 +357,9 @@ volcano_results <- stats_data %>%
     neg_log_p_adj = -log10(p_adj)
   )
 
+########################################
+# just refined origin color
+
 plot_data_volcano <- volcano_results %>%
   inner_join(met_df %>% select(metabolite, refined_origin), by = "metabolite")
 
@@ -387,10 +390,35 @@ print(p_volcano)
 
 ## color the points using this met_df's "display_class" and shape by origin
 met_df<- read.csv("/work/hs325/World_Corals/Cleaned data CSVs/metabolite_plot_df.csv")
+
+target_classes <- trimws(c(
+  "Glycerophospholipids", 
+  "Sphingolipids", 
+  "Oligopeptides", 
+  "Glycerolipids", 
+  "Triacylglycerols", 
+  "Steroids", 
+  "Carotenoids (C40)", 
+  "Fatty esters", 
+  "Diacylglyceryl-carboxyhydroxymethylcholines", 
+  "Triterpenoids", 
+  "Fatty amides", 
+  "Phosphatidylglycerocholines", 
+  "Monogalactosyldiacylglycerol", 
+  "Phosphatidylglyceroethanolamines", 
+  "Monoalkyldiacylglycerols", 
+  "Meroterpenoids",
+  "Unknown"
+))
+
 provided_hex <- c(
   "#BEAED4", "#FDC086", "#FFFF99", "#386CB0", "#F0027F", "#BF5B17", "#1B9E77",
   "#D95F02", "#7570B3", "#984EA3", "#66A61E", "#E6AB02", "#666666", "#A6CEE3", "#B2DF8A",
   "#FB9A99", "#CBD5E8")
+# "#E5D8BD" "#FDDAEC"
+spec_colors <- setNames(provided_hex, target_classes)
+
+final_palette <- c(spec_colors, "Other" = "gray60")
 origin_shapes <- c("Host" = 16, "Symbiont" = 3, "Both" = 17, "Unknown" = 8)
 
 plot_data_volcano <- volcano_results %>%
@@ -398,41 +426,57 @@ plot_data_volcano <- volcano_results %>%
     met_df %>% select(metabolite, display_class, refined_origin),
     by = "metabolite"
   ) %>%
-  # ensure factors/columns are clean
   mutate(
+    # coerce to character
     display_class = as.character(display_class),
-    display_class = if_else(is.na(display_class), "Unknown_class", display_class),
-    # use the metadata column name you have for origin; we use refined_origin here
-    refined_origin = as.character(refined_origin)
+    refined_origin = as.character(refined_origin),
+    display_class = if_else(
+      is.na(display_class) | !(display_class %in% names(final_palette)),
+      "Other",
+      display_class
+    ),
+    refined_origin = if_else(is.na(refined_origin), "Unknown", refined_origin)
   )
 
 classes <- sort(unique(plot_data_volcano$display_class))
-class_colors <- setNames(provided_hex[seq_along(classes)], classes)
+class_colors <- final_palette[classes]
+
+plot_data_volcano <- plot_data_volcano %>%
+  mutate(
+    p_adj_safe = if_else(!is.na(p_adj) & p_adj == 0, .Machine$double.xmin, p_adj),
+    neg_log_p_adj = -log10(p_adj_safe)
+  )
 
 sig_threshold <- -log10(0.05)
 
-# # optional: flag Bonferroni-significant metabolites for labeling / emphasis
-# plot_data_volcano <- plot_data_volcano %>%
-#   mutate(significant_bonf = if_else(is.finite(neg_log_p_adj) & (p_adj < 0.05), TRUE, FALSE))
-
+# build plot
 p_volcano <- ggplot(plot_data_volcano, aes(x = log2FC, y = neg_log_p_adj)) +
   geom_vline(xintercept = c(-1, 1), linetype = "dashed", color = "grey70") +
   geom_hline(yintercept = sig_threshold, linetype = "dashed", color = "grey70", linewidth = 0.8) +
-  geom_point(aes(color = display_class, shape = refined_origin), alpha = 0.7, size = 2.5) +
-  scale_color_manual(name = "Compound Superclass", values = class_colors, breaks = classes) +
-  scale_shape_manual(name = "Metabolite Origin", values = origin_shapes) +
+  geom_point(aes(color = display_class, shape = refined_origin), alpha = 0.75, size = 2.5) +
+  scale_color_manual(
+    name = "Compound Superclass",
+    values = class_colors,
+    breaks = classes,
+    na.value = "gray60"
+  ) +
+  scale_shape_manual(
+    name = "Metabolite Origin",
+    values = origin_shapes,
+    na.value = 16
+  ) +
+  guides(
+    color = guide_legend(ncol = 2, byrow = TRUE),
+    shape = guide_legend(ncol = 1)
+  ) +
   labs(
     x = "log2 Fold Change",
-    y = "-log10(adj. p-value)") +
+    y = "-log10(adj. p-value)",
+  ) +
   theme_pubr() +
   theme(
     legend.position = "right",
     plot.title = element_text(face = "bold", hjust = 0.5)
-  ) 
-p_volcano <- p_volcano +
-  guides(
-    color = guide_legend(ncol = 2),
-    shape = guide_legend(ncol = 1)
   )
 ggsave("/work/hs325/World_Corals/misc/figs/volcano.jpg", p_volcano, width=14,height=6,dpi=300)
 
