@@ -493,7 +493,7 @@ p_volcano <- ggplot(plot_data_volcano, aes(x = log2FC, y = neg_log_p_adj)) +
     legend.position = "right",
     plot.title = element_text(face = "bold", hjust = 0.5)
   )
-ggsave("/work/hs325/World_Corals/misc/figs/volcano.jpg", p_volcano, width=10,height=6,dpi=300)
+ggsave("/work/hs325/World_Corals/misc/figs/volcano.jpg", p_volcano, width=14,height=6,dpi=300)
 
 # # add labels for Bonferroni-significant points (adjust label column as desired)
 # p_volcano <- p_volcano +

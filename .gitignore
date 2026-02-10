@@ -9,4 +9,5 @@
 /misc/figs/
 *.sh
 /machine_learning/logs/
+/machine_learning/misc/
 /machine_learning/models/

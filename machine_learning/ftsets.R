@@ -8,21 +8,21 @@ met_df <- read.csv("/work/hs325/World_Corals/Cleaned data CSVs/metabolite_clean.
 
 ###########################################################
 ## 1: make dfs of each column in reduced_feature_sets_multicollinear
-df_reduced <- read.csv("/work/hs325/World_Corals/machine_learning/ftsets/reduced_feature_sets_multicollinear.csv")
-
-mets_coral_gb <- df_reduced$coralonly_gb
-mets_coral_rf <- df_reduced$coralonly_rf
-mets_all_rfgb  <- df_reduced$all_rfgb
-
-df_met_coral_gb <- met_df %>% 
-  filter(metabolite %in% mets_coral_gb)
-
-df_met_coral_rf <- met_df %>% 
-  filter(metabolite %in% mets_coral_rf)
-
-df_met_all_rfgb <- met_df %>% 
-  filter(metabolite %in% mets_all_rfgb)
-
+# df_reduced <- read.csv("/work/hs325/World_Corals/machine_learning/ftsets/reduced_feature_sets_multicollinear.csv")
+# 
+# mets_coral_gb <- df_reduced$coralonly_gb
+# mets_coral_rf <- df_reduced$coralonly_rf
+# mets_all_rfgb  <- df_reduced$all_rfgb
+# 
+# df_met_coral_gb <- met_df %>% 
+#   filter(metabolite %in% mets_coral_gb)
+# 
+# df_met_coral_rf <- met_df %>% 
+#   filter(metabolite %in% mets_coral_rf)
+# 
+# df_met_all_rfgb <- met_df %>% 
+#   filter(metabolite %in% mets_all_rfgb)
+# 
 # write.csv(df_met_all_rfgb, "/work/hs325/World_Corals/machine_learning/ftsets/met_all_rfgb_reduced.csv")
 
 ###########################################################
@@ -31,22 +31,59 @@ df_met_all_rfgb <- met_df %>%
 cols_origin <- c("Host" = "#97B9CBFF", "Symbiont" = "#9057C6FF", 
                  "Both" = "#FFE1BDFF", "Unknown" = "#8DC657FF")
 
+target_classes <- trimws(c(
+  "Glycerophospholipids", 
+  "Sphingolipids", 
+  "Oligopeptides", 
+  "Glycerolipids", 
+  "Triacylglycerols", 
+  "Steroids", 
+  "Carotenoids (C40)", 
+  "Fatty esters", 
+  "Diacylglyceryl-carboxyhydroxymethylcholines", 
+  "Triterpenoids", 
+  "Fatty amides", 
+  "Phosphatidylglycerocholines", 
+  "Monogalactosyldiacylglycerol", 
+  "Phosphatidylglyceroethanolamines", 
+  "Monoalkyldiacylglycerols", 
+  "Meroterpenoids",
+  "Unknown"
+))
+
 provided_hex <- c(
   "#BEAED4", "#FDC086", "#FFFF99", "#386CB0", "#F0027F", "#BF5B17", "#1B9E77",
   "#D95F02", "#7570B3", "#984EA3", "#66A61E", "#E6AB02", "#666666", "#A6CEE3", "#B2DF8A",
   "#FB9A99", "#CBD5E8")
+# "#E5D8BD" "#FDDAEC"
+spec_colors <- setNames(provided_hex, target_classes)
+
+final_palette <- c(spec_colors, "Other" = "gray60")
 
 
 met_plot_df <- read.csv("/work/hs325/World_Corals/Cleaned data CSVs/metabolite_plot_df.csv")
-perm_df <- read.csv("/work/hs325/World_Corals/machine_learning/ftsets/perm_importance_results.csv")
+# perm_df <- read.csv("/work/hs325/World_Corals/machine_learning/ftsets/perm_importance_results.csv")
+perm_df <- read.csv("/work/hs325/World_Corals/machine_learning/perm_importance_results_kbest.csv")
+# 
+# perm_df_clean <- perm_df %>%
+#   filter(importance_mean > 0) %>%
+#   left_join(met_plot_df %>% select(metabolite, refined_origin), by = "metabolite") %>%
+#   mutate(
+#     feature_set = recode(feature_set, 
+#                          "coral_only_pruned_rf" = "Host RF",
+#                          "coral_only_pruned_gb" = "Host XGB",
+#                          "all_pruned_rfgb"      = "All RF/XGB"),
+#     # Reorder metabolite for the lollipops
+#     metabolite = reorder(metabolite, importance_mean)
+#   )
+
 perm_df_clean <- perm_df %>%
   filter(importance_mean > 0) %>%
   left_join(met_plot_df %>% select(metabolite, refined_origin), by = "metabolite") %>%
   mutate(
     feature_set = recode(feature_set, 
-                         "coral_only_pruned_rf" = "Host RF",
-                         "coral_only_pruned_gb" = "Host XGB",
-                         "all_pruned_rfgb"      = "All RF/XGB"),
+                         "all_500" = "Host Selected",
+                         "coralonly_500" = "Coral-Only Selected"),
     # Reorder metabolite for the lollipops
     metabolite = reorder(metabolite, importance_mean)
   )
@@ -129,4 +166,4 @@ final_plot <- plot_grid(
   label_size=24
 )
 ggsave("/work/hs325/World_Corals/misc/figs/perm_importance.jpg", 
-       final_plot, width = 12, height = 14, dpi = 300)
+       final_plot, width = 16, height = 14, dpi = 300)
