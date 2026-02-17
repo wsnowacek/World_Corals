@@ -336,7 +336,7 @@ origin_counts <- met_df %>%
   count(refined_origin, .drop = FALSE)
 
 # compute the accumulation order using 'random' method
-acc_total <- specaccum(comm_matrix, method = "random", permutations = 100)
+acc_total <- specaccum(comm_matrix, method = "random", permutations = 30)
 
 # extract the order of metabolite appearance
 # calculate richness per origin at each step of the accumulated samples.

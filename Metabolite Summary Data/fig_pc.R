@@ -42,7 +42,6 @@ df <- df %>%
   )
 # color palettes
 cols_location <-c("#002594FF", "#E0B2CDFF", "#54C4E3FF", "#F3AA4FFF")
-# cols_location  <- c("#449DB3FF", "#A3BAC2FF", "#60BFAEFF", "#8C6E5DFF")
 cols_symbiont  <- c("#D84D16FF", "#FFF800FF", "#8FDA04FF")
 cols_phylum <- c("#24492EFF", "#015B58FF", "#2C6184FF", "#59629BFF", "#89689DFF", "#BA7999FF", "#E69B99FF")
 cols_sclero    <- c("1" = "#DE7862FF", "0" = "#D8AF39FF")
@@ -204,6 +203,15 @@ locS_permanova_result <- adonis2(
   data = meta_symb, 
   permutations = 999
 )
+print(locS_permanova_result)          
+# adonis2(formula = bray_curtis_locS ~ location/symbiont.potential, data = meta_symb, permutations = 999)
+# Df SumOfSqs      R2      F Pr(>F)    
+# Model      5   46.735 0.33653 53.259  0.001 ***
+#   Residual 525   92.139 0.66347                  
+# Total    530  138.874 1.00000                  
+# ---
+#   Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
 
 # global model stats
 perm_p_val <- locS_permanova_result$`Pr(>F)`[1]
@@ -380,6 +388,7 @@ ggsave("/work/hs325/World_Corals/misc/figs/pcoa_supp.jpg",
        height = 12, 
        dpi = 300)
 ################################################################################
+
 ## Bleaching status alone PERMANOVA
 
 desired_levels <- c("Bleached", "Non-Bleached", "Not Applicable")
@@ -412,6 +421,11 @@ pcoa_points <- as.data.frame(pcoa_result$points)
 colnames(pcoa_points) <- c("PCoA1", "PCoA2")
 pcoa_points <- bind_cols(pcoa_points, meta_bleach)
 
+r2_val <- round(bleaching_permanova_result$R2[1], 3)
+p_val  <- bleaching_permanova_result$`Pr(>F)`[1]
+p_lab <- if(p_val <= 0.001) "p < 0.001" else paste0("p = ", round(p_val, 3))
+stats_label <- paste0("PERMANOVA: R² = ", r2_val, ", ", p_lab)
+
 # compute percent variance explained using only positive eigenvalues
 pos_eig <- pcoa_result$eig[pcoa_result$eig > 0]
 var_explained <- round(100 * pcoa_result$eig[1:2] / sum(pos_eig), 1)
@@ -424,14 +438,22 @@ p4 <- ggplot(pcoa_points, aes(x = PCoA1, y = PCoA2, color = bleaching, fill = bl
     level = 0.95,
     type = "t",
     colour = NA
+  ) + annotate(
+    "text", 
+    x = -Inf, y = -Inf, 
+    label = stats_label, 
+    hjust = -0.1, # Shift slightly right from the edge
+    vjust = -1.2, # Shift slightly up from the edge
+    size = 4, 
+    fontface = "italic"
   ) +
   scale_color_manual(values = cols_bleaching) +
   scale_fill_manual(values = cols_bleaching) +
   labs(
     x = paste0("PCoA1: (", var_explained[1], "%)"),
     y = paste0("PCoA2: (", var_explained[2], "%)"),
-    color = "Bleaching status",
-    fill = "Bleaching status"
+    color = "Bleaching Status",
+    fill = "Bleaching Status"
   ) +
   theme_cowplot(font_size = 14) +
   theme(legend.position = "right")
@@ -460,6 +482,13 @@ symbiont_permanova_result <- adonis2(
   permutations = 999
 )
 print(symbiont_permanova_result)
+# adonis2(formula = bray_curtis_sym ~ symbiont.potential, data = meta_sym, permutations = 999)
+# Df SumOfSqs     R2      F Pr(>F)    
+# Model      2   32.374 0.2278 78.911  0.001 ***
+#   Residual 535  109.746 0.7722                  
+# Total    537  142.121 1.0000                  
+# ---
+#   Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
 pcoa_result <- cmdscale(bray_curtis_sym, eig = TRUE, k = 2)
 pcoa_points <- as.data.frame(pcoa_result$points)
@@ -496,8 +525,8 @@ p5 <- ggplot(pcoa_points, aes(x = PCoA1, y = PCoA2, color = symbiont.potential, 
   labs(
     x = paste0("PCoA1: (", var_explained[1], "%)"),
     y = paste0("PCoA2: (", var_explained[2], "%)"),
-    color = "Symbiont potential",
-    fill = "Symbiont potential"
+    color = "Symbiont Potential",
+    fill = "Symbiont Potential"
   ) +
   theme_cowplot(font_size = 14) +
   theme(legend.position = "right")
@@ -535,6 +564,14 @@ pcoa_points <- as.data.frame(pcoa_result$points)
 colnames(pcoa_points) <- c("PCoA1", "PCoA2")
 pcoa_points <- bind_cols(pcoa_points, meta_loc)
 
+
+r2_val <- round(location_permanova_result$R2[1], 3)
+p_val  <- location_permanova_result$`Pr(>F)`[1]
+
+# Format the p-value label
+p_lab <- if(p_val <= 0.001) "p < 0.001" else paste0("p = ", round(p_val, 3))
+stats_label <- paste0("PERMANOVA: R² = ", r2_val, ", ", p_lab)
+
 # percent variance explained (positive eigenvalues only)
 pos_eig <- pcoa_result$eig[pcoa_result$eig > 0]
 var_explained <- round(100 * pcoa_result$eig[1:2] / sum(pos_eig), 1)
@@ -547,6 +584,15 @@ p6 <- ggplot(pcoa_points, aes(x = PCoA1, y = PCoA2, color = location, fill = loc
     level = 0.95,
     type = "t",
     colour = NA
+  ) +
+  annotate(
+    "text", 
+    x = -Inf, y = -Inf, 
+    label = stats_label, 
+    hjust = -0.1, # Shift slightly right from the edge
+    vjust = -1.2, # Shift slightly up from the edge
+    size = 4, 
+    fontface = "italic"
   ) +
   scale_color_manual(values = cols_location) +
   scale_fill_manual(values = cols_location) +
@@ -562,6 +608,20 @@ p6 <- ggplot(pcoa_points, aes(x = PCoA1, y = PCoA2, color = location, fill = loc
 # save plot
 ggsave("/work/hs325/World_Corals/misc/figs/pcoa_location.jpg", p6, width = 8, height = 6, dpi = 300)
 
+################################################################################
+
+plot_grid(p4, p5, p6)
+pcoa_supp <- plot_grid(
+  p4, p5, p6, 
+  labels = c("A", "B", "C"), 
+  label_size = 16,
+  ncol = 2,
+  nrow = 2,
+  align = "hv",
+  axis = "tb" # aligns top and bottom axes
+)
+ggsave("/work/hs325/World_Corals/misc/figs/pcoa_supp_2.jpg", 
+       pcoa_supp, width = 12, height = 6, dpi = 300, bg = "white")
 
 ################################################################################
 ################################################################################
@@ -753,66 +813,11 @@ branch_palette <- c(
   "Chlorophyta"        = "#00CED1", # Dark Turquoise
   "Cnidaria"           = "#304530", # Gold 
   "Chordata"           = "#9370DB", # Medium Purple
-  "Porifera"           = "#ec93ed", # Hot Pink
+  "Porifera"           = "#ec93ed", # Hot Pink,
+  # "Rhodophyta"         = "#b89d4d", # Gold
   "Scleractinia_Color" = "#DE7862FF", # Kept your specific Scleractinia color
   "grey40"             = "grey40"   # Internal nodes
 )
-
-#################################### no n=
-# leaf_metadata <- df %>%
-#   filter(!is.na(host_family)) %>%
-#   group_by(host_family) %>%
-#   summarize(
-#     phylum = first(host_phylum),
-#     is_scler = first(host_order) == "Scleractinia"
-#   ) %>%
-#   ungroup()
-# 
-# dend_labels_phylum <- dend_data$labels %>%
-#   left_join(leaf_metadata, by = c("label" = "host_family")) %>%
-#   mutate(
-#     text_color_group = if_else(is_scler == TRUE, "Scleractinia_Color", phylum)
-#   )
-# 
-# p_dendro <- ggplot() +
-#   # Branches
-#   geom_segment(data = dend_segments, 
-#                aes(x = x, y = y, xend = xend, yend = yend, color = branch_color),
-#                linewidth = 0.8) +
-#   # Text labels
-#   geom_text(data = dend_labels_phylum, 
-#             aes(x = x, y = y, label = label, color = text_color_group),
-#             hjust = -0.1, 
-#             size = 3, 
-#             show.legend = FALSE) +
-#   coord_flip() +
-#   scale_y_reverse(
-#     expand = c(0.4, 0),
-#     breaks = seq(0, 0.75, 0.25)
-#   ) +
-#     scale_color_manual(
-#     values = branch_palette,
-#     breaks = c("Scleractinia_Color","Chlorophyta", "Chordata", "Cnidaria", "Ochrophyta","Porifera"),
-#     labels = c("Scleractinia","Chlorophyta", "Chordata", "Cnidaria", "Ochrophyta","Porifera")
-#   ) +
-#   
-#   theme_pubr() +
-#   labs(y = "Bray-Curtis Distance", x = "", color = "Classification") +
-#   theme(
-#     axis.text.y = element_blank(), 
-#     axis.ticks.y = element_blank(),
-#     axis.line.y = element_blank(),
-#     # Optional: Match the legend title style to your other plots
-#     legend.position = c(0.10, 0.5),   # Adjust these values to nudge the legend
-#     legend.background = element_blank(), # Makes legend background transparent
-#     legend.box.background = element_blank(),
-#     legend.title = element_text(face = "bold")
-#   ) +
-#   guides(color = guide_legend(
-#     override.aes = list(alpha = 1, size = 4, shape = 15)
-#   ))
-# 
-# print(p_dendro)
 
 #################################### with n=
 
@@ -1139,9 +1144,6 @@ plot_grid <- plot_grid(
   axis = "lr"
 )
 
-# 4. Final assembly with the legend at the bottom
 final_bleaching_fig <- plot_grid(plot_grid, shared_legend, ncol = 1, nrow = 2, rel_heights = c(1, 0.05))
-
-# Save the result
 ggsave("/work/hs325/World_Corals/misc/figs/pcoa_bleachbyloc.jpg", 
        final_bleaching_fig, width = 12, height = 11, dpi = 300)
