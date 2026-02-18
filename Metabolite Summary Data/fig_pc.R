@@ -173,7 +173,7 @@ p2 <- ggplot(pcoa_points2, aes(x = PCoA1, y = PCoA2, color = location)) +
     y = paste0("PCoA2: (", var_explained[2], "%)"),
     color = "Location",
     fill = "Location",
-    shape = "Status"
+    shape = "Bleaching Status"
   ) +
   annotate(
     "text",
@@ -206,7 +206,7 @@ locS_permanova_result <- adonis2(
 print(locS_permanova_result)          
 # adonis2(formula = bray_curtis_locS ~ location/symbiont.potential, data = meta_symb, permutations = 999)
 # Df SumOfSqs      R2      F Pr(>F)    
-# Model      5   46.735 0.33653 53.259  0.001 ***
+# Model      5   46.735  53.259  0.001 ***
 #   Residual 525   92.139 0.66347                  
 # Total    530  138.874 1.00000                  
 # ---

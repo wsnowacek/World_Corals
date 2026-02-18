@@ -443,11 +443,94 @@ ggsave("/work/hs325/World_Corals/misc/figs/fig3.jpg", final_plot, width=12,heigh
 
 ################################################################################
 
-## for metabolites TBA later - talk with Ty 
-# compound superclass (10? levels)
-# NPC classifier pathway 7 levels
-# coral compound family? 9 levels 
-# NPC superclass path plot
+## this code remakes the figure after running all code above
+## the revised version shows absolute # of samples on x axis rather than a percentage
 
+# Scler vs non scler
+plot_data_sclero <- data.frame(
+  samples = acc_sclero$sites, # Use raw site count
+  richness = acc_sclero$richness,
+  sd = acc_sclero$sd,
+  group = "1"
+)
+plot_data_other <- data.frame(
+  samples = acc_other$sites,
+  richness = acc_other$richness,
+  sd = acc_other$sd,
+  group = "0"
+)
+combined_acc <- bind_rows(plot_data_sclero, plot_data_other)
 
+p <- ggplot(combined_acc, aes(x = samples, y = richness, color = group, fill = group)) +
+  geom_ribbon(aes(ymin = richness - sd, ymax = richness + sd), alpha = 0.5, color = NA) +
+  geom_line(linewidth = 1.2) +
+  scale_color_manual(values = cols_sclero, labels = c("1" = label_sclero, "0" = label_other)) +
+  scale_fill_manual(values = cols_sclero, labels = c("1" = label_sclero, "0" = label_other)) +
+  labs(x = "Number of Samples", y = "Metabolite Richness", color = "Order", fill = "Order") +
+  theme_pubr() + theme(legend.position = c(0.98, 0.05), legend.justification = c(1, 0))
 
+# By location
+plot_data_locs <- lapply(names(loc_list), function(loc) {
+  comm_sub <- comm_matrix[rownames(comm_matrix) %in% loc_list[[loc]], ]
+  acc <- specaccum(comm_sub, method = "random", permutations = 30)
+  data.frame(samples = acc$sites, richness = acc$richness, sd = acc$sd, location = loc)
+})
+combined_acc_loc <- bind_rows(plot_data_locs)
+
+p2_new <- ggplot(combined_acc_loc, aes(x = samples, y = richness, color = location, fill = location)) +
+  geom_ribbon(aes(ymin = richness - sd, ymax = richness + sd), alpha = 0.4, color = NA) +
+  geom_line(aes(linetype = location), linewidth = 1.2) +
+  scale_color_manual(values = cols_location, labels = loc_labels) +
+  scale_fill_manual(values = cols_location, labels = loc_labels) +
+  scale_linetype_manual(values = c("Curaçao"="solid", "Hawaii"="dashed", "North Carolina"="twodash", "Sri Lanka"="dotted"), labels = loc_labels) +
+  labs(x = "Number of Samples", y = "Metabolite Richness") +
+  theme_pubr() + theme(legend.position = c(0.98, 0.05), legend.justification = c(1, 0), legend.key.width = unit(1.2, "cm"))
+
+# By bleaching
+plot_data_bleach <- lapply(names(bleach_list), function(status) {
+  comm_sub <- comm_matrix[rownames(comm_matrix) %in% bleach_list[[status]], ]
+  acc <- specaccum(comm_sub, method = "random", permutations = 30)
+  data.frame(samples = acc$sites, richness = acc$richness, sd = acc$sd, bleaching = status)
+})
+combined_acc_bleach <- bind_rows(plot_data_bleach)
+
+p3 <- ggplot(combined_acc_bleach, aes(x = samples, y = richness, color = bleaching, fill = bleaching)) +
+  geom_ribbon(aes(ymin = richness - sd, ymax = richness + sd), alpha = 0.5, color = NA) +
+  geom_line(linewidth = 1.2) +
+  scale_color_manual(values = cols_bleaching, labels = bleach_labels) +
+  scale_fill_manual(values = cols_bleaching, labels = bleach_labels) +
+  labs(x = "Number of Samples", y = "Metabolite Richness") +
+  theme_pubr() + theme(legend.position = c(0.98, 0.05), legend.justification = c(1, 0))
+
+# By symbiont potential 
+plot_data_sym <- lapply(names(sym_list), function(status) {
+  comm_sub <- comm_matrix[rownames(comm_matrix) %in% sym_list[[status]], ]
+  acc <- specaccum(comm_sub, method = "random", permutations = 30)
+  data.frame(samples = acc$sites, richness = acc$richness, sd = acc$sd, symbiont.potential = status)
+})
+combined_acc_sym <- bind_rows(plot_data_sym)
+
+p4 <- ggplot(combined_acc_sym, aes(x = samples, y = richness, color = symbiont.potential, fill = symbiont.potential)) +
+  geom_ribbon(aes(ymin = richness - sd, ymax = richness + sd), alpha = 0.5, color = NA) +
+  geom_line(linewidth = 1.2) +
+  scale_color_manual(values = cols_symbiont, labels = sym_labels) +
+  scale_fill_manual(values = cols_symbiont, labels = sym_labels) +
+  labs(x = "Number of Samples", y = "Metabolite Richness") +
+  theme_pubr() + theme(legend.position = c(0.98, 0.05), legend.justification = c(1, 0))
+
+# By metabolite origin
+# Note: plot_data_long already has 'samples' from your calc_stacked_acc function.
+# We just need to ensure we don't convert it to percent in the aes()
+p5 <- ggplot(plot_data_long, aes(x = samples, y = Richness, fill = Origin)) +
+  geom_area(alpha = 0.7, color = "black", linewidth = 0.3) +
+  scale_fill_manual(values = cols_origin, labels = origin_labels) +
+  scale_x_continuous(expand = c(0, 0)) +
+  scale_y_continuous(expand = c(0, 0)) +
+  labs(x = "Number of Samples", y = "Metabolite Richness", fill = "Metabolic Origin") +
+  theme_pubr() + theme(legend.position = "right")
+
+# plot grid
+top_row <- plot_grid(p5, p, labels = c("A", "B"), label_size = 20, ncol = 2, rel_widths = c(1, 0.8))
+bottom_row <- plot_grid(p2_new, p3, p4, labels = c("C", "D", "E"), label_size = 20, ncol = 3)
+final_plot <- plot_grid(top_row, bottom_row, ncol = 1, rel_heights = c(1, 1))
+ggsave("/work/hs325/World_Corals/misc/figs/fig3_absolute_samples.jpg", final_plot, width=12, height=10, dpi=600)

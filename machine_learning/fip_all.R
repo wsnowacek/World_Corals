@@ -45,7 +45,7 @@ process_importance_data <- function(df, importance_col) {
     mutate(metabolite = fct_reorder(metabolite, !!sym(importance_col), .desc = TRUE))
 }
 
-xgb_plot_df <- process_importance_data(merged_df_all[1:40,], "XGBoost_Importance")
+xgb_plot_df <- process_importance_data(merged_df_all[1:50,], "XGBoost_Importance")
 rf_plot_df  <- process_importance_data(merged_df_all[1:120,], "RandomForest_Importance")
 plot_df_all <- process_importance_data(merged_df_all, "XGBoost_Importance")
 
