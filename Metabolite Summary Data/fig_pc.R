@@ -113,9 +113,9 @@ p <- ggplot(pcoa_points, aes(x = PCoA1, y = PCoA2, color = scleractinia, fill = 
     color = "Order",
     fill = "Order"
   ) +
-  theme_cowplot(font_size = 14) +
+  theme_cowplot(font_size = 18) +
   theme(legend.position = "right")
-ggsave("/work/hs325/World_Corals/misc/figs/pcoa_scler.jpg", p, width = 8, height = 6, dpi=300)
+ggsave("/work/hs325/World_Corals/misc/figs/pcoa_scler.jpg", p, width = 8, height = 8, dpi=300)
 
 ################################################################################
 #Location + bleaching status PERMANOVA
@@ -872,7 +872,7 @@ p_dendro <- ggplot() +
   geom_text(data = dend_labels_phylum, 
             aes(x = x, y = y, label = label_with_n, color = text_color_group),
             hjust = -0.1, 
-            size = 3, 
+            size = 5, 
             show.legend = FALSE) +
   coord_flip() +
   scale_y_reverse(
@@ -893,13 +893,14 @@ p_dendro <- ggplot() +
     legend.position = c(0.10, 0.5),   
     legend.background = element_blank(), 
     legend.box.background = element_blank(),
-    legend.title = element_text(face = "bold")
+    legend.title = element_text(size = 20),
+    legend.text = element_text(size = 16),
   ) +
   guides(color = guide_legend(
     override.aes = list(alpha = 1, size = 4, shape = 15)
   ))
 print(p_dendro)
-
+ggsave("/work/hs325/World_Corals/misc/figs/dendro.jpg", p_dendro, width=10, height=8, dpi = 600)
 # current_order <- labels(dend)
 # print(current_order)
 # dend <- click_rotate(dend)
