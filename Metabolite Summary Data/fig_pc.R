@@ -674,6 +674,8 @@ p_abundance <- ggplot(plot_data_clean, aes(x = group, y = avg_abundance, fill = 
   theme_pubr(base_size = 13) +
   theme(
     legend.position = "none",
+    axis.text.x = element_text(size = 16),
+    axis.title.y = element_text(size = 16),
     axis.title.x = element_blank(),
     plot.title = element_text(hjust = 0.5, face = "bold")
   )
@@ -719,6 +721,8 @@ p_ubiquity <- ggplot(plot_data_clean, aes(x = group, y = avg_ubiquity, fill = gr
   theme_pubr(base_size = 13) +
   theme(
     legend.position = "none",
+    axis.text.x = element_text(size = 16),
+    axis.title.y = element_text(size = 16),
     axis.title.x = element_blank(),
     plot.title = element_text(hjust = 0.5, face = "bold")
   )
@@ -750,6 +754,8 @@ p_richness <- ggplot(plot_data_clean, aes(x = group, y = richness, fill = group,
   theme(
     legend.position = "none",
     axis.title.x = element_blank(),
+    axis.text.x = element_text(size = 16),
+    axis.title.y = element_text(size = 16),
     plot.title = element_text(hjust = 0.5, face = "bold")
   )
 print(p_richness)
@@ -781,6 +787,8 @@ p_entropy <- ggplot(plot_data_clean, aes(x = group, y = shannon, fill = group, c
   theme(
     legend.position = "none",
     axis.title.x = element_blank(),
+    axis.text.x = element_text(size = 16),
+    axis.title.y = element_text(size = 16),
     plot.title = element_text(hjust = 0.5, face = "bold")
   )
 print(p_entropy)
@@ -936,18 +944,17 @@ row1 <- plot_grid(
   label_size = 24
 )
 
-p_abundance_clean <- p_abundance + clean_theme
-p_ubiquity_clean  <- p_ubiquity + clean_theme
-p_entropy_clean  <- p_entropy + clean_theme
-p_richness_clean  <- p_richness + clean_theme
-
+p_abundance_clean <- p_abundance # + clean_theme()
+p_ubiquity_clean  <- p_ubiquity # + clean_theme()
+p_entropy_clean  <- p_entropy # + clean_theme()
+p_richness_clean  <- p_richness # + clean_theme()
 
 row2 <- plot_grid(
   p_richness_clean,p_entropy_clean,p_ubiquity_clean,p_abundance_clean,
   nrow = 1,
-  rel_widths = c(1,1,1,1), # Give Dendro more space
+  rel_widths = c(1,1,1,1),
   align = 'h', axis = 'tb',
-  labels = c("C", "D", "E", "F"),
+  # labels = c("C", "D", "E", "F"),
   label_size = 24
 )
 
@@ -957,7 +964,7 @@ final_plot <- plot_grid(
   ncol = 1, 
   rel_heights = c(1, 1) 
 )
-ggsave("/work/hs325/World_Corals/misc/figs/fig2_ppt.jpg", final_plot, width = 18, height = 12, dpi = 300)
+ggsave("/work/hs325/World_Corals/misc/figs/fig2_ppt.jpg", row2, width = 12, height = 6, dpi = 300)
 
 
 ################################################################################

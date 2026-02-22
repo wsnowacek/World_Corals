@@ -13,6 +13,7 @@ library(RColorBrewer)
 library(ggpubr)
 library(forcats)
 library(ggvenn)
+library(ggforce)
 
 setwd("/work/hs325/World_Corals/Metabolite Summary Data")
 df<- read.csv("qc_data.csv")
@@ -102,3 +103,61 @@ venn_grid <- plot_grid(p_a, p_b, p_c, ncol = 3, labels = c("A", "B", "C"), label
 print(venn_grid)
 ggsave("/work/hs325/World_Corals/misc/figs/venn.jpg", 
        venn_grid, width = 15, height = 5, dpi = 300)
+
+################################################################################
+
+# flowers
+draw_flower <- function(data, group_var) {
+  # Determine presence/absence per group
+  group_summary <- data %>%
+    pivot_longer(cols = starts_with("x"), names_to = "metabolite", values_to = "val") %>%
+    group_by(!!sym(group_var), metabolite) %>%
+    summarise(present = any(val > 0, na.rm = TRUE), .groups = "drop")
+  
+  # core
+  total_groups <- length(unique(data[[group_var]]))
+  core_mets <- group_summary %>%
+    group_by(metabolite) %>%
+    summarise(n_groups = sum(present)) %>%
+    filter(n_groups == total_groups) %>%
+    pull(metabolite)
+  
+  core_count <- length(core_mets)
+  
+  petal_data <- group_summary %>%
+    filter(present == TRUE) %>%
+    group_by(!!sym(group_var)) %>%
+    tally() %>%
+    mutate(label = paste0(!!sym(group_var), "\n(n=", n, ")"))
+  
+  n_petals <- nrow(petal_data)
+  angle <- seq(0, 2 * pi, length.out = n_petals + 1)[1:n_petals]
+  
+  petal_data$x <- sin(angle) * 2
+  petal_data$y <- cos(angle) * 2
+  
+  ggplot(petal_data) +
+    # Draw Petals
+    geom_ellipse(aes(x0 = x, y0 = y, a = 0.8, b = 1.5, angle = -angle), 
+                 fill = "lightblue", alpha = 0.3, color = "steelblue") +
+    # Center Circle
+    annotate("point", x = 0, y = 0, size = 30, color = "gold", fill = "white", shape = 21, stroke = 2) +
+    annotate("text", x = 0, y = 0, label = paste0(core_count), 
+             fontface = "bold", size = 5) +
+###group labels shift
+    geom_text(aes(x = x * 2.5, y = y * 2.5, label = label), 
+              size = 3.5, fontface = "bold") +
+    theme_void() +
+    coord_fixed(xlim = c(-6, 6), ylim = c(-6, 6)) 
+}
+
+p_flower_family <- draw_flower(df_scler, "host_family")
+p_flower_phylum <- draw_flower(df %>% filter(!is.na(host_phylum)), "host_phylum") 
+p_flower_loc    <- draw_flower(df_scler, "location")
+
+flower_grid <- plot_grid(p_flower_family, p_flower_phylum, p_flower_loc,
+                         ncol = 3, labels = c("A", "B", "C"), 
+                         rel_widths = c(1, 0.6, 0.6), label_size = 20)
+
+ggsave("/work/hs325/World_Corals/misc/figs/flower_plots_clean.jpg", 
+       flower_grid, width = 16, height = 8, dpi = 300)

@@ -500,54 +500,121 @@ p_volcano2 <- ggplot(plot_data_volcano, aes(x = log2FC, y = neg_log_p_adj)) +
   theme_pubr() +
   theme(
     legend.position = "none",
+    strip.text.x = element_text(size = 14),
+    axis.title = element_text(size = 20),
     plot.title = element_text(face = "bold", hjust = 0.5)
   )
 ggsave("/work/hs325/World_Corals/misc/figs/volcano.jpg", p_volcano2, width=14,height=10,dpi=300)
 
+################################################################################
+## subvolcanos 
+
+
+# 1. Glycerolipids Plot
+p_glycerolipids <- plot_data_volcano %>%
+  filter(display_class == "Glycerolipids") %>%
+  ggplot(aes(x = log2FC, y = neg_log_p_adj)) +
+  geom_vline(xintercept = c(-2, 2), linetype = "dashed", color = "grey70") +
+  geom_hline(yintercept = sig_threshold, linetype = "dashed", color = "grey70") +
+  geom_point(aes(color = display_class), size = 3, alpha = 0.8) +
+  # Label specific metabolite
+  geom_text_repel(
+    data = . %>% filter(metabolite == "x23838_655_56593_11_538"),
+    aes(label = metabolite),
+    box.padding = 1, point.padding = 0.5,
+    size = 4, fontface = "bold", color = "black",
+    segment.color = "grey30"
+  ) +
+  scale_color_manual(values = class_colors) +
+  labs(title = "Glycerolipids", x = "log2 Fold Change", y = "-log10(adj. p-value)") +
+  theme_pubr() +
+  theme(legend.position = "none", plot.title = element_text(size = 18, face = "bold"))
+
+p_triacylglycerols <- plot_data_volcano %>%
+  filter(display_class == "Triacylglycerols") %>%
+  ggplot(aes(x = log2FC, y = neg_log_p_adj)) +
+  geom_vline(xintercept = c(-2, 2), linetype = "dashed", color = "grey70") +
+  geom_hline(yintercept = sig_threshold, linetype = "dashed", color = "grey70") +
+  geom_point(aes(color = display_class), size = 3, alpha = 0.8) +
+  # Label specific metabolite
+  geom_text_repel(
+    data = . %>% filter(metabolite == "x39055_948_80202_15_826"),
+    aes(label = metabolite),
+    box.padding = 1, point.padding = 0.5,
+    size = 4, fontface = "bold", color = "black",
+    segment.color = "grey30"
+  ) +
+  scale_color_manual(values = class_colors) +
+  labs(title = "Triacylglycerols", x = "log2 Fold Change", y = "-log10(adj. p-value)") +
+  theme_pubr() +
+  theme(legend.position = "none", plot.title = element_text(size = 18, face = "bold"))
+
+p_sphingolipids <- plot_data_volcano %>%
+  filter(display_class == "Sphingolipids") %>%
+  ggplot(aes(x = log2FC, y = neg_log_p_adj)) +
+  geom_vline(xintercept = c(-2, 2), linetype = "dashed", color = "grey70") +
+  geom_hline(yintercept = sig_threshold, linetype = "dashed", color = "grey70") +
+  geom_point(aes(color = display_class), size = 3, alpha = 0.8) +
+  # Label specific metabolite
+  geom_text_repel(
+    data = . %>% filter(metabolite == "x15256_518_49365_7_407"),
+    aes(label = metabolite),
+    box.padding = 1, point.padding = 0.5,
+    size = 4, fontface = "bold", color = "black",
+    segment.color = "grey30"
+  ) +
+  scale_color_manual(values = class_colors) +
+  labs(title = "Sphingolipids", x = "log2 Fold Change", y = "-log10(adj. p-value)") +
+  theme_pubr() +
+  theme(legend.position = "none", plot.title = element_text(size = 18, face = "bold"))
+
+subcano <- plot_grid(p_glycerolipids, p_triacylglycerols, p_sphingolipids, ncol = 3)
+ggsave("/work/hs325/World_Corals/misc/figs/volcano_glycerolipids.jpg", subcano, width=14, height=7, dpi=300)
+# ggsave("/work/hs325/World_Corals/misc/figs/volcano_triacylglycerols.jpg", p_triacylglycerols, width=8, height=6, dpi=300)
 
 ################################################################################
-
-top_row <- plot_grid(
-  p_volcano, p_ridge_full, 
-  labels = c("A", "B"), 
-  label_size = 20,
-  label_x=0,
-  label_y=1,
-  hjust = 0,   
-  vjust = 1.5,
-  ncol = 2,
-  rel_widths = c(1,1)
-)
-p_ridge_superclass_noleg <- p_ridge_superclass + theme(legend.position = "none")
-bottom_row <- plot_grid(
-  p_ridge_npc, p_ridge_superclass_noleg, 
-  labels = c("C", "D"), 
-  label_size = 20,
-  label_x=0,
-  label_y=1,
-  hjust = 0,   
-  vjust = 1.5,
-  ncol = 2,
-  rel_widths = c(1,1)
-)
-
-p_for_legend <- p_ridge_superclass + 
-  theme(legend.position = "bottom", 
-        legend.justification = "center",
-        legend.direction = "horizontal") +
-  labs(fill = "Order:", color = "Order:")
-
-# 2. Extract the legend
-shared_legend <- get_legend(p_for_legend)
-legend_row <- plot_grid(shared_legend)  
-final_plot <- plot_grid(
-  top_row, 
-  bottom_row, 
-  legend_row,
-  ncol = 1, 
-  rel_heights = c(1, 1, 0.1) 
-)
-ggsave("/work/hs325/World_Corals/misc/figs/fig4.jpg", final_plot, width=15,height=12,dpi=300)
+# 
+# top_row <- plot_grid(
+#   p_volcano, p_ridge_full, 
+#   labels = c("A", "B"), 
+#   label_size = 20,
+#   label_x=0,
+#   label_y=1,
+#   hjust = 0,   
+#   vjust = 1.5,
+#   ncol = 2,
+#   rel_widths = c(1,1)
+# )
+# p_ridge_superclass_noleg <- p_ridge_superclass + theme(legend.position = "none")
+# bottom_row <- plot_grid(
+#   p_ridge_npc, p_ridge_superclass_noleg, 
+#   labels = c("C", "D"), 
+#   label_size = 20,
+#   label_x=0,
+#   label_y=1,
+#   hjust = 0,   
+#   vjust = 1.5,
+#   ncol = 2,
+#   rel_widths = c(1,1)
+# )
+# 
+# p_for_legend <- p_ridge_superclass + 
+#   theme(legend.position = "bottom", 
+#         legend.justification = "center",
+#         legend.direction = "horizontal") +
+#   labs(fill = "Order:", color = "Order:")
+# 
+# # 2. Extract the legend
+# shared_legend <- get_legend(p_for_legend)
+# legend_row <- plot_grid(shared_legend)  
+# final_plot <- plot_grid(
+#   top_row, 
+#   bottom_row, 
+#   legend_row,
+#   ncol = 1, 
+#   rel_heights = c(1, 1, 0.1) 
+# )
+# ggsave("/work/hs325/World_Corals/misc/figs/fig4.jpg", final_plot, width=15,height=12,dpi=300)
 
 ################################################################################
 
