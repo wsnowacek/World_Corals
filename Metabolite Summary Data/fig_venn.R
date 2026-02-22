@@ -17,7 +17,7 @@ library(ggforce)
 
 setwd("/work/hs325/World_Corals/Metabolite Summary Data")
 df<- read.csv("qc_data.csv")
-met_df<- read.csv("/work/hs325/World_Corals/Cleaned data CSVs/metabolite_clean.csv")
+met_df<- read.csv("/work/hs325/World_Corals/Cleaned data CSVs/metabolite_plot_df.csv")
 
 cols_bleaching <- c(
   "Bleached" = "#FF847CFF", 
@@ -161,3 +161,217 @@ flower_grid <- plot_grid(p_flower_family, p_flower_phylum, p_flower_loc,
 
 ggsave("/work/hs325/World_Corals/misc/figs/flower_plots_clean.jpg", 
        flower_grid, width = 16, height = 8, dpi = 300)
+
+################################################################################
+
+group_summary_core <- df_scler %>%
+  pivot_longer(cols = starts_with("x"), names_to = "metabolite", values_to = "val") %>%
+  group_by(host_family, metabolite) %>%
+  summarise(present = any(val > 0, na.rm = TRUE), .groups = "drop")
+
+total_families <- length(unique(df_scler$host_family))
+
+core_metabolite_ids <- group_summary_core %>%
+  group_by(metabolite) %>%
+  summarise(n_families = sum(present)) %>%
+  filter(n_families == total_families) %>%
+  pull(metabolite)
+
+core_df <- met_df %>%
+  filter(metabolite %in% core_metabolite_ids)
+
+#######################
+# venn by host_origin TBA
+
+core_filtered <- core_df %>% 
+  filter(refined_origin != "Unknown")
+
+list_core <- get_venn_list(core_filtered)
+
+venn_fill <- c(cols_origin["Host"], cols_origin["Symbiont"])
+
+# 4. Create the plot
+p_core_venn <- ggvenn(
+  list_core, 
+  fill_color = venn_fill, 
+  stroke_size = 0.5, 
+  set_name_size = 5,
+  text_size = 4,
+  show_percentage = TRUE # Optional: helpful to see proportion of the core
+) +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 16))
+
+print(p_core_venn)
+
+# ggsave("/work/hs325/World_Corals/misc/figs/venn_core_origin.jpg", 
+#        p_core_venn, width = 6, height = 5, dpi = 300)
+
+################################################################################
+## categories for venns
+
+met_df_filtered <- met_df %>% 
+  filter(refined_origin != "Unknown")
+
+get_venn_list <- function(data) {
+  list(
+    Host = data %>% filter(refined_origin %in% c("Host", "Both")) %>% pull(metabolite),
+    Symbiont = data %>% filter(refined_origin %in% c("Symbiont", "Both")) %>% pull(metabolite)
+  )
+}
+
+# Define the subsets
+list_all <- get_venn_list(met_df_filtered)
+list_xgb <- get_venn_list(met_df_filtered %>% arrange(desc(XGBoost_Importance)) %>% head(43))
+list_rf  <- get_venn_list(met_df_filtered %>% arrange(desc(RandomForest_Importance)) %>% head(1541))
+
+### plot
+cols_origin <- c("Host" = "#97B9CBFF", "Symbiont" = "#9057C6FF", 
+                 "Both" = "#FFE1BDFF", "Unknown" = "#8DC657FF")
+venn_fill <- c(cols_origin["Host"], cols_origin["Symbiont"])
+
+p_a <- ggvenn(list_all, fill_color = venn_fill, stroke_size = 0.5, set_name_size = 4) +
+  labs() + theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+
+
+#######################
+# volcano
+# choose only metabolites in core_df
+
+comm_long <- core_abundance_df %>%
+  pivot_longer(
+    cols = starts_with("x"), 
+    names_to  = "metabolite",
+    values_to = "abundance"
+  )
+comm_long <- comm_long %>%
+  mutate(abundance = as.numeric(as.character(abundance)))
+
+stats_data <- comm_long %>%
+  select(-scleractinia) %>%                    
+  left_join(df %>% select(sample, scleractinia), by = "sample") %>%
+  filter(!is.na(scleractinia)) %>%
+  mutate(group = if_else(as.character(scleractinia) == "1", "Scleractinia", "Other"))
+
+# compute L2FC and p-values per metabolite
+volcano_results <- stats_data %>%
+  group_by(metabolite) %>%
+  summarise(
+    mean_scler = mean(abundance[group == "Scleractinia"], na.rm = TRUE),
+    mean_other = mean(abundance[group == "Other"], na.rm = TRUE),
+    p_val_raw = wilcox.test(abundance ~ group)$p.value,
+    .groups = "drop"
+  ) %>%
+  mutate(
+    p_adj = p.adjust(p_val_raw, method = "bonferroni"),
+    log2FC = log2((mean_scler + 1) / (mean_other + 1)),
+    # Use adjusted p-value for the y-axis
+    neg_log_p_adj = -log10(p_adj)
+  )
+target_classes <- trimws(c(
+  "Glycerophospholipids", 
+  "Sphingolipids", 
+  "Oligopeptides", 
+  "Glycerolipids", 
+  "Triacylglycerols", 
+  "Steroids", 
+  "Carotenoids (C40)", 
+  "Fatty esters", 
+  "Diacylglyceryl-carboxyhydroxymethylcholines", 
+  "Triterpenoids", 
+  "Fatty amides", 
+  "Phosphatidylglycerocholines", 
+  "Monogalactosyldiacylglycerol", 
+  "Phosphatidylglyceroethanolamines", 
+  "Monoalkyldiacylglycerols", 
+  "Meroterpenoids",
+  "Unknown"
+))
+
+provided_hex <- c(
+  "#BEAED4", "#FDC086", "#FFFF99", "#386CB0", "#F0027F", "#BF5B17", "#1B9E77",
+  "#D95F02", "#7570B3", "#984EA3", "#66A61E", "#E6AB02", "#666666", "#A6CEE3", "#B2DF8A",
+  "#FB9A99", "#CBD5E8")
+# "#E5D8BD" "#FDDAEC"
+spec_colors <- setNames(provided_hex, target_classes)
+
+final_palette <- c(spec_colors, "Other" = "gray60")
+origin_shapes <- c("Host" = 16, "Symbiont" = 3, "Both" = 17, "Unknown" = 8)
+
+plot_data_volcano <- volcano_results %>%
+  inner_join(
+    met_df %>% select(metabolite, display_class, refined_origin),
+    by = "metabolite"
+  ) %>%
+  mutate(
+    # coerce to character
+    display_class = as.character(display_class),
+    refined_origin = as.character(refined_origin),
+    display_class = if_else(
+      is.na(display_class) | !(display_class %in% names(final_palette)),
+      "Other",
+      display_class
+    ),
+    refined_origin = if_else(is.na(refined_origin), "Unknown", refined_origin)
+  )
+
+classes <- sort(unique(plot_data_volcano$display_class))
+class_colors <- final_palette[classes]
+class_order <- c(target_classes, "Other")
+
+plot_data_volcano <- volcano_results %>%
+  inner_join(
+    met_df %>% select(metabolite, display_class, refined_origin),
+    by = "metabolite"
+  ) %>%
+  mutate(
+    display_class = as.character(display_class),
+    refined_origin = as.character(refined_origin),
+    display_class = if_else(
+      is.na(display_class) | !(display_class %in% names(final_palette)),
+      "Other",
+      display_class
+    ),
+    display_class = factor(display_class, levels = class_order),
+    refined_origin = if_else(is.na(refined_origin), "Unknown", refined_origin)
+  )
+
+classes <- levels(plot_data_volcano$display_class)
+class_colors <- final_palette[classes]
+
+sig_threshold <- -log10(0.05)
+
+# build plot
+p_volcano2 <- ggplot(plot_data_volcano, aes(x = log2FC, y = neg_log_p_adj)) +
+  geom_vline(xintercept = c(-2, 2), linetype = "dashed", color = "grey70") +
+  geom_hline(yintercept = sig_threshold, linetype = "dashed", color = "grey70", linewidth = 0.8) +
+  geom_point(aes(color = display_class), alpha = 0.75, size = 3.5) +
+  scale_color_manual(
+    name = "Compound Superclass",
+    values = class_colors,
+    breaks = classes,
+    na.value = "gray60"
+  ) +
+  ylim(0,75) + 
+  xlim(-20,20) +
+  scale_shape_manual(
+    name = "Metabolite Origin",
+    values = origin_shapes,
+    na.value = 16) +
+  facet_wrap(~display_class, ncol = 4) +
+  
+  guides(
+    color = guide_legend(ncol = 2, byrow = TRUE),
+    shape = guide_legend(ncol = 1)
+  ) +
+  labs(
+    x = "log2 Fold Change",
+    y = "-log10(adj. p-value)",
+  ) +
+  theme_pubr() +
+  theme(
+    legend.position = "none",
+    strip.text.x = element_text(size = 14),
+    axis.title = element_text(size = 20),
+    plot.title = element_text(face = "bold", hjust = 0.5)
+  )
+ggsave("/work/hs325/World_Corals/misc/figs/volcano_core.jpg", p_volcano2, width=14,height=10,dpi=300)

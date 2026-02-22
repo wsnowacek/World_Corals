@@ -18,7 +18,7 @@ library(forcats)
 
 setwd("/work/hs325/World_Corals/Metabolite Summary Data")
 df<- read.csv("qc_data.csv")
-met_df<- read.csv("/work/hs325/World_Corals/Cleaned data CSVs/metabolite_clean.csv")
+met_df<- read.csv("/work/hs325/World_Corals/Cleaned data CSVs/metabolite_plot_df.csv")
 
 present_metabolites <- df %>% 
   select(starts_with("x")) %>% 
