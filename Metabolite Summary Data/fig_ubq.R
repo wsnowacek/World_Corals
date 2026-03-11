@@ -17,6 +17,7 @@ library(tibble)
 library(GGally)
 library(stringr)
 library(RColorBrewer)
+library(ggrepel)
 library(Polychrome)
 
 setwd("/work/hs325/World_Corals/Metabolite Summary Data")
@@ -737,9 +738,9 @@ row_hi <- plot_grid(
   # labels = c("H", "I"), 
   label_size = 18, ncol = 2
 )
-row_hi <- plot_grid(
-  unified_legend, row_hi,
-  nrow = 2, rel_heights = c(0.4,1))
+# row_hi <- plot_grid(
+#   unified_legend, row_hi,
+#   nrow = 2, rel_heights = c(0.4,1))
 
 ggsave("/work/hs325/World_Corals/misc/figs/fig5_hi.jpg", 
        row_hi, width = 14, height = 6, dpi = 300, bg = "white")
@@ -808,4 +809,4 @@ row_ab <- plot_grid(
   unified_legend, p1p2,
   nrow = 2, rel_heights = c(0.4,1))
 ggsave("/work/hs325/World_Corals/misc/figs/fig5_hi.jpg", 
-       row_ab, width = 18, height = 7, dpi = 300, bg = "white")
+       p1p2, width = 12, height = 6, dpi = 600, bg = "white")

@@ -163,7 +163,7 @@ p_flower_family <- draw_flower(df_scler, "host_family")
 #                          rel_widths = c(1, 0.6, 0.6), label_size = 20)
 
 ggsave("/work/hs325/World_Corals/misc/figs/flower_plot_family.jpg", 
-       p_flower_family, width = 10, height = 10, dpi = 300)
+       p_flower_family, width = 13.5, height = 13, dpi = 300)
 
 ################################################################################
 
