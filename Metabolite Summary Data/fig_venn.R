@@ -18,7 +18,7 @@ library(ggforce)
 
 setwd("/work/hs325/World_Corals/Metabolite Summary Data")
 df<- read.csv("qc_data.csv")
-met_df<- read.csv("/work/hs325/World_Corals/Cleaned data CSVs/metabolite_plot_df.csv")
+met_df<- read.csv("/work/hs325/World_Corals/Cleaned data CSVs/merged_met_plot_df.csv")
 
 cols_bleaching <- c(
   "Bleached" = "#FF847CFF", 
@@ -108,8 +108,8 @@ ggsave("/work/hs325/World_Corals/misc/figs/venn.jpg",
 ################################################################################
 
 # flowers
+
 draw_flower <- function(data, group_var) {
-  # Determine presence/absence per group
   group_summary <- data %>%
     pivot_longer(cols = starts_with("x"), names_to = "metabolite", values_to = "val") %>%
     group_by(!!sym(group_var), metabolite) %>%
@@ -131,6 +131,7 @@ draw_flower <- function(data, group_var) {
     tally() %>%
     mutate(label = paste0(!!sym(group_var), "\n(n=", n, ")"))
   
+  # Calculate petal positions
   n_petals <- nrow(petal_data)
   angle <- seq(0, 2 * pi, length.out = n_petals + 1)[1:n_petals]
   
@@ -138,32 +139,83 @@ draw_flower <- function(data, group_var) {
   petal_data$y <- cos(angle) * 2
   
   ggplot(petal_data) +
-    # Draw Petals
     geom_ellipse(aes(x0 = x, y0 = y, a = 0.8, b = 1.5, angle = -angle), 
                  fill = "lightblue", alpha = 0.3, color = "steelblue") +
+    
     # Center Circle
-    annotate("point", x = 0, y = 0, size = 45, color = "gold", fill = "white", shape = 21, stroke = 2) +
+    annotate("point", x = 0, y = 0, size = 45, color = "gold", 
+             fill = "white", shape = 21, stroke = 2) +
     annotate("text", x = 0, y = 0, label = paste0(core_count), 
              fontface = "bold", size = 7) +
-###group labels shift
-    geom_text(aes(x = x * 2.9, y = y * 3, label = label), 
-              size = 6, fontface = "bold") +
+    
+    geom_text(aes(x = x * 3, y = y * 3, label = label), 
+              size = 5, fontface = "bold",
+              hjust = "middle", vjust = "middle") +
+    
     theme_void() +
-    coord_fixed(xlim = c(-6, 6), ylim = c(-6, 6)) 
+    coord_cartesian(xlim = c(-8,8), ylim = c(-7, 7)) 
 }
 
 df_scler <- df %>% filter(host_order == "Scleractinia", !is.na(host_family))
-
 p_flower_family <- draw_flower(df_scler, "host_family")
-# p_flower_phylum <- draw_flower(df %>% filter(!is.na(host_phylum)), "host_phylum") 
-# p_flower_loc    <- draw_flower(df_scler, "location")
-# 
-# flower_grid <- plot_grid(p_flower_family, p_flower_phylum, p_flower_loc,
-#                          ncol = 3, labels = c("A", "B", "C"), 
-#                          rel_widths = c(1, 0.6, 0.6), label_size = 20)
-
 ggsave("/work/hs325/World_Corals/misc/figs/flower_plot_family.jpg", 
-       p_flower_family, width = 13.5, height = 13, dpi = 300)
+       p_flower_family, width = 10, height = 8, dpi = 300)
+
+
+################################################################################
+
+## flower plot modified to show number of unique metabolites in each family
+
+draw_flower <- function(data, group_var) {
+  group_summary <- data %>%
+    pivot_longer(cols = starts_with("x"), names_to = "metabolite", values_to = "val") %>%
+    group_by(!!sym(group_var), metabolite) %>%
+    summarise(present = any(val > 0, na.rm = TRUE), .groups = "drop")
+  
+  total_groups <- length(unique(data[[group_var]]))
+  metabolite_counts <- group_summary %>%
+    group_by(metabolite) %>%
+    summarise(n_groups = sum(present), .groups = "drop")
+  
+  core_count <- sum(metabolite_counts$n_groups == total_groups)
+  unique_mets <- metabolite_counts %>% filter(n_groups == 1) %>% pull(metabolite)
+  
+  petal_data <- group_summary %>%
+    filter(present == TRUE) %>%
+    group_by(!!sym(group_var)) %>%
+    summarise(
+      total_n = n(),
+      unique_n = sum(metabolite %in% unique_mets),
+      .groups = "drop"
+    ) %>%
+    mutate(label = paste0(!!sym(group_var), "\nTotal: ", total_n, "\nUnique: ", unique_n))
+  
+  n_petals <- nrow(petal_data)
+  angle <- seq(0, 2 * pi, length.out = n_petals + 1)[1:n_petals]
+  
+  petal_data$x <- sin(angle) * 1.5
+  petal_data$y <- cos(angle) * 1.5
+  
+  ggplot(petal_data) +
+    geom_ellipse(aes(x0 = x, y0 = y, a = 0.8, b = 1.5, angle = -angle), 
+                 fill = "lightblue", alpha = 0.3, color = "steelblue") +
+    
+    annotate("point", x = 0, y = 0, size = 45, color = "gold", 
+             fill = "white", shape = 21, stroke = 2) +
+    annotate("text", x = 0, y = 0, label = paste0(core_count), 
+             fontface = "bold", size = 7) +
+    
+    geom_text(aes(x = sin(angle) * 5, y = cos(angle) * 5, label = label), 
+              size = 4, lineheight = 0.9) +
+    
+    theme_void() +
+    coord_cartesian(xlim = c(-7, 7), ylim = c(-5, 5)) 
+}
+df_scler <- df %>% filter(host_order == "Scleractinia", !is.na(host_family))
+p_flower_family <- draw_flower(df_scler, "host_family")
+ggsave("/work/hs325/World_Corals/misc/figs/flower_plot_family_unique.jpg", 
+       p_flower_family, width = 13, height = 9, dpi = 300)
+
 
 ################################################################################
 
@@ -381,64 +433,32 @@ p_volcano2 <- ggplot(plot_data_volcano, aes(x = log2FC, y = neg_log_p_adj)) +
   )
 ggsave("/work/hs325/World_Corals/misc/figs/volcano_core.jpg", p_volcano2, width=14,height=10,dpi=300)
 
+################################################################################
 
-############## IN CORE: highlight our 3 metabolites
-p_glycerolipids <- plot_data_volcano %>%
-  filter(display_class == "Glycerolipids") %>%
-  ggplot(aes(x = log2FC, y = neg_log_p_adj)) +
-  geom_vline(xintercept = c(-2, 2), linetype = "dashed", color = "grey70") +
-  geom_hline(yintercept = sig_threshold, linetype = "dashed", color = "grey70") +
-  geom_point(aes(color = display_class), size = 3, alpha = 0.8) +
-  # Label specific metabolite
-  geom_text_repel(
-    data = . %>% filter(metabolite == "x23838_655_56593_11_538"),
-    aes(label = metabolite),
-    box.padding = 1, point.padding = 0.5,
-    size = 4, fontface = "bold", color = "black",
-    segment.color = "grey30"
-  ) +
-  scale_color_manual(values = class_colors) +
-  labs(title = "Glycerolipids", x = "log2 Fold Change", y = "-log10(adj. p-value)") +
-  theme_pubr() +
-  theme(legend.position = "none", plot.title = element_text(size = 18, face = "bold"))
+## make core plot with cowplot
+top_right_col <- plot_grid(
+  p_core_venn, 
+  labels = c("B"), 
+  label_size = 20,
+  align = "v"
+)
 
-p_triacylglycerols <- plot_data_volcano %>%
-  filter(display_class == "Triacylglycerols") %>%
-  ggplot(aes(x = log2FC, y = neg_log_p_adj)) +
-  geom_vline(xintercept = c(-2, 2), linetype = "dashed", color = "grey70") +
-  geom_hline(yintercept = sig_threshold, linetype = "dashed", color = "grey70") +
-  geom_point(aes(color = display_class), size = 3, alpha = 0.8) +
-  # Label specific metabolite
-  geom_text_repel(
-    data = . %>% filter(metabolite == "x39055_948_80202_15_826"),
-    aes(label = metabolite),
-    box.padding = 1, point.padding = 0.5,
-    size = 4, fontface = "bold", color = "black",
-    segment.color = "grey30"
-  ) +
-  scale_color_manual(values = class_colors) +
-  labs(title = "Triacylglycerols", x = "log2 Fold Change", y = "-log10(adj. p-value)") +
-  theme_pubr() +
-  theme(legend.position = "none", plot.title = element_text(size = 18, face = "bold"))
+top_row <- plot_grid(
+  p_flower_family, 
+  top_right_col, 
+  ncol = 2, 
+  labels = c("A", ""),
+  label_size = 20,
+  rel_widths = c(1.5, 0.5) 
+)
 
-p_sphingolipids <- plot_data_volcano %>%
-  filter(display_class == "Sphingolipids") %>%
-  ggplot(aes(x = log2FC, y = neg_log_p_adj)) +
-  geom_vline(xintercept = c(-2, 2), linetype = "dashed", color = "grey70") +
-  geom_hline(yintercept = sig_threshold, linetype = "dashed", color = "grey70") +
-  geom_point(aes(color = display_class), size = 3, alpha = 0.8) +
-  # Label specific metabolite
-  geom_text_repel(
-    data = . %>% filter(metabolite == "x15256_518_49365_7_407"),
-    aes(label = metabolite),
-    box.padding = 1, point.padding = 0.5,
-    size = 4, fontface = "bold", color = "black",
-    segment.color = "grey30"
-  ) +
-  scale_color_manual(values = class_colors) +
-  labs(title = "Sphingolipids", x = "log2 Fold Change", y = "-log10(adj. p-value)") +
-  theme_pubr() +
-  theme(legend.position = "none", plot.title = element_text(size = 18, face = "bold"))
+final_layout <- plot_grid(
+  top_row, 
+  p_volcano2, 
+  nrow = 2, 
+  labels = c("", "C"), 
+  label_size = 20,
+  rel_heights = c(0.8, 1)
+)
+ggsave("/work/hs325/World_Corals/misc/figs/ecological_core.jpg", final_layout, width=20,height=16,dpi=300)
 
-subcano <- plot_grid(p_glycerolipids, p_triacylglycerols, p_sphingolipids, ncol = 3)
-ggsave("/work/hs325/World_Corals/misc/figs/volcano_glycerolipids.jpg", subcano, width=14, height=7, dpi=300)

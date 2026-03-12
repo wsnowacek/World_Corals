@@ -22,7 +22,8 @@ library(Polychrome)
 
 setwd("/work/hs325/World_Corals/Metabolite Summary Data")
 df<- read.csv("qc_data.csv")
-met_df<- read.csv("/work/hs325/World_Corals/Cleaned data CSVs/metabolite_clean.csv")
+# met_df<- read.csv("/work/hs325/World_Corals/Cleaned data CSVs/metabolite_clean.csv")
+met_df<- read.csv("/work/hs325/World_Corals/Cleaned data CSVs/merged_met_plot_df.csv")
 
 present_metabolites <- df %>% 
   select(starts_with("x")) %>% 
@@ -283,26 +284,26 @@ pb <- ggplot(met_summary_classed_scler, aes(x = ubiquity_all, y = avg_abundance)
 pb
 
 #################################################################################
-
-feature_importance_comparison_all <- read.csv("/work/hs325/World_Corals/machine_learning/all_mets/featureimportanceallmets.csv")
-
-feature_importance_comparison_all <- feature_importance_comparison_all %>%
-  dplyr::rename(metabolite = Feature)
-merged_df_all <- feature_importance_comparison_all %>%
-  inner_join(met_df, by = "metabolite")
-
-importance_scores <- merged_df_all %>%
-  select(metabolite, XGBoost_Importance, RandomForest_Importance)
-
-met_plot_df <- met_plot_df %>%
-  left_join(importance_scores, by = "metabolite") %>%
-  mutate(
-    XGBoost_Importance = replace_na(XGBoost_Importance, 0),
-    RandomForest_Importance = replace_na(RandomForest_Importance, 0)
-  )
-
-ordered_levels <- c(target_classes, "Other")
-met_plot_df$display_class <- factor(met_plot_df$display_class, levels = ordered_levels)
+# 
+# feature_importance_comparison_all <- read.csv("/work/hs325/World_Corals/machine_learning/all_mets/featureimportanceallmets.csv")
+# 
+# feature_importance_comparison_all <- feature_importance_comparison_all %>%
+#   dplyr::rename(metabolite = Feature)
+# merged_df_all <- feature_importance_comparison_all %>%
+#   inner_join(met_df, by = "metabolite")
+# 
+# importance_scores <- merged_df_all %>%
+#   select(metabolite, XGBoost_Importance, RandomForest_Importance)
+# 
+# met_plot_df <- met_plot_df %>%
+#   left_join(importance_scores, by = "metabolite") %>%
+#   mutate(
+#     XGBoost_Importance = replace_na(XGBoost_Importance, 0),
+#     RandomForest_Importance = replace_na(RandomForest_Importance, 0)
+#   )
+# 
+# ordered_levels <- c(target_classes, "Other")
+# met_plot_df$display_class <- factor(met_plot_df$display_class, levels = ordered_levels)
 
 ## change # of metabolites to plot here
 xgb_plot_data <- met_plot_df %>%
@@ -315,7 +316,7 @@ rf_plot_data <- met_plot_df %>%
   slice_head(n = 120) %>%
   mutate(metabolite = fct_reorder(metabolite, RandomForest_Importance, .desc = TRUE))
 
-# 
+ 
 # xgb_plot_df$display_class <- factor(xgb_plot_df$display_class, levels = ordered_levels)
 # rf_plot_df$display_class  <- factor(rf_plot_df$display_class,  levels = ordered_levels)
 # plot_df_all$display_class <- factor(plot_df_all$display_class, levels = ordered_levels)
@@ -382,104 +383,104 @@ p3
 
 ggsave("/work/hs325/World_Corals/misc/figs/p3alone.jpg", p3, width = 12, height = 8, dpi = 300)
 #################################################################################
-
-## add a column to the met_plot_df that has the ubiquity 
-# of the metabolite in Scleractinia in the entire dataset
-# and of the metabolite in non-Scleractinia in the entire dataset
-
-target_mets <- unique(as.character(met_plot_df$metabolite))
-
-scler_ubiquity_df <- df %>%
-  filter(scleractinia == 1) %>%
-  select(all_of(intersect(names(.), target_mets))) %>%
-  summarise(across(everything(), ~ mean(.x > 0, na.rm = TRUE) * 100)) %>%
-  # Reshape for joining
-  pivot_longer(everything(), names_to = "metabolite", values_to = "scler_ubiquity")
-
-met_plot_df <- met_plot_df %>%
-  left_join(scler_ubiquity_df, by = "metabolite") %>%
-  # Handle any metabolites that might have 0 presence in the Scleractinian subset
-  mutate(scler_ubiquity = replace_na(scler_ubiquity, 0))
-
-non_scler_ubiquity_df <- df %>%
-  filter(scleractinia != 1) %>%
-  select(all_of(intersect(names(.), target_mets))) %>%
-  summarise(across(everything(), ~ mean(.x > 0, na.rm = TRUE) * 100)) %>%
-  # Reshape for joining
-  pivot_longer(everything(), names_to = "metabolite", values_to = "non_scler_ubiquity")
-
-met_plot_df <- met_plot_df %>%
-  left_join(non_scler_ubiquity_df, by = "metabolite") %>%
-  # Handle any metabolites that might have 0 presence in the Scleractinian subset
-  mutate(non_scler_ubiquity = replace_na(non_scler_ubiquity, 0))
-
-met_plot_df %>%
-  select(metabolite, scler_ubiquity, non_scler_ubiquity) %>%
-  arrange(desc(scler_ubiquity)) %>%
-  head(10)
+# 
+# ## add a column to the met_plot_df that has the ubiquity 
+# # of the metabolite in Scleractinia in the entire dataset
+# # and of the metabolite in non-Scleractinia in the entire dataset
+# 
+# target_mets <- unique(as.character(met_plot_df$metabolite))
+# 
+# scler_ubiquity_df <- df %>%
+#   filter(scleractinia == 1) %>%
+#   select(all_of(intersect(names(.), target_mets))) %>%
+#   summarise(across(everything(), ~ mean(.x > 0, na.rm = TRUE) * 100)) %>%
+#   # Reshape for joining
+#   pivot_longer(everything(), names_to = "metabolite", values_to = "scler_ubiquity")
+# 
+# met_plot_df <- met_plot_df %>%
+#   left_join(scler_ubiquity_df, by = "metabolite") %>%
+#   # Handle any metabolites that might have 0 presence in the Scleractinian subset
+#   mutate(scler_ubiquity = replace_na(scler_ubiquity, 0))
+# 
+# non_scler_ubiquity_df <- df %>%
+#   filter(scleractinia != 1) %>%
+#   select(all_of(intersect(names(.), target_mets))) %>%
+#   summarise(across(everything(), ~ mean(.x > 0, na.rm = TRUE) * 100)) %>%
+#   # Reshape for joining
+#   pivot_longer(everything(), names_to = "metabolite", values_to = "non_scler_ubiquity")
+# 
+# met_plot_df <- met_plot_df %>%
+#   left_join(non_scler_ubiquity_df, by = "metabolite") %>%
+#   # Handle any metabolites that might have 0 presence in the Scleractinian subset
+#   mutate(non_scler_ubiquity = replace_na(non_scler_ubiquity, 0))
+# 
+# met_plot_df %>%
+#   select(metabolite, scler_ubiquity, non_scler_ubiquity) %>%
+#   arrange(desc(scler_ubiquity)) %>%
+#   head(10)
 
 #################################################################################
-
-ubiquity_pal <- c(
-  "[0,20]"   = "#440154FF", # Dark Purple
-  "(20,40]"  = "#3B528BFF", # Blue
-  "(40,60]"  = "#21908CFF", # Teal
-  "(60,80]"  = "#5DC863FF", # Green
-  "(80,100]" = "#FDE725FF"  # Yellow
-)
-
-# Helper to prepare data for ubiquity-colored barplots
-prep_ubiq_plot <- function(df, importance_col, n_slice) {
-  df %>%
-    arrange(desc(!!sym(importance_col))) %>%
-    slice_head(n = n_slice) %>%
-    mutate(
-      ubiquity_bin = cut(scler_ubiquity, 
-                         breaks = c(-Inf, 20, 40, 60, 80, 100), 
-                         labels = names(ubiquity_pal), 
-                         include.lowest = TRUE),
-      metabolite = fct_reorder(metabolite, !!sym(importance_col), .desc = TRUE)
-    )
-}
-
-xgb_ubiq_data <- prep_ubiq_plot(met_plot_df, "XGBoost_Importance", 60)
-rf_ubiq_data  <- prep_ubiq_plot(met_plot_df, "RandomForest_Importance", 120)
-
-p_xgb_ubiq <- ggplot(xgb_ubiq_data, aes(x = metabolite, y = XGBoost_Importance, fill = ubiquity_bin)) +
-  geom_bar(stat = "identity", color = "black", linewidth = 0.1) +
-  scale_fill_manual(values = ubiquity_pal, drop = FALSE) +
-  scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
-  theme_pubr() +
-  labs(
-    x = "Metabolite",
-    y = "XGBoost Feature Importance",
-    fill = "Ubiquity Percentage"
-  ) +
-  theme(
-    axis.text.x = element_blank(),
-    axis.ticks.x = element_blank(),
-    legend.position = "right"
-  )
-
-# --- Random Forest Importance colored by Scleractinian Ubiquity ---
-p_rf_ubiq <- ggplot(rf_ubiq_data, aes(x = metabolite, y = RandomForest_Importance, fill = ubiquity_bin)) +
-  geom_bar(stat = "identity", color = "black", linewidth = 0.1) +
-  scale_fill_manual(values = ubiquity_pal, drop = FALSE) +
-  scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
-  theme_pubr() +
-  labs(
-    x = "Metabolite",
-    y = "RF Feature Importance",
-    fill = "Scleractinian Ubiquity Percentage"
-  ) +
-  theme(
-    axis.text.x = element_blank(),
-    axis.ticks.x = element_blank(),
-    legend.position = "right"
-  )
-
-print(p_xgb_ubiq)
-print(p_rf_ubiq)
+# 
+# ubiquity_pal <- c(
+#   "[0,20]"   = "#440154FF", # Dark Purple
+#   "(20,40]"  = "#3B528BFF", # Blue
+#   "(40,60]"  = "#21908CFF", # Teal
+#   "(60,80]"  = "#5DC863FF", # Green
+#   "(80,100]" = "#FDE725FF"  # Yellow
+# )
+# 
+# # Helper to prepare data for ubiquity-colored barplots
+# prep_ubiq_plot <- function(df, importance_col, n_slice) {
+#   df %>%
+#     arrange(desc(!!sym(importance_col))) %>%
+#     slice_head(n = n_slice) %>%
+#     mutate(
+#       ubiquity_bin = cut(scler_ubiquity, 
+#                          breaks = c(-Inf, 20, 40, 60, 80, 100), 
+#                          labels = names(ubiquity_pal), 
+#                          include.lowest = TRUE),
+#       metabolite = fct_reorder(metabolite, !!sym(importance_col), .desc = TRUE)
+#     )
+# }
+# 
+# xgb_ubiq_data <- prep_ubiq_plot(met_plot_df, "XGBoost_Importance", 60)
+# rf_ubiq_data  <- prep_ubiq_plot(met_plot_df, "RandomForest_Importance", 120)
+# 
+# p_xgb_ubiq <- ggplot(xgb_ubiq_data, aes(x = metabolite, y = XGBoost_Importance, fill = ubiquity_bin)) +
+#   geom_bar(stat = "identity", color = "black", linewidth = 0.1) +
+#   scale_fill_manual(values = ubiquity_pal, drop = FALSE) +
+#   scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
+#   theme_pubr() +
+#   labs(
+#     x = "Metabolite",
+#     y = "XGBoost Feature Importance",
+#     fill = "Ubiquity Percentage"
+#   ) +
+#   theme(
+#     axis.text.x = element_blank(),
+#     axis.ticks.x = element_blank(),
+#     legend.position = "right"
+#   )
+# 
+# # --- Random Forest Importance colored by Scleractinian Ubiquity ---
+# p_rf_ubiq <- ggplot(rf_ubiq_data, aes(x = metabolite, y = RandomForest_Importance, fill = ubiquity_bin)) +
+#   geom_bar(stat = "identity", color = "black", linewidth = 0.1) +
+#   scale_fill_manual(values = ubiquity_pal, drop = FALSE) +
+#   scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
+#   theme_pubr() +
+#   labs(
+#     x = "Metabolite",
+#     y = "RF Feature Importance",
+#     fill = "Scleractinian Ubiquity Percentage"
+#   ) +
+#   theme(
+#     axis.text.x = element_blank(),
+#     axis.ticks.x = element_blank(),
+#     legend.position = "right"
+#   )
+# 
+# print(p_xgb_ubiq)
+# print(p_rf_ubiq)
 
 #################################################################################
 
@@ -545,7 +546,6 @@ p_rf_ubiq_scatter
 levels(met_plot_df$display_class) <- str_wrap(levels(met_plot_df$display_class), width = 20)
 names(final_palette) <- str_wrap(names(final_palette), width = 20)
 
-# 2. Re-run the dummy plot with a more flexible guide
 legend_dummy <- ggplot(met_plot_df, aes(x = XGBoost_Importance, y = RandomForest_Importance)) +
   geom_point(aes(fill = display_class, shape = refined_origin)) +
   scale_fill_manual(
@@ -592,14 +592,14 @@ row_ab <- plot_grid(
 row_cd <- plot_grid(
   p1 + theme(legend.position = "none") + labs(subtitle = "XGBoost"), 
   p2 + theme(legend.position = "none") + labs(subtitle = "Random Forest"), 
-  # labels = c("C", "D"), 
+  labels = c("C", "D"),
   label_size = 18, ncol = 2
 )
 
 # Row 3: Scatter Importance (E) - Centered or full width
 row_e <- plot_grid(
   p3 + theme(legend.position = "none"), 
-  # labels = c("E"), 
+  labels = c("E"),
   label_size = 18, ncol = 1
 )
 # 
@@ -614,7 +614,7 @@ row_hi <- plot_grid(
   p_rf_ubiq_scatter 
   + theme(legend.position = "none")
   + labs(subtitle = "Random Forest"), 
-  # labels = c("H", "I"), 
+  labels = c("F", "G"),
   label_size = 18, ncol = 2
 )
 
@@ -640,8 +640,8 @@ true_final_figure <- plot_grid(
 )
 
 # Save high-resolution for publication
-ggsave("/work/hs325/World_Corals/misc/figs/fig5.jpg", 
-       true_final_figure, width = 16, height = 24, dpi = 300, bg = "white")
+ggsave("/work/hs325/World_Corals/misc/figs/fig5.png", 
+       true_final_figure, width = 18, height = 24, dpi = 600, bg = "white")
 
 
 ################################################################################

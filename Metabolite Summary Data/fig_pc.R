@@ -15,7 +15,7 @@ library(forcats)
 
 setwd("/work/hs325/World_Corals/Metabolite Summary Data")
 df<- read.csv("qc_data.csv")
-met_df<- read.csv("/work/hs325/World_Corals/Cleaned data CSVs/metabolite_clean.csv")
+met_df<- read.csv("/work/hs325/World_Corals/Cleaned data CSVs/merged_met_plot_df.csv")
 
 cols_bleaching <- c(
   "Bleached" = "#FF847CFF", 
@@ -375,7 +375,8 @@ ggsave("/work/hs325/World_Corals/misc/figs/pcoa_bsym.jpg", p_bleach_sym, width =
 pcoa_supp <- plot_grid(
   p3 + theme(legend.position = "right"), 
   p_bleach_sym + theme(legend.position = "right"), 
-  labels = c("A", "B"), 
+  p2 + theme(legend.position="right"),
+  labels = c("A", "B", "C"), 
   label_size = 20,
   ncol = 1,              
   align = "v",
@@ -385,8 +386,10 @@ pcoa_supp <- plot_grid(
 ggsave("/work/hs325/World_Corals/misc/figs/pcoa_supp.jpg", 
        pcoa_supp, 
        width = 10, 
-       height = 12, 
+       height = 16, 
        dpi = 300)
+
+################################################################################
 ################################################################################
 
 ## Bleaching status alone PERMANOVA
@@ -914,60 +917,6 @@ ggsave("/work/hs325/World_Corals/misc/figs/dendro.jpg", p_dendro, width=10, heig
 # dend <- click_rotate(dend)
 
 ################################################################################
-## combine plots with cowplot for talk
-# row 1 legend, p, p_dendro
-
-
-legend_sclero <- get_legend(
-  p + 
-    guides(color = guide_legend(title = "Order"), fill = guide_legend(title = "Order")) +
-    theme(
-      legend.position = "left", 
-      legend.box.margin = margin(6, 0, 0, 6),
-      legend.title = element_text(size = 24, face = "bold"), 
-      legend.text = element_text(size = 20),
-      legend.title.align = 0.5,
-      legend.text.align = 0.5,
-      legend.key.size = unit(1.2, "lines")))
-clean_theme <- theme(
-  legend.position = "none",
-  plot.title = element_blank() # Remove titles to keep row 2 clean
-)
-
-p <- p + theme(legend.position = "none")
-
-row1 <- plot_grid(
-  legend_sclero, p, p_dendro,
-  ncol = 3,
-  rel_widths = c(0.4, 1, 1.2), # Legend is narrow, plots are equal
-  labels = c("", "A", "B"),
-  label_size = 24
-)
-
-p_abundance_clean <- p_abundance # + clean_theme()
-p_ubiquity_clean  <- p_ubiquity # + clean_theme()
-p_entropy_clean  <- p_entropy # + clean_theme()
-p_richness_clean  <- p_richness # + clean_theme()
-
-row2 <- plot_grid(
-  p_richness_clean,p_entropy_clean,p_ubiquity_clean,p_abundance_clean,
-  nrow = 1,
-  rel_widths = c(1,1,1,1),
-  align = 'h', axis = 'tb',
-  # labels = c("C", "D", "E", "F"),
-  label_size = 24
-)
-
-final_plot <- plot_grid(
-  row1, 
-  row2, 
-  ncol = 1, 
-  rel_heights = c(1, 1) 
-)
-ggsave("/work/hs325/World_Corals/misc/figs/fig2_ppt.jpg", row2, width = 12, height = 6, dpi = 300)
-
-
-################################################################################
 # combine plots with cowplot
 # row 1: legend, p, p2 
 # row 2: p_dendro, p_abundance, p_ubiquity, p_evenness, p_richness (boxplots should be tight)
@@ -1022,14 +971,13 @@ final_plot <- plot_grid(
 print(final_plot)
 ggsave("/work/hs325/World_Corals/misc/figs/fig2.jpg", final_plot, width = 18, height = 12, dpi = 300)
 
+
+################################################################################
 ################################################################################
 
-# PERMANOVA by df$scleractinia for Curacao
-# PERMANOVA by df$bleaching for all
-# color points by cols_sclero for the first three, cols_bleaching for last one
-# make combined plot with PERMANOVA values inset for each
+# extra graphs
 
-##
+## scleractinia vs nonscleractinia ONLY CURACAO
 
 keep_cur <- meta2$location == "Curaçao" & !is.na(meta2$scleractinia)
 meta_cur <- meta2[keep_cur, ]
@@ -1037,6 +985,15 @@ num_cur  <- permanova_numeric_data2[keep_cur, ]
 
 bc_cur <- vegdist(num_cur, method = "bray")
 perm_cur <- adonis2(bc_cur ~ scleractinia, data = meta_cur, permutations = 999)
+
+# 
+# adonis2(formula = bc_cur ~ scleractinia, data = meta_cur, permutations = 999)
+# Df SumOfSqs      R2      F Pr(>F)    
+# Model      1   11.620 0.16534 48.333  0.001 ***
+#   Residual 244   58.660 0.83466                  
+# Total    245   70.279 1.00000                  
+# ---
+#   Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
 p_val_cur <- perm_cur[["Pr(>F)"]][1]
 r2_cur    <- round(perm_cur[["R2"]][1], 3)
@@ -1078,80 +1035,3 @@ p_cur <- ggplot(df_cur, aes(x = V1, y = V2)) +
   theme_cowplot()
 p_cur
 ggsave("/work/hs325/World_Corals/misc/figs/pcoa_cur_scler.jpg", p_cur, width = 8, height = 6, dpi = 300)
-
-################################################################################
-### bleaching within  each location (Hawaii has no bleached samples)
-
-locs_bleach <- c("Sri Lanka", "North Carolina", "Curaçao")
-bleach_plots <- list()
-
-for (loc in locs_bleach) {
-  
-  keep_idx <- meta2$location == loc & !is.na(meta2$bleaching)
-  if(sum(keep_idx) < 3 || length(unique(meta2$bleaching[keep_idx])) < 2) next
-  
-  m_sub <- meta2[keep_idx, ]
-  n_sub <- permanova_numeric_data2[keep_idx, ]
-  
-  # BC & PERMANOVA
-  bc_sub <- vegdist(n_sub, method = "bray")
-  perm_sub <- adonis2(bc_sub ~ bleaching, data = m_sub, permutations = 999)
-  
-  # Extract Stats
-  p_val <- perm_sub[["Pr(>F)"]][1]
-  r2_val <- round(perm_sub[["R2"]][1], 3)
-  p_lab <- if(is.na(p_val)) "p = NA" else if(p_val <= 0.001) "p < 0.001" else paste("p =", p_val)
-  stats_label <- paste0("PERMANOVA: R² = ", r2_val, ", ", p_lab)
-  
-  # PCoA
-  pcoa_res <- cmdscale(bc_sub, eig = TRUE, k = 2)
-  var_exp  <- round(100 * pcoa_res$eig[1:2] / sum(pcoa_res$eig[pcoa_res$eig > 0]), 1)
-  pcoa_df  <- cbind(as.data.frame(pcoa_res$points), m_sub)
-  
-  # Generate Plot
-  p <- ggplot(pcoa_df, aes(x = V1, y = V2, color = bleaching)) +
-    geom_point(size = 3, alpha = 0.7) +
-    scale_color_manual(values = cols_bleaching) +
-    labs(
-      title = loc,
-      x = paste0("PCoA1: (", var_exp[1], "%)"), 
-      y = paste0("PCoA2: (", var_exp[2], "%)")
-    ) +
-    annotate(
-      "text", x = Inf, y = -Inf, 
-      label = stats_label, 
-      hjust = 1.05, vjust = -1.2, 
-      size = 3, fontface = "italic"
-    ) +
-    theme_cowplot() +
-    theme(legend.position = "none") 
-  
-  bleach_plots[[loc]] <- p
-}
-
-#combine
-shared_legend <- get_legend(
-  ggplot(meta2[!is.na(meta2$bleaching),], aes(x=1, y=1, color=bleaching)) +
-    geom_point(size = 4) + 
-    scale_color_manual(values = cols_bleaching, name = "Status") +
-    theme_cowplot() + 
-    theme(
-      legend.position = "bottom",
-      legend.direction = "horizontal",
-      legend.justification = "center",
-      legend.box.just = "center"
-    )
-)
-
-plot_grid <- plot_grid(
-  plotlist = bleach_plots,
-  labels = c("A", "B", "C"),
-  label_size=24,
-  ncol = 1,
-  align = "v",
-  axis = "lr"
-)
-
-final_bleaching_fig <- plot_grid(plot_grid, shared_legend, ncol = 1, nrow = 2, rel_heights = c(1, 0.05))
-ggsave("/work/hs325/World_Corals/misc/figs/pcoa_bleachbyloc.jpg", 
-       final_bleaching_fig, width = 12, height = 11, dpi = 300)

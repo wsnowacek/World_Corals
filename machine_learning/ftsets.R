@@ -4,7 +4,7 @@ library(broom)
 library(ggpubr)
 library(cowplot)
 
-met_df <- read.csv("/work/hs325/World_Corals/Cleaned data CSVs/metabolite_clean.csv")
+met_df<- read.csv("/work/hs325/World_Corals/Cleaned data CSVs/merged_met_plot_df.csv")
 
 ###########################################################
 ## 1: make dfs of each column in reduced_feature_sets_multicollinear
