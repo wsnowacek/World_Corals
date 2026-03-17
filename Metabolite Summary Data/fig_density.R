@@ -508,7 +508,7 @@ ggsave("/work/hs325/World_Corals/misc/figs/volcano.jpg", p_volcano2, width=14,he
 
 #############################################
 
-combined_volcano <- plot_grid(p_volcano, p_volcano2, ncol = 1, labels = c("A, B"), label_size = 24, align = "hv")
+combined_volcano <- plot_grid(p_volcano, p_volcano2, ncol = 1, labels = c("A", "B"), label_size = 24, align = "hv")
 ggsave("/work/hs325/World_Corals/misc/figs/combined_volcano.jpg", combined_volcano, width=14,height=20,dpi=300)
 
 
