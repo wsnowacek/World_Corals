@@ -28,24 +28,6 @@ present_metabolites <- df %>%
 met_df <- met_df %>%
   filter(met_df$metabolite %in% present_metabolites)
 
-unique(met_df$compound_superclass) #58
-unique(met_df$npc_number_pathway) #8
-unique(met_df$npc_number_superclass) #42
-unique(met_df$npc_number_class) #83
-unique(met_df$coraldb_compound_superclass) #17
-unique(met_df$coraldb_compound_class) #34
-unique(met_df$coraldb_compound_family) #10
-unique(met_df$gnps_compound_class) #13
-unique(met_df$classy_fire_number_most_specific_class) #231
-
-class_counts <- met_df %>%
-  group_by(coraldb_compound_class) %>%
-  summarise(n = n()) %>%
-  arrange(desc(n))
-print(class_counts, n = 50)
-
-## met_df_npc_number_pathway
-
 cols_bleaching <- c(
   "Bleached" = "#FF847CFF", 
   "Non-Bleached" = "#019875FF", 
@@ -69,252 +51,12 @@ df <- df %>%
     host_family = factor(host_family),
     host_phylum = factor(host_phylum)
   )
+
 # color palettes
 cols_location <-c("#002594FF", "#E0B2CDFF", "#54C4E3FF", "#F3AA4FFF")
 cols_symbiont  <- c("#D84D16FF", "#FFF800FF", "#8FDA04FF")
 cols_phylum <- c("#24492EFF", "#015B58FF", "#2C6184FF", "#59629BFF", "#89689DFF", "#BA7999FF", "#E69B99FF")
 cols_sclero    <- c("1" = "#DE7862FF", "0" = "#D8AF39FF")
-
-
-#################################################################################
-## panel A) ridgeline Scleractinia by coral compound class (or NPC number pathway)
-# 
-# comm_matrix = df |>
-#   select(c(sample, grep("^x", names(df), value = TRUE))) |>
-#   column_to_rownames(var = "sample")
-# 
-# comm_matrix = comm_matrix |>
-#   mutate(across(where(is.numeric), ~ ifelse(.x > 0, 1, 0)))
-# 
-# top_20_classes <- met_df %>%
-#   filter(!is.na(coraldb_compound_class)) %>%
-#   group_by(coraldb_compound_class) %>%
-#   summarise(n = n()) %>%
-#   arrange(desc(n)) %>%
-#   slice_head(n = 20) %>%
-#   mutate(class_label = paste0(coraldb_compound_class, " (n=", n, ")"))
-# top_20_classes # remove NA
-# 
-# comm_long <- as.data.frame(comm_matrix) %>%
-#   mutate(sample = rownames(.)) %>%
-#   pivot_longer(-sample, names_to = "metabolite", values_to = "abundance")
-# 
-# class_abundance <- comm_long %>%
-#   inner_join(met_df %>% select(metabolite, coraldb_compound_class), by = "metabolite") %>%
-#   filter(coraldb_compound_class %in% top_20_classes$coraldb_compound_class) %>%
-#   group_by(sample, coraldb_compound_class) %>%
-#   summarise(mean_abundance = mean(abundance, na.rm = TRUE), .groups = "drop")
-# 
-# plot_data_ridge <- class_abundance %>%
-#   left_join(df %>% select(sample, scleractinia), by = "sample") %>%
-#   left_join(top_20_classes %>% select(coraldb_compound_class, class_label), by = "coraldb_compound_class") %>%
-#   mutate(scler_label = if_else(scleractinia == "1", "Scleractinia", "Other")) %>%
-#   filter(!is.na(scler_label)) #
-# 
-# plot_data_ridge <- plot_data_ridge %>%
-#   mutate(scler_label = factor(scler_label, levels = c("Scleractinia", "Other")))
-# 
-# ridge_cols <- c("Scleractinia" = "#DE7862FF", "Other" = "#D8AF39FF") 
-# 
-# ## no averaging
-# plot_data_ridge_full <- comm_long %>%
-#   inner_join(met_df %>% select(metabolite, coraldb_compound_class), by = "metabolite") %>%
-#   filter(coraldb_compound_class %in% top_20_classes$coraldb_compound_class) %>%
-#   left_join(df %>% select(sample, scleractinia), by = "sample") %>%
-#   left_join(top_20_classes %>% select(coraldb_compound_class, class_label), by = "coraldb_compound_class") %>%
-#   mutate(scler_label = factor(if_else(scleractinia == "1", "Scleractinia", "Other"), 
-#                               levels = c("Scleractinia", "Other"))) %>%
-#   filter(!is.na(scler_label))
-# 
-# ############################
-# 
-# p_ridge <- ggplot(plot_data_ridge, 
-#                   aes(x = log10(mean_abundance + 1), 
-#                       y = reorder(class_label, mean_abundance), 
-#                       fill = scler_label, 
-#                       color = scler_label)) +
-# 
-#   geom_vline(xintercept = 0, linetype = "dashed", color = "grey50", linewidth = 0.5) +
-#   
-#   geom_density_ridges(alpha = 0.6, 
-#                       scale = 1.2, 
-#                       rel_min_height = 0.01,
-#                       bandwidth = 0.1,
-#                       show.legend = FALSE) + 
-#   
-#   scale_fill_manual(values = ridge_cols) +
-#   scale_color_manual(values = ridge_cols) +
-#   
-#   facet_grid(scler_label ~ .) +
-#   
-#   labs(
-#     x = "Metabolite Abundances (log10 Mean + 1)",
-#     y = "Top 20 Compound Classes"
-#   ) +
-#   theme_pubr() + 
-#   theme(
-#     axis.text.y = element_text(size = 9),
-#     axis.title.y = element_blank(),
-#     strip.text = element_blank(),
-#     strip.background = element_blank(),
-#     panel.spacing = unit(1.5, "lines") 
-#   )
-# 
-# print(p_ridge)
-# ggsave("/work/hs325/World_Corals/misc/figs/ridgeline_avg.jpg", p_ridge, width = 5, height = 10, dpi=300)
-# 
-# 
-# #################################################################################
-# 
-# p_ridge_full <- ggplot(plot_data_ridge_full, 
-#                        aes(x = log10(abundance + 1), 
-#                            y = reorder(class_label, abundance, FUN = median), 
-#                            fill = scler_label, 
-#                            color = scler_label)) +
-#   
-#   geom_vline(xintercept = 0, linetype = "dashed", color = "grey50", linewidth = 0.5) +
-#   
-#     geom_density_ridges(alpha = 0.6, 
-#                       scale = 1.2, 
-#                       rel_min_height = 0.01, # lowered slightly to capture rare metabolites
-#                       bandwidth = 0.1,
-#                       show.legend = FALSE) + 
-#   
-#   scale_fill_manual(values = ridge_cols) +
-#   scale_color_manual(values = ridge_cols) +
-#   
-#   facet_grid(scler_label ~ .) +
-#   
-#   labs(
-#     x = "Metabolite Abundances (log10 + 1)",
-#     y = ""
-#   ) +
-#   theme_pubr() + 
-#   theme(
-#     axis.text.y = element_text(size = 9),
-#     strip.text = element_blank(),
-#     strip.background = element_blank(),
-#     panel.spacing.y = unit(1, "lines")
-#   ) +
-#   coord_cartesian(xlim = c(0, NA))
-# print(p_ridge_full)
-# ggsave("/work/hs325/World_Corals/misc/figs/ridgeline.jpg", p_ridge_full, width = 5, height = 10, dpi=300)
-
-#################################################################################
-
-# npc number pathway
-# 
-# top_20_npc <- met_df %>%
-#   filter(!is.na(npc_number_pathway), 
-#          !npc_number_pathway %in% c("null", "Unknown", "unclassified")) %>%
-#   group_by(npc_number_pathway) %>%
-#   summarise(n = n()) %>%
-#   arrange(desc(n)) %>%
-#   slice_head(n = 20) %>%
-#   mutate(npc_label = paste0(npc_number_pathway, " (n=", n, ")"))
-# 
-# # 2. Build the full distribution dataset (no averaging)
-# plot_data_npc_full <- comm_long %>%
-#   inner_join(met_df %>% select(metabolite, npc_number_pathway), by = "metabolite") %>%
-#   filter(npc_number_pathway %in% top_20_npc$npc_number_pathway) %>%
-#   # Join with sample metadata
-#   left_join(df %>% select(sample, scleractinia), by = "sample") %>%
-#   # Join with our new labels
-#   left_join(top_20_npc %>% select(npc_number_pathway, npc_label), by = "npc_number_pathway") %>%
-#   mutate(scler_label = factor(if_else(scleractinia == "1", "Scleractinia", "Other"), 
-#                               levels = c("Scleractinia", "Other"))) %>%
-#   filter(!is.na(scler_label))
-# 
-# p_ridge_npc <- ggplot(plot_data_npc_full, 
-#                       aes(x = log10(abundance + 1), 
-#                           y = reorder(npc_label, abundance, FUN = median), 
-#                           fill = scler_label, 
-#                           color = scler_label)) +
-#   
-#   geom_vline(xintercept = 0, linetype = "dashed", color = "grey50", linewidth = 0.5) +
-#   
-#   geom_density_ridges(alpha = 0.6, 
-#                       scale = 1.2, 
-#                       rel_min_height = 0.005, 
-#                       bandwidth = 0.1,
-#                       show.legend = TRUE) + 
-#   
-#   scale_fill_manual(values = ridge_cols) +
-#   scale_color_manual(values = ridge_cols) +
-#     coord_cartesian(xlim = c(0, NA)) +
-#   
-#   facet_grid(scler_label ~ .) +
-#   
-#   labs(
-#     x = "Metabolite Abundances (log10 Intensity + 1)",
-#     y = "",
-#     fill = "Order",
-#     color = "Order"
-#   ) +
-#   theme_pubr() + 
-#   theme(
-#     axis.text.y = element_text(size = 9),
-#     strip.background = element_blank(),
-#     strip.text = element_blank(),
-#     panel.spacing.y = unit(0.5, "lines"),
-#     legend.position = "none"
-#   )
-# 
-# print(p_ridge_npc)
-
-#################################################################################
-
-# top_20_superclass <- met_df %>%
-#   filter(!is.na(compound_superclass), 
-#          !compound_superclass %in% c("null", "Unknown", "unclassified", "N/A")) %>%
-#   group_by(compound_superclass) %>%
-#   summarise(n = n()) %>%
-#   arrange(desc(n)) %>%
-#   slice_head(n = 20) %>%
-#   mutate(superclass_label = paste0(compound_superclass, " (n=", n, ")"))
-# 
-# plot_data_superclass_full <- comm_long %>%
-#   inner_join(met_df %>% select(metabolite, compound_superclass), by = "metabolite") %>%
-#   filter(compound_superclass %in% top_20_superclass$compound_superclass) %>%
-#   left_join(df %>% select(sample, scleractinia), by = "sample") %>%
-#   left_join(top_20_superclass %>% select(compound_superclass, superclass_label), by = "compound_superclass") %>%
-#   mutate(scler_label = factor(if_else(scleractinia == "1", "Scleractinia", "Other"), 
-#                               levels = c("Scleractinia", "Other"))) %>%
-#   filter(!is.na(scler_label))
-# 
-# p_ridge_superclass <- ggplot(plot_data_superclass_full, 
-#                              aes(x = log10(abundance + 1), 
-#                                  y = reorder(superclass_label, abundance, FUN = median), 
-#                                  fill = scler_label, 
-#                                  color = scler_label)) +
-#   
-#   geom_vline(xintercept = 0, linetype = "dashed", color = "grey50", linewidth = 0.5) +
-#   
-#   geom_density_ridges(alpha = 0.6, 
-#                       scale = 1.2, 
-#                       rel_min_height = 0.005, 
-#                       bandwidth = 0.1) + 
-#   
-#   scale_fill_manual(values = ridge_cols) +
-#   scale_color_manual(values = ridge_cols) +
-#   
-#   coord_cartesian(xlim = c(0, NA)) + # Strictly clips the x-axis at 0
-#   
-#   facet_grid(scler_label ~ .) +
-#   
-#   labs(
-#     x = "Metabolite Abundances (log10 Intensity + 1)",
-#     y = ""
-#   ) +
-#   theme_pubr() + 
-#   theme(
-#     axis.text.y = element_text(size = 9),
-#     strip.background = element_blank(),
-#     strip.text = element_blank(),
-#     panel.spacing.y = unit(0.5, "lines")
-#   )
-# print(p_ridge_superclass)
-# ggsave("/work/hs325/World_Corals/misc/figs/superclass.jpg", p_ridge_superclass, width=8,height=8)
 
 
 #################################################################################
@@ -396,79 +138,126 @@ ggsave("/work/hs325/World_Corals/misc/figs/volcano_origin.jpg", p_volcano, width
 
 ################################################################################
 
-## color the points using this met_df's "display_class" and shape by origin
-met_df<- read.csv("/work/hs325/World_Corals/Cleaned data CSVs/merged_met_plot_df.csv")
+### for ClassyFire compound_superclass
+# target_classes <- trimws(c(
+#   "Glycerophospholipids", 
+#   "Sphingolipids", 
+#   "Oligopeptides", 
+#   "Glycerolipids", 
+#   "Triacylglycerols", 
+#   "Steroids", 
+#   "Carotenoids (C40)", 
+#   "Fatty esters", 
+#   "Diacylglyceryl-carboxyhydroxymethylcholines", 
+#   "Triterpenoids", 
+#   "Fatty amides", 
+#   "Phosphatidylglycerocholines", 
+#   "Monogalactosyldiacylglycerol", 
+#   "Phosphatidylglyceroethanolamines", 
+#   "Monoalkyldiacylglycerols", 
+#   "Meroterpenoids",
+#   "Unknown"
+# ))
+# 
+# provided_hex <- c(
+#   "#BEAED4", "#FDC086", "#FFFF99", "#386CB0", "#F0027F", "#BF5B17", "#1B9E77",
+#   "#D95F02", "#7570B3", "#984EA3", "#66A61E", "#E6AB02", "#666666", "#A6CEE3", "#B2DF8A",
+#   "#FB9A99", "#CBD5E8")
+# # "#E5D8BD" "#FDDAEC"
+# spec_colors <- setNames(provided_hex, target_classes)
+# 
+# final_palette <- c(spec_colors, "Other" = "gray60")
+# origin_shapes <- c("Host" = 16, "Symbiont" = 3, "Both" = 17, "Unknown" = 8)
+# 
+# plot_data_volcano <- volcano_results %>%
+#   inner_join(
+#     met_df %>% select(metabolite, display_class, refined_origin),
+#     by = "metabolite"
+#   ) %>%
+#   mutate(
+#     # coerce to character
+#     display_class = as.character(display_class),
+#     refined_origin = as.character(refined_origin),
+#     display_class = if_else(
+#       is.na(display_class) | !(display_class %in% names(final_palette)),
+#       "Other",
+#       display_class
+#     ),
+#     refined_origin = if_else(is.na(refined_origin), "Unknown", refined_origin)
+#   )
+# 
+# classes <- sort(unique(plot_data_volcano$display_class))
+# class_colors <- final_palette[classes]
+# class_order <- c(target_classes, "Other")
 
-target_classes <- trimws(c(
-  "Glycerophospholipids", 
-  "Sphingolipids", 
-  "Oligopeptides", 
-  "Glycerolipids", 
-  "Triacylglycerols", 
-  "Steroids", 
-  "Carotenoids (C40)", 
-  "Fatty esters", 
-  "Diacylglyceryl-carboxyhydroxymethylcholines", 
-  "Triterpenoids", 
-  "Fatty amides", 
-  "Phosphatidylglycerocholines", 
-  "Monogalactosyldiacylglycerol", 
-  "Phosphatidylglyceroethanolamines", 
-  "Monoalkyldiacylglycerols", 
-  "Meroterpenoids",
-  "Unknown"
-))
 
-provided_hex <- c(
-  "#BEAED4", "#FDC086", "#FFFF99", "#386CB0", "#F0027F", "#BF5B17", "#1B9E77",
-  "#D95F02", "#7570B3", "#984EA3", "#66A61E", "#E6AB02", "#666666", "#A6CEE3", "#B2DF8A",
-  "#FB9A99", "#CBD5E8")
-# "#E5D8BD" "#FDDAEC"
-spec_colors <- setNames(provided_hex, target_classes)
+################################################################################
 
-final_palette <- c(spec_colors, "Other" = "gray60")
-origin_shapes <- c("Host" = 16, "Symbiont" = 3, "Both" = 17, "Unknown" = 8)
-
-plot_data_volcano <- volcano_results %>%
-  inner_join(
-    met_df %>% select(metabolite, display_class, refined_origin),
-    by = "metabolite"
-  ) %>%
+### for custom compound_class
+met_df <- met_df %>%
   mutate(
-    # coerce to character
-    display_class = as.character(display_class),
-    refined_origin = as.character(refined_origin),
-    display_class = if_else(
-      is.na(display_class) | !(display_class %in% names(final_palette)),
-      "Other",
-      display_class
-    ),
-    refined_origin = if_else(is.na(refined_origin), "Unknown", refined_origin)
+    compound_class = recode(
+      compound_class,
+      "Carotenoids (C40, Î²-Î²)" = "Carotenoids",
+      "Oxidized glycerophospholipids" = "OxPL",
+      "Glycerophosphoethanolamines" = "GPEtn",
+      "Neutral glycosphingolipids" = "Neutral GSL",
+      "Triacylglycerols" = "TAG",
+      "Diacylglycerols" = "DAG",
+      "Prenyl quinone meroterpenoids" = "TQ/THQs"
+    )
   )
 
-classes <- sort(unique(plot_data_volcano$display_class))
-class_colors <- final_palette[classes]
+### take top 20 compound_class by count, with Unknown forced to end
+target_classes <- met_df %>%
+  count(compound_class, sort = TRUE) %>%
+  slice_head(n = 20) %>%
+  pull(compound_class) %>%
+  trimws()
+
+target_classes <- c(
+  setdiff(target_classes, "Unknown"),
+  intersect(target_classes, "Unknown")
+)
+
+### colors
+provided_hex <- c(
+  "#1F77B4FF", "#FF7F0EFF", "#2CA02CFF", "#D62728FF",
+  "#9467BDFF", "#8C564BFF", "#E377C2FF", "deepskyblue4", "#BCBD22FF",
+  "#17BECFFF", "#AEC7E8FF", "#FFBB78FF", "#98DF8AFF", "#FF9896FF",
+  "#C5B0D5FF", "#C49C94FF", "#F7B6D2FF", "#9EDAE5FF", "#DBDB8DFF",
+  "#C7C7C7FF"
+)
+
+spec_colors <- setNames(provided_hex[seq_along(target_classes)], target_classes)
+
+final_palette <- c(spec_colors, "Other" = "gray30")
 class_order <- c(target_classes, "Other")
 
+origin_shapes <- c("Host" = 16, "Symbiont" = 3, "Both" = 17, "Unknown" = 8)
+
+### volcano plotting data
 plot_data_volcano <- volcano_results %>%
   inner_join(
-    met_df %>% select(metabolite, display_class, refined_origin),
+    met_df %>% select(metabolite, compound_class, refined_origin),
     by = "metabolite"
   ) %>%
   mutate(
-    display_class = as.character(display_class),
+    compound_class = trimws(as.character(compound_class)),
     refined_origin = as.character(refined_origin),
-        display_class = if_else(
-      is.na(display_class) | !(display_class %in% names(final_palette)),
+    display_class = if_else(
+      is.na(compound_class) | !(compound_class %in% names(final_palette)),
       "Other",
-      display_class
+      compound_class
     ),
-    display_class = factor(display_class, levels = class_order),
-    refined_origin = if_else(is.na(refined_origin), "Unknown", refined_origin)
+    refined_origin = if_else(is.na(refined_origin), "Unknown", refined_origin),
+    display_class = factor(display_class, levels = class_order)
   )
 
-classes <- levels(plot_data_volcano$display_class)
+classes <- levels(droplevels(plot_data_volcano$display_class))
 class_colors <- final_palette[classes]
+
+###############################################################
 
 sig_threshold <- -log10(0.05)
 
@@ -478,7 +267,7 @@ p_volcano2 <- ggplot(plot_data_volcano, aes(x = log2FC, y = neg_log_p_adj)) +
   geom_hline(yintercept = sig_threshold, linetype = "dashed", color = "grey70", linewidth = 0.8) +
   geom_point(aes(color = display_class), alpha = 0.75, size = 2.5) +
   scale_color_manual(
-    name = "Compound Superclass",
+    name = "Compound Class",
     values = class_colors,
     breaks = classes,
     na.value = "gray60"
@@ -515,6 +304,9 @@ ggsave("/work/hs325/World_Corals/misc/figs/combined_volcano.jpg", combined_volca
 
 ################################################################################
 ## subvolcanos 
+
+# for compound superclass: display_class "Glycerolipids" "Sphingolipids" "Triacylglycerols"
+# for compound class: "TAG" "DAG" "MA
 
 # 1. Glycerolipids Plot
 p_glycerolipids <- plot_data_volcano %>%
@@ -579,13 +371,43 @@ ggsave("/work/hs325/World_Corals/misc/figs/subcano.jpg", subcano, width=14, heig
 
 ################################################################################
 
-################################################################################
+# for compound class: "TAG" "DAG" "MADAG"
 
-## TBA: boxplots for specific categories of coraldb compound class?
-# triacylglycerols
-# MADAG
-# DGCC
-# MGDG
-# DGDG
-# LysoPC acyl
-# Diacylglycerols
+TAG <- plot_data_volcano %>%
+  filter(display_class == "TQ/THQs") %>%
+  ggplot(aes(x = log2FC, y = neg_log_p_adj)) +
+  geom_vline(xintercept = c(-2, 2), linetype = "dashed", color = "grey70") +
+  geom_hline(yintercept = sig_threshold, linetype = "dashed", color = "grey70") +
+  geom_point(aes(color = display_class), size = 3, alpha = 0.8) +
+  scale_color_manual(values = class_colors) +
+  labs(title = "TQ/THQs", x = "log2 Fold Change", y = "-log10(adj. p-value)") +
+  theme_pubr() +
+  theme(legend.position = "none", plot.title = element_text(size = 18, face = "bold"))
+
+DAG <- plot_data_volcano %>%
+  filter(display_class == "Neutral GSL") %>%
+  ggplot(aes(x = log2FC, y = neg_log_p_adj)) +
+  geom_vline(xintercept = c(-2, 2), linetype = "dashed", color = "grey70") +
+  geom_hline(yintercept = sig_threshold, linetype = "dashed", color = "grey70") +
+  geom_point(aes(color = display_class), size = 3, alpha = 0.8) +
+  scale_color_manual(values = class_colors) +
+  labs(title = "Neutral GSL", x = "log2 Fold Change", y = "-log10(adj. p-value)") +
+  theme_pubr() +
+  theme(legend.position = "none", plot.title = element_text(size = 18, face = "bold"))
+
+MADAG <- plot_data_volcano %>%
+  filter(display_class == "Ceramides") %>%
+  ggplot(aes(x = log2FC, y = neg_log_p_adj)) +
+  geom_vline(xintercept = c(-2, 2), linetype = "dashed", color = "grey70") +
+  geom_hline(yintercept = sig_threshold, linetype = "dashed", color = "grey70") +
+  geom_point(aes(color = display_class), size = 3, alpha = 0.8) +
+  scale_color_manual(values = class_colors) +
+  labs(title = "Ceramides", x = "log2 Fold Change", y = "-log10(adj. p-value)") +
+  theme_pubr() +
+  theme(legend.position = "none", plot.title = element_text(size = 18, face = "bold"))
+MADAG
+
+subcano2 <- plot_grid(TAG, DAG, MADAG, ncol = 3)
+ggsave("/work/hs325/World_Corals/misc/figs/subcano2.jpg", subcano2, width=14, height=7, dpi=300)
+
+

@@ -64,43 +64,97 @@ cols_sclero    <- c("1" = "#DE7862FF", "0" = "#D8AF39FF")
 
 
 ##################################################
-# for compound superclass - ClassyFire annotation
-target_classes <- trimws(c(
-  "Glycerophospholipids", 
-  "Sphingolipids", 
-  "Oligopeptides", 
-  "Glycerolipids", 
-  "Triacylglycerols", 
-  "Steroids", 
-  "Carotenoids (C40)", 
-  "Fatty esters", 
-  "Diacylglyceryl-carboxyhydroxymethylcholines", 
-  "Triterpenoids", 
-  "Fatty amides", 
-  "Phosphatidylglycerocholines", 
-  "Monogalactosyldiacylglycerol", 
-  "Phosphatidylglyceroethanolamines", 
-  "Monoalkyldiacylglycerols", 
-  "Meroterpenoids",
-  "Unknown"
-))
+# for Compound Class - ClassyFire annotation
 
-# 2. Provided Hex Colors
-provided_hex <- c(
-  "#BEAED4", "#FDC086", "#FFFF99", "#386CB0", "#F0027F", "#BF5B17", "#1B9E77",
-"#D95F02", "#7570B3", "#984EA3", "#66A61E", "#E6AB02", "#666666", "#A6CEE3", "#B2DF8A",
-"#FB9A99", "#CBD5E8")
-# "#E5D8BD" "#FDDAEC"
+# target_classes <- trimws(c(
+#   "Glycerophospholipids", 
+#   "Sphingolipids", 
+#   "Oligopeptides", 
+#   "Glycerolipids", 
+#   "Triacylglycerols", 
+#   "Steroids", 
+#   "Carotenoids (C40)", 
+#   "Fatty esters", 
+#   "Diacylglyceryl-carboxyhydroxymethylcholines", 
+#   "Triterpenoids", 
+#   "Fatty amides", 
+#   "Phosphatidylglycerocholines", 
+#   "Monogalactosyldiacylglycerol", 
+#   "Phosphatidylglyceroethanolamines", 
+#   "Monoalkyldiacylglycerols", 
+#   "Meroterpenoids",
+#   "Unknown"
+# ))
+# 
+# provided_hex <- c(
+#   "#BEAED4", "#FDC086", "#FFFF99", "#386CB0", "#F0027F", "#BF5B17", "#1B9E77",
+# "#D95F02", "#7570B3", "#984EA3", "#66A61E", "#E6AB02", "#666666", "#A6CEE3", "#B2DF8A",
+# "#FB9A99", "#CBD5E8")
+# # "#E5D8BD" "#FDDAEC"
+# spec_colors <- setNames(provided_hex, target_classes)
+# 
+# final_palette <- c(spec_colors, "Other" = "gray60")
+# ordered_levels <- c(target_classes, "Other")
+# 
+# process_importance_data <- function(df) {
+#   df %>%
+#     mutate(compound_superclass = trimws(as.character(compound_superclass))) %>%
+#     mutate(display_class = if_else(compound_superclass %in% names(final_palette), 
+#                                    compound_superclass, 
+#                                    "Other")) %>%
+#     mutate(display_class = fct_relevel(factor(display_class), "Other", after = Inf)) 
+# }
+# 
+# met_plot_df <- process_importance_data(met_df)
+# 
+# ordered_levels <- c(target_classes, "Other")
+# met_plot_df$display_class <- factor(met_plot_df$display_class, levels = ordered_levels)
+
+##################################################
+
+# for compound class - custom spectral library
+
+met_df <- met_df %>%
+  mutate(
+    compound_class = recode(
+      compound_class,
+      "Carotenoids (C40, Î²-Î²)" = "Carotenoids",
+      "Oxidized glycerophospholipids" = "OxPL",
+      "Glycerophosphoethanolamines" = "GPEtn",
+      "Neutral glycosphingolipids" = "Neutral GSL",
+      "Triacylglycerols" = "TAG",
+      "Diacylglycerols" = "DAG",
+      "Prenyl quinone meroterpenoids" = "TQ/THQs" ## unsure about this one
+    )
+  )
+
+target_classes <- met_df %>%
+  count(compound_class, sort = TRUE) %>%
+  slice_head(n = 20) %>%
+  pull(compound_class) %>%
+  trimws()
+
+target_classes <- c(
+  setdiff(target_classes, "Unknown"),
+  intersect(target_classes, "Unknown")
+)
+
+provided_hex <- c("#1F77B4FF", "#FF7F0EFF", "#2CA02CFF", "#D62728FF", 
+                  "#9467BDFF", "#8C564BFF", "#E377C2FF", "deepskyblue4", "#BCBD22FF", 
+                  "#17BECFFF", "#AEC7E8FF", "#FFBB78FF", "#98DF8AFF", "#FF9896FF", 
+                  "#C5B0D5FF", "#C49C94FF", "#F7B6D2FF", "#9EDAE5FF", "#DBDB8DFF", 
+                  "#C7C7C7FF")
+
 spec_colors <- setNames(provided_hex, target_classes)
 
-final_palette <- c(spec_colors, "Other" = "gray60")
+final_palette <- c(spec_colors, "Other" = "gray30")
 ordered_levels <- c(target_classes, "Other")
 
 process_importance_data <- function(df) {
   df %>%
-    mutate(compound_superclass = trimws(as.character(compound_superclass))) %>%
-    mutate(display_class = if_else(compound_superclass %in% names(final_palette), 
-                                   compound_superclass, 
+    mutate(compound_class = trimws(as.character(compound_class))) %>%
+    mutate(display_class = if_else(compound_class %in% names(final_palette), 
+                                   compound_class, 
                                    "Other")) %>%
     mutate(display_class = fct_relevel(factor(display_class), "Other", after = Inf)) 
 }
@@ -110,9 +164,6 @@ met_plot_df <- process_importance_data(met_df)
 ordered_levels <- c(target_classes, "Other")
 met_plot_df$display_class <- factor(met_plot_df$display_class, levels = ordered_levels)
 
-##################################################
-
-# for compound class - custom spectral library
 
 ##################################################
 
@@ -209,7 +260,7 @@ pa <- ggplot(met_summary_classed, aes(x = ubiquity_all, y = avg_abundance)) +
   labs(
     x = "Ubiquity",
     y = "Abundance",
-    color = "Compound Superclass", # Updated label
+    color = "Compound Class", # Updated label
     shape = "Metabolite Origin"
   ) + 
   theme_pubr() + 
@@ -277,7 +328,7 @@ pb <- ggplot(met_summary_classed_scler, aes(x = ubiquity_all, y = avg_abundance)
   labs(
     x = "Scleractinian Ubiquity",
     y = "Abundance",
-    fill = "Compound Superclass",
+    fill = "Compound Class",
   ) + 
   theme_pubr() + 
   theme(
@@ -481,7 +532,7 @@ p_xgb_ubiq_scatter <- ggplot(met_summary_xgb, aes(x = non_scler_ubiquity, y = sc
   labs(
     x = "Non-Scleractinian Ubiquity (%)", 
     y = "Scleractinian Ubiquity (%)", 
-    color = "Compound Superclass",
+    color = "Compound Class",
     shape = "Metabolite Origin"
   ) +
   theme_pubr() +
@@ -504,7 +555,7 @@ p_rf_ubiq_scatter <- ggplot(met_summary_rf, aes(x = non_scler_ubiquity, y = scle
   labs(
     x = "Non-Scleractinian Ubiquity (%)", 
     y = "Scleractinian Ubiquity (%)", 
-    color = "Compound Superclass",
+    color = "Compound Class",
     shape = "Metabolite Origin"
   ) +
   theme_pubr() +
@@ -523,7 +574,7 @@ legend_dummy <- ggplot(met_plot_df, aes(x = XGBoost_Importance, y = RandomForest
   geom_point(aes(fill = display_class, shape = refined_origin)) +
   scale_fill_manual(
     values = final_palette, 
-    name = "Compound Superclass", 
+    name = "Compound Class", 
     drop = FALSE
   ) +
   scale_shape_manual(
@@ -662,7 +713,7 @@ p_xgb_ubiq_scatter <- ggplot(met_summary_xgb, aes(x = non_scler_ubiquity, y = sc
   labs(
     x = "Non-Scleractinian Ubiquity (%)", 
     y = "Scleractinian Ubiquity (%)", 
-    color = "Compound Superclass",
+    color = "Compound Class",
     shape = "Metabolite Origin"
   ) +
   theme_pubr() +
@@ -695,7 +746,7 @@ p_rf_ubiq_scatter <- ggplot(met_summary_rf, aes(x = non_scler_ubiquity, y = scle
   labs(
     x = "Non-Scleractinian Ubiquity (%)", 
     y = "Scleractinian Ubiquity (%)", 
-    color = "Compound Superclass",
+    color = "Compound Class",
     shape = "Metabolite Origin"
   ) +
   theme_pubr() +
@@ -703,6 +754,7 @@ p_rf_ubiq_scatter <- ggplot(met_summary_rf, aes(x = non_scler_ubiquity, y = scle
 
 print(p_xgb_ubiq_scatter)
 print(p_rf_ubiq_scatter)
+
 row_hi <- plot_grid(
   p_xgb_ubiq_scatter + theme(legend.position = "none") + labs(subtitle = "XGBoost"), 
   p_rf_ubiq_scatter 
@@ -719,67 +771,67 @@ ggsave("/work/hs325/World_Corals/misc/figs/fig5_hi.jpg",
        row_hi, width = 14, height = 6, dpi = 300, bg = "white")
 
 ################################################################################
-p1 <- ggbarplot(xgb_plot_data, x = "metabolite", y = "XGBoost_Importance",
-                fill = "display_class", color = "transparent",
-                xlab = "Metabolite", ylab = "XGBoost Feature Importance") +
-  theme_pubr() +
-  scale_fill_manual(values = final_palette) +
-  scale_y_continuous(expand = expansion(mult = c(0, 0.3))) + # More top space for callouts
-  scale_x_discrete(expand = expansion(add = c(1, 10))) +     # More right space for labels
-  geom_text_repel(
-    data = subset(xgb_plot_data, metabolite %in% target_mets),
-    aes(label = metabolite),
-    # Push labels up and to the right
-    nudge_x = 20, 
-    nudge_y = 0.01,
-    direction = "both",
-    angle = 0,                # Horizontal text as requested
-    segment.size = 0.5,
-    segment.color = "grey30",
-    segment.curvature = -0.2, # Curved lines look better for long distances
-    box.padding = 2,          # Forces label further from the bar
-    point.padding = 0.5,
-    min.segment.length = 0,   # Always show the line
-    size = 3.5,
-    fontface = "bold"
-  ) +
-  theme(axis.text.x = element_blank(), 
-        axis.ticks.x = element_blank(),
-        legend.position = "none")
-
-p2 <- ggbarplot(rf_plot_data, x = "metabolite", y = "RandomForest_Importance",
-                fill = "display_class", color = "transparent",
-                xlab = "Metabolite", ylab = "RF Feature Importance") +
-  theme_pubr() +
-  scale_fill_manual(values = final_palette) +
-  scale_y_continuous(expand = expansion(mult = c(0, 0.3))) +
-  scale_x_discrete(expand = expansion(add = c(1, 10))) +
-  geom_text_repel(
-    data = subset(rf_plot_data, metabolite %in% target_mets),
-    aes(label = metabolite),
-    nudge_x = 20, 
-    nudge_y = 0.01,
-    direction = "both",
-    angle = 0,
-    segment.size = 0.5,
-    segment.color = "grey30",
-    segment.curvature = -0.2,
-    box.padding = 2,
-    point.padding = 0.5,
-    min.segment.length = 0,
-    size = 3.5,
-    fontface = "bold"
-  ) +
-  theme(axis.text.x = element_blank(), 
-        axis.ticks.x = element_blank(),
-        legend.position = "none")
-
-print(p1)
-print(p2)
-
-p1p2 <- plot_grid(p1, p2)
-row_ab <- plot_grid(
-  unified_legend, p1p2,
-  nrow = 2, rel_heights = c(0.4,1))
-ggsave("/work/hs325/World_Corals/misc/figs/fig5_hi.jpg", 
-       p1p2, width = 12, height = 6, dpi = 600, bg = "white")
+# p1 <- ggbarplot(xgb_plot_data, x = "metabolite", y = "XGBoost_Importance",
+#                 fill = "display_class", color = "transparent",
+#                 xlab = "Metabolite", ylab = "XGBoost Feature Importance") +
+#   theme_pubr() +
+#   scale_fill_manual(values = final_palette) +
+#   scale_y_continuous(expand = expansion(mult = c(0, 0.3))) + # More top space for callouts
+#   scale_x_discrete(expand = expansion(add = c(1, 10))) +     # More right space for labels
+#   geom_text_repel(
+#     data = subset(xgb_plot_data, metabolite %in% target_mets),
+#     aes(label = metabolite),
+#     # Push labels up and to the right
+#     nudge_x = 20, 
+#     nudge_y = 0.01,
+#     direction = "both",
+#     angle = 0,                # Horizontal text as requested
+#     segment.size = 0.5,
+#     segment.color = "grey30",
+#     segment.curvature = -0.2, # Curved lines look better for long distances
+#     box.padding = 2,          # Forces label further from the bar
+#     point.padding = 0.5,
+#     min.segment.length = 0,   # Always show the line
+#     size = 3.5,
+#     fontface = "bold"
+#   ) +
+#   theme(axis.text.x = element_blank(), 
+#         axis.ticks.x = element_blank(),
+#         legend.position = "none")
+# 
+# p2 <- ggbarplot(rf_plot_data, x = "metabolite", y = "RandomForest_Importance",
+#                 fill = "display_class", color = "transparent",
+#                 xlab = "Metabolite", ylab = "RF Feature Importance") +
+#   theme_pubr() +
+#   scale_fill_manual(values = final_palette) +
+#   scale_y_continuous(expand = expansion(mult = c(0, 0.3))) +
+#   scale_x_discrete(expand = expansion(add = c(1, 10))) +
+#   geom_text_repel(
+#     data = subset(rf_plot_data, metabolite %in% target_mets),
+#     aes(label = metabolite),
+#     nudge_x = 20, 
+#     nudge_y = 0.01,
+#     direction = "both",
+#     angle = 0,
+#     segment.size = 0.5,
+#     segment.color = "grey30",
+#     segment.curvature = -0.2,
+#     box.padding = 2,
+#     point.padding = 0.5,
+#     min.segment.length = 0,
+#     size = 3.5,
+#     fontface = "bold"
+#   ) +
+#   theme(axis.text.x = element_blank(), 
+#         axis.ticks.x = element_blank(),
+#         legend.position = "none")
+# 
+# print(p1)
+# print(p2)
+# 
+# p1p2 <- plot_grid(p1, p2)
+# row_ab <- plot_grid(
+#   unified_legend, p1p2,
+#   nrow = 2, rel_heights = c(0.4,1))
+# ggsave("/work/hs325/World_Corals/misc/figs/fig5_hi.jpg", 
+#        p1p2, width = 12, height = 6, dpi = 600, bg = "white")

@@ -404,6 +404,76 @@ plot_data_volcano <- volcano_results %>%
 classes <- levels(plot_data_volcano$display_class)
 class_colors <- final_palette[classes]
 
+###########################################################
+
+
+### for custom compound_class
+met_df <- met_df %>%
+  mutate(
+    compound_class = recode(
+      compound_class,
+      "Carotenoids (C40, Î²-Î²)" = "Carotenoids",
+      "Oxidized glycerophospholipids" = "OxPL",
+      "Glycerophosphoethanolamines" = "GPEtn",
+      "Neutral glycosphingolipids" = "Neutral GSL",
+      "Triacylglycerols" = "TAG",
+      "Diacylglycerols" = "DAG",
+      "Prenyl quinone meroterpenoids" = "TQ/THQs"
+    )
+  )
+
+### take top 20 compound_class by count, with Unknown forced to end
+target_classes <- met_df %>%
+  count(compound_class, sort = TRUE) %>%
+  slice_head(n = 20) %>%
+  pull(compound_class) %>%
+  trimws()
+
+target_classes <- c(
+  setdiff(target_classes, "Unknown"),
+  intersect(target_classes, "Unknown")
+)
+
+### colors
+provided_hex <- c(
+  "#1F77B4FF", "#FF7F0EFF", "#2CA02CFF", "#D62728FF",
+  "#9467BDFF", "#8C564BFF", "#E377C2FF", "deepskyblue4", "#BCBD22FF",
+  "#17BECFFF", "#AEC7E8FF", "#FFBB78FF", "#98DF8AFF", "#FF9896FF",
+  "#C5B0D5FF", "#C49C94FF", "#F7B6D2FF", "#9EDAE5FF", "#DBDB8DFF",
+  "#C7C7C7FF"
+)
+
+spec_colors <- setNames(provided_hex[seq_along(target_classes)], target_classes)
+
+final_palette <- c(spec_colors, "Other" = "gray30")
+class_order <- c(target_classes, "Other")
+
+origin_shapes <- c("Host" = 16, "Symbiont" = 3, "Both" = 17, "Unknown" = 8)
+
+### volcano plotting data
+plot_data_volcano <- volcano_results %>%
+  inner_join(
+    met_df %>% select(metabolite, compound_class, refined_origin),
+    by = "metabolite"
+  ) %>%
+  mutate(
+    compound_class = trimws(as.character(compound_class)),
+    refined_origin = as.character(refined_origin),
+    display_class = if_else(
+      is.na(compound_class) | !(compound_class %in% names(final_palette)),
+      "Other",
+      compound_class
+    ),
+    refined_origin = if_else(is.na(refined_origin), "Unknown", refined_origin),
+    display_class = factor(display_class, levels = class_order)
+  )
+
+classes <- levels(droplevels(plot_data_volcano$display_class))
+class_colors <- final_palette[classes]
+
+###########################################################
+
+
 sig_threshold <- -log10(0.05)
 
 # build plot
@@ -412,7 +482,7 @@ p_volcano2 <- ggplot(plot_data_volcano, aes(x = log2FC, y = neg_log_p_adj)) +
   geom_hline(yintercept = sig_threshold, linetype = "dashed", color = "grey70", linewidth = 0.8) +
   geom_point(aes(color = display_class), alpha = 0.75, size = 3.5) +
   scale_color_manual(
-    name = "Compound Superclass",
+    name = "Compound Class",
     values = class_colors,
     breaks = classes,
     na.value = "gray60"
