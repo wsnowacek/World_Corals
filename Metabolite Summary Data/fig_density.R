@@ -13,12 +13,13 @@ library(RColorBrewer)
 library(ggpubr)
 library(ggrepel)
 library(forcats)
+library(here)
 # library(ComplexHeatmap)
 # library(circlize)
 
-setwd("/work/hs325/World_Corals/Metabolite Summary Data")
-df<- read.csv("qc_data.csv")
-met_df<- read.csv("/work/hs325/World_Corals/Cleaned data CSVs/merged_met_plot_df.csv")
+# read in data
+df <- read.csv(here("Metabolite Summary Data", "qc_data.csv"))
+met_df <- read.csv(here("Cleaned data CSVs", "merged_met_plot_df.csv"))
 
 present_metabolites <- df %>% 
   select(starts_with("x")) %>% 

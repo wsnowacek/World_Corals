@@ -15,10 +15,15 @@ library(forcats)
 library(ggvenn)
 library(ggrepel)
 library(ggforce)
+library(here)
 
-setwd("/work/hs325/World_Corals/Metabolite Summary Data")
-df<- read.csv("qc_data.csv")
-met_df<- read.csv("/work/hs325/World_Corals/Cleaned data CSVs/merged_met_plot_df.csv")
+# read in data
+df <- read.csv(here("Metabolite Summary Data", "qc_data.csv"))
+met_df <- read.csv(here("Cleaned data CSVs", "merged_met_plot_df.csv"))
+
+# setwd("/work/hs325/World_Corals/Metabolite Summary Data")
+# df<- read.csv("qc_data.csv")
+# met_df<- read.csv("/work/hs325/World_Corals/Cleaned data CSVs/merged_met_plot_df.csv")
 
 cols_bleaching <- c(
   "Bleached" = "#FF847CFF", 
@@ -324,6 +329,10 @@ volcano_results <- stats_data %>%
     # Use adjusted p-value for the y-axis
     neg_log_p_adj = -log10(p_adj)
   )
+
+###########################################################
+
+#### Compound Superclass
 target_classes <- trimws(c(
   "Glycerophospholipids", 
   "Sphingolipids", 
@@ -439,7 +448,7 @@ ggsave("/work/hs325/World_Corals/misc/figs/volcano_core.jpg", p_volcano2, width=
 top_right_col <- plot_grid(
   p_core_venn, 
   labels = c("B"), 
-  label_size = 20,
+  label_size = 30,
   align = "v"
 )
 
@@ -448,7 +457,7 @@ top_row <- plot_grid(
   top_right_col, 
   ncol = 2, 
   labels = c("A", ""),
-  label_size = 20,
+  label_size = 30,
   rel_widths = c(1.5, 0.5) 
 )
 
@@ -457,7 +466,7 @@ final_layout <- plot_grid(
   p_volcano2, 
   nrow = 2, 
   labels = c("", "C"), 
-  label_size = 20,
+  label_size = 30,
   rel_heights = c(0.8, 1)
 )
 ggsave("/work/hs325/World_Corals/misc/figs/ecological_core.jpg", final_layout, width=20,height=16,dpi=300)

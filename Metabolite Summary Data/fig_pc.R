@@ -12,10 +12,11 @@ library(dendextend)
 library(RColorBrewer)
 library(ggpubr)
 library(forcats)
+library(here)
 
-setwd("/work/hs325/World_Corals/Metabolite Summary Data")
-df<- read.csv("qc_data.csv")
-met_df<- read.csv("/work/hs325/World_Corals/Cleaned data CSVs/merged_met_plot_df.csv")
+# read in data
+df <- read.csv(here("Metabolite Summary Data", "qc_data.csv"))
+met_df <- read.csv(here("Cleaned data CSVs", "merged_met_plot_df.csv"))
 
 cols_bleaching <- c(
   "Bleached" = "#FF847CFF", 
@@ -978,6 +979,7 @@ ggsave("/work/hs325/World_Corals/misc/figs/fig2.jpg", final_plot, width = 18, he
 # extra graphs
 
 ## scleractinia vs nonscleractinia ONLY CURACAO
+# edit so all NA locations with "Curacao" in set plate are correct
 
 keep_cur <- meta2$location == "Curaçao" & !is.na(meta2$scleractinia)
 meta_cur <- meta2[keep_cur, ]
@@ -1019,8 +1021,8 @@ p_cur <- ggplot(df_cur, aes(x = V1, y = V2)) +
     name = "Order"
   ) +
   scale_shape_manual(
-    values = c("Curaçao" = 16), # Choose the shape (16 is solid circle)
-    name = "Location"           # This becomes the header for the shape legend
+    values = c("Curaçao" = 16), 
+    name = "Location" 
   ) +
   labs(
     x = paste0("PCoA1: (", var_cur[1], "%)"), 

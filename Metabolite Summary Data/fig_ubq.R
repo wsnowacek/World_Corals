@@ -19,11 +19,11 @@ library(stringr)
 library(RColorBrewer)
 library(ggrepel)
 library(Polychrome)
+library(here)
 
-setwd("/work/hs325/World_Corals/Metabolite Summary Data")
-df<- read.csv("qc_data.csv")
-# met_df<- read.csv("/work/hs325/World_Corals/Cleaned data CSVs/metabolite_clean.csv")
-met_df<- read.csv("/work/hs325/World_Corals/Cleaned data CSVs/merged_met_plot_df.csv")
+# read in data
+df <- read.csv(here("Metabolite Summary Data", "qc_data.csv"))
+met_df <- read.csv(here("Cleaned data CSVs", "merged_met_plot_df.csv"))
 
 present_metabolites <- df %>% 
   select(starts_with("x")) %>% 
@@ -62,6 +62,9 @@ cols_symbiont  <- c("#D84D16FF", "#FFF800FF", "#8FDA04FF")
 cols_phylum <- c("#24492EFF", "#015B58FF", "#2C6184FF", "#59629BFF", "#89689DFF", "#BA7999FF", "#E69B99FF")
 cols_sclero    <- c("1" = "#DE7862FF", "0" = "#D8AF39FF")
 
+
+##################################################
+# for compound superclass - ClassyFire annotation
 target_classes <- trimws(c(
   "Glycerophospholipids", 
   "Sphingolipids", 
@@ -106,6 +109,12 @@ met_plot_df <- process_importance_data(met_df)
 
 ordered_levels <- c(target_classes, "Other")
 met_plot_df$display_class <- factor(met_plot_df$display_class, levels = ordered_levels)
+
+##################################################
+
+# for compound class - custom spectral library
+
+##################################################
 
 origin_shapes <- c("Host" = 16, "Symbiont" = 3, "Both" = 17, "Unknown" = 8)
 
@@ -382,42 +391,6 @@ p3 <- ggscatter(met_plot_df,
 p3
 
 ggsave("/work/hs325/World_Corals/misc/figs/p3alone.jpg", p3, width = 12, height = 8, dpi = 300)
-#################################################################################
-# 
-# ## add a column to the met_plot_df that has the ubiquity 
-# # of the metabolite in Scleractinia in the entire dataset
-# # and of the metabolite in non-Scleractinia in the entire dataset
-# 
-# target_mets <- unique(as.character(met_plot_df$metabolite))
-# 
-# scler_ubiquity_df <- df %>%
-#   filter(scleractinia == 1) %>%
-#   select(all_of(intersect(names(.), target_mets))) %>%
-#   summarise(across(everything(), ~ mean(.x > 0, na.rm = TRUE) * 100)) %>%
-#   # Reshape for joining
-#   pivot_longer(everything(), names_to = "metabolite", values_to = "scler_ubiquity")
-# 
-# met_plot_df <- met_plot_df %>%
-#   left_join(scler_ubiquity_df, by = "metabolite") %>%
-#   # Handle any metabolites that might have 0 presence in the Scleractinian subset
-#   mutate(scler_ubiquity = replace_na(scler_ubiquity, 0))
-# 
-# non_scler_ubiquity_df <- df %>%
-#   filter(scleractinia != 1) %>%
-#   select(all_of(intersect(names(.), target_mets))) %>%
-#   summarise(across(everything(), ~ mean(.x > 0, na.rm = TRUE) * 100)) %>%
-#   # Reshape for joining
-#   pivot_longer(everything(), names_to = "metabolite", values_to = "non_scler_ubiquity")
-# 
-# met_plot_df <- met_plot_df %>%
-#   left_join(non_scler_ubiquity_df, by = "metabolite") %>%
-#   # Handle any metabolites that might have 0 presence in the Scleractinian subset
-#   mutate(non_scler_ubiquity = replace_na(non_scler_ubiquity, 0))
-# 
-# met_plot_df %>%
-#   select(metabolite, scler_ubiquity, non_scler_ubiquity) %>%
-#   arrange(desc(scler_ubiquity)) %>%
-#   head(10)
 
 #################################################################################
 # 
