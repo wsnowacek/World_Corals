@@ -10,4 +10,4 @@
 *.sh
 /machine_learning/logs/
 /machine_learning/misc/
-/machine_learning/models/
+# /machine_learning/models/

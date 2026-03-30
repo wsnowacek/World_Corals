@@ -5,8 +5,8 @@ library(ggpubr)
 library(cowplot)
 
 met_df <- read.csv(here("Cleaned data CSVs", "merged_met_plot_df.csv"))
-# perm_df <- read.csv(here("machine_learning/ftsets", "perm_importance_results_kbest.csv"))
-perm_df <- read.csv(here("machine_learning/ftsets", "perm_importance_results.csv"))
+perm_df <- read.csv(here("machine_learning/ftsets", "perm_importance_results_kbest.csv"))
+# perm_df <- read.csv(here("machine_learning/ftsets", "perm_importance_results.csv"))
 
 ###########################################################
 ## 1: make dfs of each column in reduced_feature_sets_multicollinear

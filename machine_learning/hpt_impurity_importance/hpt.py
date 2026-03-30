@@ -14,8 +14,8 @@ import joblib
 
 print("loaded packages\n")
 
-coral_df = pd.read_csv("/work/hs325/World_Corals/Cleaned data CSVs/richness_qc_clean.csv")
-met_df = pd.read_csv("/work/hs325/World_Corals/Cleaned data CSVs/metabolite_clean.csv")
+coral_df = pd.read_csv("/work/hs325/World_Corals/Cleaned data CSVs/qc_data.csv")
+met_df = pd.read_csv("/work/hs325/World_Corals/Cleaned data CSVs/merged_met_plot_df.csv")
 
 coral_df['scleractinia'] = np.where(coral_df['host_order'] == 'Scleractinia', 1, 0)
 met_df['refined_origin'] = met_df['refined_origin'].str.replace('Host', 'Coral')
