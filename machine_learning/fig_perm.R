@@ -5,7 +5,7 @@ library(ggpubr)
 library(cowplot)
 
 met_df <- read.csv(here("Cleaned data CSVs", "merged_met_plot_df.csv"))
-# perm_df <- read.csv(here("machine_learning", "perm_importance_results_kbest.csv"))
+# perm_df <- read.csv(here("machine_learning/ftsets", "perm_importance_results_kbest.csv"))
 perm_df <- read.csv(here("machine_learning/ftsets", "perm_importance_results.csv"))
 
 ###########################################################
@@ -77,7 +77,7 @@ met_df <- met_df %>%
       "Neutral glycosphingolipids" = "Neutral GSL",
       "Triacylglycerols" = "TAG",
       "Diacylglycerols" = "DAG",
-      "Prenyl quinone meroterpenoids" = "TQ/THQs" ## unsure about this one
+      "Prenyl quinone meroterpenoids" = "TQ/THQs" 
     )
   )
 

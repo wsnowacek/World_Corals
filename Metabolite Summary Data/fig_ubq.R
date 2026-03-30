@@ -124,7 +124,7 @@ met_df <- met_df %>%
       "Neutral glycosphingolipids" = "Neutral GSL",
       "Triacylglycerols" = "TAG",
       "Diacylglycerols" = "DAG",
-      "Prenyl quinone meroterpenoids" = "TQ/THQs" ## unsure about this one
+      "Prenyl quinone meroterpenoids" = "TQ/THQs" 
     )
   )
 

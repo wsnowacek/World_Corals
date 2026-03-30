@@ -91,13 +91,13 @@ stats_annotation <- paste0("PERMANOVA: R² = ", perm_r2, ", ", p_label)
 
 p <- ggplot(pcoa_points, aes(x = PCoA1, y = PCoA2, color = scleractinia, fill = scleractinia)) +
   geom_point(size = 3, alpha = 0.8) +
-  # stat_ellipse(
-  #   geom = "polygon",
-  #   alpha = 0.15,
-  #   level = 0.95,
-  #   type = "t",
-  #   colour = NA
-  # ) +
+  stat_ellipse(
+    geom = "polygon",
+    alpha = 0.15,
+    level = 0.95,
+    type = "t",
+    colour = NA
+  ) +
   annotate(
     "text",
     x = -Inf,  
