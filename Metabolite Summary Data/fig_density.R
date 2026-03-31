@@ -4,7 +4,6 @@ library(readxl)
 library(data.table)
 library(vegan)
 library(scales)
-library(ggraph)
 library(cowplot)
 library(ggdendro)
 library(ggridges)
@@ -18,7 +17,7 @@ library(here)
 # library(circlize)
 
 # read in data
-df <- read.csv(here("Metabolite Summary Data", "qc_data.csv"))
+df <- read.csv(here("Cleaned data CSVs", "qc_data.csv"))
 met_df <- read.csv(here("Cleaned data CSVs", "merged_met_plot_df.csv"))
 
 present_metabolites <- df %>% 
@@ -133,7 +132,7 @@ p_volcano <- ggplot(plot_data_volcano, aes(x = log2FC, y = neg_log_p_adj, color 
     axis.text = element_text(size = 14)
   )
 print(p_volcano)
-ggsave("/work/hs325/World_Corals/misc/figs/volcano_origin.jpg", p_volcano, width=15,height=12,dpi=300)
+ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/volcano_origin.jpg", p_volcano, width=15,height=12,dpi=300)
 ## 110 rows outside
 
 ################################################################################
@@ -294,23 +293,22 @@ p_volcano2 <- ggplot(plot_data_volcano, aes(x = log2FC, y = neg_log_p_adj)) +
     axis.title = element_text(size = 20),
     plot.title = element_text(face = "bold", hjust = 0.5)
   )
-ggsave("/work/hs325/World_Corals/misc/figs/volcano.jpg", p_volcano2, width=14,height=10,dpi=300)
+ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/volcano.jpg", p_volcano2, width=14,height=10,dpi=300)
 
 #############################################
 
 combined_volcano <- plot_grid(p_volcano, p_volcano2, ncol = 1, labels = c("A", "B"), label_size = 24, align = "hv")
-ggsave("/work/hs325/World_Corals/misc/figs/combined_volcano.jpg", combined_volcano, width=14,height=20,dpi=300)
+ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/combined_volcano.jpg", combined_volcano, width=14,height=20,dpi=300)
 
 
 ################################################################################
 ## subvolcanos 
 
 # for compound superclass: display_class "Glycerolipids" "Sphingolipids" "Triacylglycerols"
-# for compound class: "TAG" "DAG" "MA
+# for compound class: "TAG" "DAG" "MADAG"
 
-# 1. Glycerolipids Plot
-p_glycerolipids <- plot_data_volcano %>%
-  filter(display_class == "Glycerolipids") %>%
+p_tag <- plot_data_volcano %>%
+  filter(display_class == "TAG") %>%
   ggplot(aes(x = log2FC, y = neg_log_p_adj)) +
   geom_vline(xintercept = c(-2, 2), linetype = "dashed", color = "grey70") +
   geom_hline(yintercept = sig_threshold, linetype = "dashed", color = "grey70") +
@@ -324,12 +322,12 @@ p_glycerolipids <- plot_data_volcano %>%
   #   segment.color = "grey30"
   # ) 
   scale_color_manual(values = class_colors) +
-  labs(title = "Glycerolipids", x = "log2 Fold Change", y = "-log10(adj. p-value)") +
+  labs(title = "TAG", x = "log2 Fold Change", y = "-log10(adj. p-value)") +
   theme_pubr() +
   theme(legend.position = "none", plot.title = element_text(size = 18, face = "bold"))
 
-p_triacylglycerols <- plot_data_volcano %>%
-  filter(display_class == "Triacylglycerols") %>%
+p_dag <- plot_data_volcano %>%
+  filter(display_class == "DAG") %>%
   ggplot(aes(x = log2FC, y = neg_log_p_adj)) +
   geom_vline(xintercept = c(-2, 2), linetype = "dashed", color = "grey70") +
   geom_hline(yintercept = sig_threshold, linetype = "dashed", color = "grey70") +
@@ -343,12 +341,12 @@ p_triacylglycerols <- plot_data_volcano %>%
   #   segment.color = "grey30"
   # ) 
   scale_color_manual(values = class_colors) +
-  labs(title = "Triacylglycerols", x = "log2 Fold Change", y = "-log10(adj. p-value)") +
+  labs(title = "DAG", x = "log2 Fold Change", y = "-log10(adj. p-value)") +
   theme_pubr() +
   theme(legend.position = "none", plot.title = element_text(size = 18, face = "bold"))
 
-p_sphingolipids <- plot_data_volcano %>%
-  filter(display_class == "Sphingolipids") %>%
+p_madag <- plot_data_volcano %>%
+  filter(display_class == "MADAG") %>%
   ggplot(aes(x = log2FC, y = neg_log_p_adj)) +
   geom_vline(xintercept = c(-2, 2), linetype = "dashed", color = "grey70") +
   geom_hline(yintercept = sig_threshold, linetype = "dashed", color = "grey70") +
@@ -362,16 +360,16 @@ p_sphingolipids <- plot_data_volcano %>%
   #   segment.color = "grey30"
   # ) 
   scale_color_manual(values = class_colors) +
-  labs(title = "Sphingolipids", x = "log2 Fold Change", y = "-log10(adj. p-value)") +
+  labs(title = "MADAG", x = "log2 Fold Change", y = "-log10(adj. p-value)") +
   theme_pubr() +
   theme(legend.position = "none", plot.title = element_text(size = 18, face = "bold"))
 
-subcano <- plot_grid(p_glycerolipids, p_triacylglycerols, p_sphingolipids, ncol = 3)
-ggsave("/work/hs325/World_Corals/misc/figs/subcano.jpg", subcano, width=14, height=7, dpi=300)
+subcano <- plot_grid(p_tag, p_dag, p_madag, ncol = 3)
+ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/subcano.jpg", subcano, width=14, height=7, dpi=300)
 
 ################################################################################
 
-# for compound class: "TAG" "DAG" "MADAG"
+# for compound class: "TQ/THQ" "Neutral GSL" "Ceramide"
 
 TAG <- plot_data_volcano %>%
   filter(display_class == "TQ/THQs") %>%
@@ -408,6 +406,6 @@ MADAG <- plot_data_volcano %>%
 MADAG
 
 subcano2 <- plot_grid(TAG, DAG, MADAG, ncol = 3)
-ggsave("/work/hs325/World_Corals/misc/figs/subcano2.jpg", subcano2, width=14, height=7, dpi=300)
+ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/subcano2.jpg", subcano2, width=14, height=7, dpi=300)
 
 

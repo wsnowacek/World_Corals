@@ -4,25 +4,19 @@ library(readxl)
 library(data.table)
 library(vegan)
 library(scales)
-library(ggraph)
 library(cowplot)
-library(ggdendro)
-library(ggridges)
-library(dendextend)
 library(RColorBrewer)
 library(ggpubr)
 library(forcats)
 library(caret)
 library(tibble)
-library(GGally)
 library(stringr)
 library(RColorBrewer)
 library(ggrepel)
-library(Polychrome)
 library(here)
 
 # read in data
-df <- read.csv(here("Metabolite Summary Data", "qc_data.csv"))
+df <- read.csv(here("Cleaned data CSVs", "qc_data.csv"))
 met_df <- read.csv(here("Cleaned data CSVs", "merged_met_plot_df.csv"))
 
 present_metabolites <- df %>% 
@@ -345,7 +339,7 @@ pb
 
 #################################################################################
 # 
-# feature_importance_comparison_all <- read.csv("/work/hs325/World_Corals/machine_learning/all_mets/featureimportanceallmets.csv")
+# feature_importance_comparison_all <- read.csv("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/machine_learning/all_mets/featureimportanceallmets.csv")
 # 
 # feature_importance_comparison_all <- feature_importance_comparison_all %>%
 #   dplyr::rename(metabolite = Feature)
@@ -441,70 +435,7 @@ p3 <- ggscatter(met_plot_df,
     shape = guide_legend(title = "Metabolite Origin", override.aes = list(size = 5)))
 p3
 
-ggsave("/work/hs325/World_Corals/misc/figs/p3alone.jpg", p3, width = 12, height = 8, dpi = 300)
-
-#################################################################################
-# 
-# ubiquity_pal <- c(
-#   "[0,20]"   = "#440154FF", # Dark Purple
-#   "(20,40]"  = "#3B528BFF", # Blue
-#   "(40,60]"  = "#21908CFF", # Teal
-#   "(60,80]"  = "#5DC863FF", # Green
-#   "(80,100]" = "#FDE725FF"  # Yellow
-# )
-# 
-# # Helper to prepare data for ubiquity-colored barplots
-# prep_ubiq_plot <- function(df, importance_col, n_slice) {
-#   df %>%
-#     arrange(desc(!!sym(importance_col))) %>%
-#     slice_head(n = n_slice) %>%
-#     mutate(
-#       ubiquity_bin = cut(scler_ubiquity, 
-#                          breaks = c(-Inf, 20, 40, 60, 80, 100), 
-#                          labels = names(ubiquity_pal), 
-#                          include.lowest = TRUE),
-#       metabolite = fct_reorder(metabolite, !!sym(importance_col), .desc = TRUE)
-#     )
-# }
-# 
-# xgb_ubiq_data <- prep_ubiq_plot(met_plot_df, "XGBoost_Importance", 60)
-# rf_ubiq_data  <- prep_ubiq_plot(met_plot_df, "RandomForest_Importance", 120)
-# 
-# p_xgb_ubiq <- ggplot(xgb_ubiq_data, aes(x = metabolite, y = XGBoost_Importance, fill = ubiquity_bin)) +
-#   geom_bar(stat = "identity", color = "black", linewidth = 0.1) +
-#   scale_fill_manual(values = ubiquity_pal, drop = FALSE) +
-#   scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
-#   theme_pubr() +
-#   labs(
-#     x = "Metabolite",
-#     y = "XGBoost Feature Importance",
-#     fill = "Ubiquity Percentage"
-#   ) +
-#   theme(
-#     axis.text.x = element_blank(),
-#     axis.ticks.x = element_blank(),
-#     legend.position = "right"
-#   )
-# 
-# # --- Random Forest Importance colored by Scleractinian Ubiquity ---
-# p_rf_ubiq <- ggplot(rf_ubiq_data, aes(x = metabolite, y = RandomForest_Importance, fill = ubiquity_bin)) +
-#   geom_bar(stat = "identity", color = "black", linewidth = 0.1) +
-#   scale_fill_manual(values = ubiquity_pal, drop = FALSE) +
-#   scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
-#   theme_pubr() +
-#   labs(
-#     x = "Metabolite",
-#     y = "RF Feature Importance",
-#     fill = "Scleractinian Ubiquity Percentage"
-#   ) +
-#   theme(
-#     axis.text.x = element_blank(),
-#     axis.ticks.x = element_blank(),
-#     legend.position = "right"
-#   )
-# 
-# print(p_xgb_ubiq)
-# print(p_rf_ubiq)
+ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/p3alone.jpg", p3, width = 12, height = 8, dpi = 300)
 
 #################################################################################
 
@@ -626,14 +557,8 @@ row_e <- plot_grid(
   labels = c("E"),
   label_size = 18, ncol = 1
 )
-# 
-# row_fg <- plot_grid(
-#   p_xgb_ubiq + theme(legend.position = "none"), 
-#   p_rf_ubiq, # Keep one ubiquity legend here as it's a different scale/meaning
-#   labels = c("F", "G"), label_size = 18, ncol = 2, rel_widths = c(1, 1.2)
-# )
 
-row_hi <- plot_grid(
+row_fg <- plot_grid(
   p_xgb_ubiq_scatter + theme(legend.position = "none") + labs(subtitle = "XGBoost"), 
   p_rf_ubiq_scatter 
   + theme(legend.position = "none")
@@ -649,7 +574,7 @@ row_cde <- plot_grid(
   unified_legend, row_e,
   nrow = 2, rel_heights = c(0.4,1))
 
-ggsave("/work/hs325/World_Corals/misc/figs/fig5cde_ppt.jpg", 
+ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/fig5cde_ppt.jpg", 
        row_cde, width = 18, height = 8, dpi = 300)
 
 true_final_figure <- plot_grid(
@@ -657,181 +582,105 @@ true_final_figure <- plot_grid(
   row_ab,
   row_cd,
   row_e,
-  # row_fg,
-  row_hi,
+  row_fg,
   ncol = 1,
   rel_heights = c(0.4, 1, 1, 1.2, 1, 1) # Adjust heights based on content density
 )
 
 # Save high-resolution for publication
-ggsave("/work/hs325/World_Corals/misc/figs/fig5.png", 
+ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/fig5.png", 
        true_final_figure, width = 18, height = 24, dpi = 600, bg = "white")
 
 
 ################################################################################
 
-#save each row
-temp_save <- plot_grid(
-  unified_legend, row_hi,
-  ncol = 1,
-  rel_heights = c(0.5, 1) 
-)
-ggsave("/work/hs325/World_Corals/misc/figs/fig5_ppt.jpg", 
-       temp_save, width = 14, height = 8, dpi = 600, bg = "white")
+# ML ubiquity plot with outlined metabolites
 
-
-################################################################################
-target_mets <- c("x39055_948_80202_15_826", 
-                 "x15256_518_49365_7_407", 
-                 "x23838_655_56593_11_538")
-
-p_xgb_ubiq_scatter <- ggplot(met_summary_xgb, aes(x = non_scler_ubiquity, y = scler_ubiquity)) +
-  geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "gray60") +
-  geom_point(
-    aes(color = display_class, shape = refined_origin), 
-    size = 4, stroke = 1, alpha = 0.9
-  ) +
-  geom_text_repel(
-    data = subset(met_summary_xgb, metabolite %in% target_mets),
-    aes(label = metabolite),
-    size = 3.5,
-    fontface = "bold",
-    box.padding = 2.5,        # Distance between label and other objects
-    point.padding = 1.5,      # Distance between label and the data point
-    force = 50,               # Strength of the repulsion
-    force_pull = 0.5,         
-    min.segment.length = 0,   # Always draw the line, no matter how short
-    segment.color = "grey30",
-    segment.curvature = -0.1, # Adds a slight curve to the leader lines for better aesthetics
-    segment.ncp = 3,
-    arrow = arrow(length = unit(0.02, "npc")) 
-  ) +
-  scale_color_manual(values = final_palette) +
-  scale_shape_manual(values = origin_shapes) + 
-  scale_y_continuous(limits = c(0, 100), breaks = seq(0, 100, by = 20)) +
-  scale_x_continuous(limits = c(0, 100), breaks = seq(0, 100, by = 20)) +
-  labs(
-    x = "Non-Scleractinian Ubiquity (%)", 
-    y = "Scleractinian Ubiquity (%)", 
-    color = "Compound Class",
-    shape = "Metabolite Origin"
-  ) +
-  theme_pubr() +
-  theme(legend.position = "none", plot.title = element_text(size = 12, face = "bold"))
-
-p_rf_ubiq_scatter <- ggplot(met_summary_rf, aes(x = non_scler_ubiquity, y = scler_ubiquity)) +
-  geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "gray60") +
-  geom_point(
-    aes(color = display_class, shape = refined_origin), 
-    size = 4, stroke = 1, alpha = 0.9
-  ) +
-  geom_text_repel(
-    data = subset(met_summary_rf, metabolite %in% target_mets),
-    aes(label = metabolite),
-    size = 3.5,
-    fontface = "bold",
-    box.padding = 2.5,
-    point.padding = 1.5,
-    force = 50,
-    force_pull = 0.5,
-    min.segment.length = 0,
-    segment.color = "grey30",
-    segment.curvature = -0.1,
-    arrow = arrow(length = unit(0.02, "npc"))
-  ) +
-  scale_color_manual(values = final_palette) +
-  scale_shape_manual(values = origin_shapes) + 
-  scale_y_continuous(limits = c(0, 100), breaks = seq(0, 100, by = 20)) +
-  scale_x_continuous(limits = c(0, 100), breaks = seq(0, 100, by = 20)) +
-  labs(
-    x = "Non-Scleractinian Ubiquity (%)", 
-    y = "Scleractinian Ubiquity (%)", 
-    color = "Compound Class",
-    shape = "Metabolite Origin"
-  ) +
-  theme_pubr() +
-  theme(legend.position = "none", plot.title = element_text(size = 12, face = "bold"))
-
-print(p_xgb_ubiq_scatter)
-print(p_rf_ubiq_scatter)
-
-row_hi <- plot_grid(
-  p_xgb_ubiq_scatter + theme(legend.position = "none") + labs(subtitle = "XGBoost"), 
-  p_rf_ubiq_scatter 
-  + theme(legend.position = "none")
-  + labs(subtitle = "Random Forest"), 
-  # labels = c("H", "I"), 
-  label_size = 18, ncol = 2
-)
-# row_hi <- plot_grid(
-#   unified_legend, row_hi,
-#   nrow = 2, rel_heights = c(0.4,1))
-
-ggsave("/work/hs325/World_Corals/misc/figs/fig5_hi.jpg", 
-       row_hi, width = 14, height = 6, dpi = 300, bg = "white")
-
-################################################################################
-# p1 <- ggbarplot(xgb_plot_data, x = "metabolite", y = "XGBoost_Importance",
-#                 fill = "display_class", color = "transparent",
-#                 xlab = "Metabolite", ylab = "XGBoost Feature Importance") +
-#   theme_pubr() +
-#   scale_fill_manual(values = final_palette) +
-#   scale_y_continuous(expand = expansion(mult = c(0, 0.3))) + # More top space for callouts
-#   scale_x_discrete(expand = expansion(add = c(1, 10))) +     # More right space for labels
-#   geom_text_repel(
-#     data = subset(xgb_plot_data, metabolite %in% target_mets),
-#     aes(label = metabolite),
-#     # Push labels up and to the right
-#     nudge_x = 20, 
-#     nudge_y = 0.01,
-#     direction = "both",
-#     angle = 0,                # Horizontal text as requested
-#     segment.size = 0.5,
-#     segment.color = "grey30",
-#     segment.curvature = -0.2, # Curved lines look better for long distances
-#     box.padding = 2,          # Forces label further from the bar
-#     point.padding = 0.5,
-#     min.segment.length = 0,   # Always show the line
-#     size = 3.5,
-#     fontface = "bold"
-#   ) +
-#   theme(axis.text.x = element_blank(), 
-#         axis.ticks.x = element_blank(),
-#         legend.position = "none")
+# target_mets <- c("x39055_948_80202_15_826", 
+#                  "x15256_518_49365_7_407", 
+#                  "x23838_655_56593_11_538")
 # 
-# p2 <- ggbarplot(rf_plot_data, x = "metabolite", y = "RandomForest_Importance",
-#                 fill = "display_class", color = "transparent",
-#                 xlab = "Metabolite", ylab = "RF Feature Importance") +
-#   theme_pubr() +
-#   scale_fill_manual(values = final_palette) +
-#   scale_y_continuous(expand = expansion(mult = c(0, 0.3))) +
-#   scale_x_discrete(expand = expansion(add = c(1, 10))) +
+# p_xgb_ubiq_scatter <- ggplot(met_summary_xgb, aes(x = non_scler_ubiquity, y = scler_ubiquity)) +
+#   geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "gray60") +
+#   geom_point(
+#     aes(color = display_class, shape = refined_origin), 
+#     size = 4, stroke = 1, alpha = 0.9
+#   ) +
 #   geom_text_repel(
-#     data = subset(rf_plot_data, metabolite %in% target_mets),
+#     data = subset(met_summary_xgb, metabolite %in% target_mets),
 #     aes(label = metabolite),
-#     nudge_x = 20, 
-#     nudge_y = 0.01,
-#     direction = "both",
-#     angle = 0,
-#     segment.size = 0.5,
+#     size = 3.5,
+#     fontface = "bold",
+#     box.padding = 2.5,        # Distance between label and other objects
+#     point.padding = 1.5,      # Distance between label and the data point
+#     force = 50,               # Strength of the repulsion
+#     force_pull = 0.5,         
+#     min.segment.length = 0,   # Always draw the line, no matter how short
 #     segment.color = "grey30",
-#     segment.curvature = -0.2,
-#     box.padding = 2,
-#     point.padding = 0.5,
+#     segment.curvature = -0.1, # Adds a slight curve to the leader lines for better aesthetics
+#     segment.ncp = 3,
+#     arrow = arrow(length = unit(0.02, "npc")) 
+#   ) +
+#   scale_color_manual(values = final_palette) +
+#   scale_shape_manual(values = origin_shapes) + 
+#   scale_y_continuous(limits = c(0, 100), breaks = seq(0, 100, by = 20)) +
+#   scale_x_continuous(limits = c(0, 100), breaks = seq(0, 100, by = 20)) +
+#   labs(
+#     x = "Non-Scleractinian Ubiquity (%)", 
+#     y = "Scleractinian Ubiquity (%)", 
+#     color = "Compound Class",
+#     shape = "Metabolite Origin"
+#   ) +
+#   theme_pubr() +
+#   theme(legend.position = "none", plot.title = element_text(size = 12, face = "bold"))
+# 
+# p_rf_ubiq_scatter <- ggplot(met_summary_rf, aes(x = non_scler_ubiquity, y = scler_ubiquity)) +
+#   geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "gray60") +
+#   geom_point(
+#     aes(color = display_class, shape = refined_origin), 
+#     size = 4, stroke = 1, alpha = 0.9
+#   ) +
+#   geom_text_repel(
+#     data = subset(met_summary_rf, metabolite %in% target_mets),
+#     aes(label = metabolite),
+#     size = 3.5,
+#     fontface = "bold",
+#     box.padding = 2.5,
+#     point.padding = 1.5,
+#     force = 50,
+#     force_pull = 0.5,
 #     min.segment.length = 0,
-#     size = 3.5,
-#     fontface = "bold"
+#     segment.color = "grey30",
+#     segment.curvature = -0.1,
+#     arrow = arrow(length = unit(0.02, "npc"))
 #   ) +
-#   theme(axis.text.x = element_blank(), 
-#         axis.ticks.x = element_blank(),
-#         legend.position = "none")
+#   scale_color_manual(values = final_palette) +
+#   scale_shape_manual(values = origin_shapes) + 
+#   scale_y_continuous(limits = c(0, 100), breaks = seq(0, 100, by = 20)) +
+#   scale_x_continuous(limits = c(0, 100), breaks = seq(0, 100, by = 20)) +
+#   labs(
+#     x = "Non-Scleractinian Ubiquity (%)", 
+#     y = "Scleractinian Ubiquity (%)", 
+#     color = "Compound Class",
+#     shape = "Metabolite Origin"
+#   ) +
+#   theme_pubr() +
+#   theme(legend.position = "none", plot.title = element_text(size = 12, face = "bold"))
 # 
-# print(p1)
-# print(p2)
+# print(p_xgb_ubiq_scatter)
+# print(p_rf_ubiq_scatter)
 # 
-# p1p2 <- plot_grid(p1, p2)
-# row_ab <- plot_grid(
-#   unified_legend, p1p2,
-#   nrow = 2, rel_heights = c(0.4,1))
-# ggsave("/work/hs325/World_Corals/misc/figs/fig5_hi.jpg", 
-#        p1p2, width = 12, height = 6, dpi = 600, bg = "white")
+# row_hi <- plot_grid(
+#   p_xgb_ubiq_scatter + theme(legend.position = "none") + labs(subtitle = "XGBoost"), 
+#   p_rf_ubiq_scatter 
+#   + theme(legend.position = "none")
+#   + labs(subtitle = "Random Forest"), 
+#   # labels = c("H", "I"), 
+#   label_size = 18, ncol = 2
+# )
+# # row_hi <- plot_grid(
+# #   unified_legend, row_hi,
+# #   nrow = 2, rel_heights = c(0.4,1))
+# 
+# ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/fig5_hi.jpg", 
+#        row_hi, width = 14, height = 6, dpi = 300, bg = "white")

@@ -5,12 +5,11 @@ library(ggpubr)
 library(cowplot)
 
 met_df <- read.csv(here("Cleaned data CSVs", "merged_met_plot_df.csv"))
-perm_df <- read.csv(here("machine_learning/ftsets", "perm_importance_results_kbest.csv"))
-# perm_df <- read.csv(here("machine_learning/ftsets", "perm_importance_results.csv"))
+perm_df <- read.csv(here("machine_learning/perm_importance", "perm_importance_results_kbest.csv"))
 
 ###########################################################
 ## 1: make dfs of each column in reduced_feature_sets_multicollinear
-# df_reduced <- read.csv("/work/hs325/World_Corals/machine_learning/ftsets/reduced_feature_sets_multicollinear.csv")
+# df_reduced <- read.csv("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/machine_learning/ftsets/reduced_feature_sets_multicollinear.csv")
 # 
 # mets_coral_gb <- df_reduced$coralonly_gb
 # mets_coral_rf <- df_reduced$coralonly_rf
@@ -25,7 +24,7 @@ perm_df <- read.csv(here("machine_learning/ftsets", "perm_importance_results_kbe
 # df_met_all_rfgb <- met_df %>% 
 #   filter(metabolite %in% mets_all_rfgb)
 # 
-# write.csv(df_met_all_rfgb, "/work/hs325/World_Corals/machine_learning/ftsets/met_all_rfgb_reduced.csv")
+# write.csv(df_met_all_rfgb, "/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/machine_learning/ftsets/met_all_rfgb_reduced.csv")
 
 ###########################################################
 
@@ -163,7 +162,7 @@ p_perm <- ggplot(perm_df_clean, aes(x = importance_mean, y = metabolite, color =
   )
 print(p_perm)
 
-ggsave("/work/hs325/World_Corals/misc/figs/perm_importance.jpg", 
+ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/perm_importance.jpg", 
        p_perm, width = 12, height = 8, dpi = 300)
 
 ## 3: by display class
@@ -206,7 +205,7 @@ p_perm_class <- ggplot(perm_df_display, aes(x = importance_mean, y = metabolite,
     legend.title     = element_text(size = 12)
   ) +
   guides(color = guide_legend(nrow = 1, byrow = TRUE, title.position = "top", title.hjust = 0.5))
-ggsave("/work/hs325/World_Corals/misc/figs/perm_importance_class.jpg", 
+ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/perm_importance_class.jpg", 
        p_perm_class, width = 14, height = 8, dpi = 300)
 
 ###########################################################
@@ -218,5 +217,5 @@ final_plot <- plot_grid(
   labels=c('A', 'B'),
   label_size=24
 )
-ggsave("/work/hs325/World_Corals/misc/figs/perm_importance.jpg", 
+ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/perm_importance.jpg", 
        final_plot, width = 16, height = 14, dpi = 300)

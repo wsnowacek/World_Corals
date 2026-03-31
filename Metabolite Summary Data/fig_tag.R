@@ -4,7 +4,6 @@ library(readxl)
 library(data.table)
 library(vegan)
 library(scales)
-library(ggraph)
 library(cowplot)
 library(RColorBrewer)
 library(ggpubr)
@@ -14,7 +13,7 @@ library(ggrepel)
 library(ggforce)
 library(here)
 
-df <- read.csv(here("Metabolite Summary Data", "qc_data.csv"))
+df <- read.csv(here("Cleaned data CSVs", "qc_data.csv"))
 met_df <- read.csv(here("Cleaned data CSVs", "merged_met_plot_df.csv"))
 
 ## Use glycerolipid dataset provided by Nina with duplicates 

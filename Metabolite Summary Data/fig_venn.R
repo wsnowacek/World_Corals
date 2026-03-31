@@ -4,7 +4,6 @@ library(readxl)
 library(data.table)
 library(vegan)
 library(scales)
-library(ggraph)
 library(cowplot)
 library(ggdendro)
 library(ggridges)
@@ -18,12 +17,8 @@ library(ggforce)
 library(here)
 
 # read in data
-df <- read.csv(here("Metabolite Summary Data", "qc_data.csv"))
+df <- read.csv(here("Cleaned data CSVs", "qc_data.csv"))
 met_df <- read.csv(here("Cleaned data CSVs", "merged_met_plot_df.csv"))
-
-# setwd("/work/hs325/World_Corals/Metabolite Summary Data")
-# df<- read.csv("qc_data.csv")
-# met_df<- read.csv("/work/hs325/World_Corals/Cleaned data CSVs/merged_met_plot_df.csv")
 
 cols_bleaching <- c(
   "Bleached" = "#FF847CFF", 
@@ -56,7 +51,7 @@ cols_phylum <- c("#24492EFF", "#015B58FF", "#2C6184FF", "#59629BFF", "#89689DFF"
 cols_sclero    <- c("1" = "#DE7862FF", "0" = "#D8AF39FF")
 
 # 
-# feature_importance_comparison_all <- read.csv("/work/hs325/World_Corals/machine_learning/all_mets/featureimportanceallmets.csv")
+# feature_importance_comparison_all <- read.csv("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/machine_learning/all_mets/featureimportanceallmets.csv")
 # 
 # feature_importance_comparison_all <- feature_importance_comparison_all %>%
 #   dplyr::rename(metabolite = Feature)
@@ -107,7 +102,7 @@ p_c <- ggvenn(list_rf, fill_color = venn_fill, stroke_size = 0.5, set_name_size 
 
 venn_grid <- plot_grid(p_a, p_b, p_c, ncol = 3, labels = c("A", "B", "C"), label_size = 20)
 print(venn_grid)
-ggsave("/work/hs325/World_Corals/misc/figs/venn.jpg", 
+ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/venn.jpg", 
        venn_grid, width = 15, height = 5, dpi = 300)
 
 ################################################################################
@@ -163,7 +158,7 @@ draw_flower <- function(data, group_var) {
 
 df_scler <- df %>% filter(host_order == "Scleractinia", !is.na(host_family))
 p_flower_family <- draw_flower(df_scler, "host_family")
-ggsave("/work/hs325/World_Corals/misc/figs/flower_plot_family.jpg", 
+ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/flower_plot_family.jpg", 
        p_flower_family, width = 10, height = 8, dpi = 300)
 
 
@@ -218,7 +213,7 @@ draw_flower <- function(data, group_var) {
 }
 df_scler <- df %>% filter(host_order == "Scleractinia", !is.na(host_family))
 p_flower_family <- draw_flower(df_scler, "host_family")
-ggsave("/work/hs325/World_Corals/misc/figs/flower_plot_family_unique.jpg", 
+ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/flower_plot_family_unique.jpg", 
        p_flower_family, width = 13, height = 9, dpi = 300)
 
 
@@ -263,7 +258,7 @@ p_core_venn <- ggvenn(
 
 print(p_core_venn)
 
-# ggsave("/work/hs325/World_Corals/misc/figs/venn_core_origin.jpg", 
+# ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/venn_core_origin.jpg", 
 #        p_core_venn, width = 6, height = 5, dpi = 300)
 
 ################################################################################
@@ -510,7 +505,7 @@ p_volcano2 <- ggplot(plot_data_volcano, aes(x = log2FC, y = neg_log_p_adj)) +
     axis.title = element_text(size = 20),
     plot.title = element_text(face = "bold", hjust = 0.5)
   )
-ggsave("/work/hs325/World_Corals/misc/figs/volcano_core.jpg", p_volcano2, width=14,height=10,dpi=300)
+ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/volcano_core.jpg", p_volcano2, width=14,height=10,dpi=300)
 
 ################################################################################
 
@@ -539,5 +534,5 @@ final_layout <- plot_grid(
   label_size = 30,
   rel_heights = c(0.8, 1)
 )
-ggsave("/work/hs325/World_Corals/misc/figs/ecological_core.jpg", final_layout, width=20,height=16,dpi=300)
+ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/ecological_core.jpg", final_layout, width=20,height=16,dpi=300)
 

@@ -4,18 +4,14 @@ library(readxl)
 library(data.table)
 library(vegan)
 library(scales)
-library(ggraph)
 library(cowplot)
-library(ggdendro)
-library(ggridges)
-library(dendextend)
 library(RColorBrewer)
 library(ggpubr)
 library(forcats)
 library(here)
 
 # read in data
-df <- read.csv(here("Metabolite Summary Data", "qc_data.csv"))
+df <- read.csv(here("Cleaned data CSVs", "qc_data.csv"))
 met_df <- read.csv(here("Cleaned data CSVs", "merged_met_plot_df.csv"))
 
 ## Collectors Curves
@@ -440,6 +436,6 @@ final_plot <- plot_grid(
   ncol = 1, 
   rel_heights = c(1, 1) 
 )
-ggsave("/work/hs325/World_Corals/misc/figs/fig3.jpg", final_plot, width=12,height=10,dpi=300)
+ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/fig3.jpg", final_plot, width=12,height=10,dpi=300)
 
 ################################################################################
