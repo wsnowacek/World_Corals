@@ -4,7 +4,7 @@ library(readxl)
 library(data.table)
 library(vegan)
 library(scales)
-library(ggraph)
+# library(ggraph)
 library(cowplot)
 library(ggdendro)
 library(ggridges)
@@ -116,7 +116,7 @@ p <- ggplot(pcoa_points, aes(x = PCoA1, y = PCoA2, color = scleractinia, fill = 
   ) +
   theme_cowplot(font_size = 18) +
   theme(legend.position = "right")
-ggsave("/work/hs325/World_Corals/misc/figs/pcoa_scler.jpg", p, width = 10, height = 8, dpi=300)
+ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/pcoa_scler.jpg", p, width = 10, height = 8, dpi=300)
 
 ################################################################################
 #Location + bleaching status PERMANOVA
@@ -186,8 +186,7 @@ p2 <- ggplot(pcoa_points2, aes(x = PCoA1, y = PCoA2, color = location)) +
     size = 4) +
     theme(legend.position = "right") +
   theme_cowplot(font_size = 14)
-ggsave("/work/hs325/World_Corals/misc/figs/pcoa_locb.jpg", p2, width = 8, height = 6, dpi = 300)
-
+ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/pcoa_locb.jpg", p2, width = 8, height = 6, dpi = 300)
 
 
 ################################################################################
@@ -256,7 +255,7 @@ p3 <- ggplot(pcoa_points3, aes(x = PCoA1, y = PCoA2, color = location)) +
   theme(legend.position = "right")
 
 # Save
-ggsave("/work/hs325/World_Corals/misc/figs/pcoa_locsym_annotated.jpg", p3, width = 8, height = 6, dpi = 300)
+ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/pcoa_locsym_annotated.jpg", p3, width = 8, height = 6, dpi = 300)
 
 # keep_rows <- !is.na(meta2$symbiont.potential)
 # # subset the metadata and the numeric data simultaneously
@@ -313,7 +312,7 @@ ggsave("/work/hs325/World_Corals/misc/figs/pcoa_locsym_annotated.jpg", p3, width
 #   ) +
 #   theme_cowplot(font_size = 14) +
 #   theme(legend.position = "right")
-# ggsave("/work/hs325/World_Corals/misc/figs/pcoa_locsym.jpg", p3, width = 8, height = 6, dpi = 300)
+# ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/pcoa_locsym.jpg", p3, width = 8, height = 6, dpi = 300)
 
 ################################################################################
 
@@ -370,7 +369,7 @@ p_bleach_sym <- ggplot(pcoa_pts, aes(x = PCoA1, y = PCoA2, color = bleaching)) +
   theme(legend.position = "right")
 
 # Save the result
-ggsave("/work/hs325/World_Corals/misc/figs/pcoa_bsym.jpg", p_bleach_sym, width = 8, height = 6, dpi = 300)
+ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/pcoa_bsym.jpg", p_bleach_sym, width = 8, height = 6, dpi = 300)
 
 ################################################################################
 pcoa_supp <- plot_grid(
@@ -384,7 +383,7 @@ pcoa_supp <- plot_grid(
   axis = "lr"
 )
 
-ggsave("/work/hs325/World_Corals/misc/figs/pcoa_supp.jpg", 
+ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/pcoa_supp.jpg", 
        pcoa_supp, 
        width = 10, 
        height = 16, 
@@ -461,7 +460,7 @@ p4 <- ggplot(pcoa_points, aes(x = PCoA1, y = PCoA2, color = bleaching, fill = bl
   ) +
   theme_cowplot(font_size = 14) +
   theme(legend.position = "right")
-ggsave("/work/hs325/World_Corals/misc/figs/pcoa_bleaching.jpg", p4, width = 8, height = 6, dpi = 300)
+ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/pcoa_bleaching.jpg", p4, width = 8, height = 6, dpi = 300)
 
 
 ################################################################################
@@ -534,7 +533,7 @@ p5 <- ggplot(pcoa_points, aes(x = PCoA1, y = PCoA2, color = symbiont.potential, 
   ) +
   theme_cowplot(font_size = 14) +
   theme(legend.position = "right")
-ggsave("/work/hs325/World_Corals/misc/figs/pcoa_symbiont.jpg", 
+ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/pcoa_symbiont.jpg", 
        p5, width = 8, height = 6, dpi = 300)
 
 ################################################################################
@@ -610,7 +609,7 @@ p6 <- ggplot(pcoa_points, aes(x = PCoA1, y = PCoA2, color = location, fill = loc
   theme(legend.position = "right")
 
 # save plot
-ggsave("/work/hs325/World_Corals/misc/figs/pcoa_location.jpg", p6, width = 8, height = 6, dpi = 300)
+ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/pcoa_location.jpg", p6, width = 8, height = 6, dpi = 300)
 
 ################################################################################
 
@@ -624,7 +623,7 @@ pcoa_supp <- plot_grid(
   align = "hv",
   axis = "tb" # aligns top and bottom axes
 )
-ggsave("/work/hs325/World_Corals/misc/figs/pcoa_supp_2.jpg", 
+ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/pcoa_supp_2.jpg", 
        pcoa_supp, width = 12, height = 6, dpi = 300, bg = "white")
 
 ################################################################################
@@ -912,7 +911,7 @@ p_dendro <- ggplot() +
     override.aes = list(alpha = 1, size = 4, shape = 15)
   ))
 print(p_dendro)
-ggsave("/work/hs325/World_Corals/misc/figs/dendro.jpg", p_dendro, width=10, height=8, dpi = 600)
+ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/dendro.jpg", p_dendro, width=10, height=8, dpi = 600)
 # current_order <- labels(dend)
 # print(current_order)
 # dend <- click_rotate(dend)
@@ -970,24 +969,24 @@ final_plot <- plot_grid(
 )
 
 print(final_plot)
-ggsave("/work/hs325/World_Corals/misc/figs/fig2.jpg", final_plot, width = 18, height = 12, dpi = 300)
+ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/fig2.jpg", final_plot, width = 18, height = 12, dpi = 300)
 
 
 ################################################################################
 ################################################################################
 
-# extra graphs
+df_clean <- df %>% 
+  filter(!is.na(location), complete.cases(select(., starts_with("x"))))
 
-## scleractinia vs nonscleractinia ONLY CURACAO
-# edit so all NA locations with "Curacao" in set plate are correct
+# 2. Filter specifically for Curaçao and non-NA scleractinia
+df_cur <- df_clean %>% 
+  filter(location == "Curaçao", !is.na(scleractinia))
 
-keep_cur <- meta2$location == "Curaçao" & !is.na(meta2$scleractinia)
-meta_cur <- meta2[keep_cur, ]
-num_cur  <- permanova_numeric_data2[keep_cur, ]
+num_cur  <- df_cur %>% select(starts_with("x"))
+meta_cur <- df_cur # contains your 'scleractinia' column
 
 bc_cur <- vegdist(num_cur, method = "bray")
 perm_cur <- adonis2(bc_cur ~ scleractinia, data = meta_cur, permutations = 999)
-
 # 
 # adonis2(formula = bc_cur ~ scleractinia, data = meta_cur, permutations = 999)
 # Df SumOfSqs      R2      F Pr(>F)    
@@ -1036,4 +1035,4 @@ p_cur <- ggplot(df_cur, aes(x = V1, y = V2)) +
   ) +
   theme_cowplot()
 p_cur
-ggsave("/work/hs325/World_Corals/misc/figs/pcoa_cur_scler.jpg", p_cur, width = 8, height = 6, dpi = 300)
+ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/pcoa_cur_scler.jpg", p_cur, width = 8, height = 6, dpi = 300)
