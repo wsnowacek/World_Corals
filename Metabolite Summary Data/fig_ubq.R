@@ -262,16 +262,13 @@ met_summary_classed$refined_origin <- factor(
 
 pa <- ggplot(met_summary_classed, aes(x = ubiquity_all, y = avg_abundance)) +
   geom_point(
-    aes(color = display_class, shape = refined_origin), # Changed fill to color
+    aes(color = display_class, shape = refined_origin),
     size = 3,      
-    stroke = 0.8,  # Increased slightly for better visibility of shapes 3 and 8
+    stroke = 0.8,  
     alpha = 0.85
   ) +
-  
-  # Use scale_color_manual to match the scatter plots H and I
   scale_color_manual(values = final_palette) +
   scale_shape_manual(values = origin_shapes) +
-  
   scale_y_continuous(
     labels = label_number(scale_cut = cut_short_scale())
   ) + 
@@ -300,10 +297,16 @@ pa
 #################################################################################
 
 ## remake this plot using only Scleractinian samples (e.g. df$scleractinia ==1) 
-## and host-only metabolites (e.g. met_df$refined_origin == 'Host')
-host_only_mets <- met_df %>%
-  filter(refined_origin == "Host") %>%
-  pull(metabolite)
+## and host-only metabolites (e.g. met_df$refined_origin == Host | Both)
+# host_only_mets <- met_df %>%
+#   filter(refined_origin == "Host" | refined_origin == "Both") %>%
+#   pull(metabolite)
+
+## remake this plot using only Scleractinian samples and metabolites (regardless of origin)
+## that are only found in Scleractinia (e.g. met_df$)
+# host_only_mets <- met_df %>%
+#   filter(scler_ubiquity != 0) %>%
+#   pull(metabolite)
 
 met_presence_scler_host <- df %>%
   filter(scleractinia == 1) %>% # Only Scleractinian samples
@@ -325,18 +328,29 @@ met_summary_scler <- met_presence_scler_host %>%
 
 met_summary_classed_scler <- met_summary_scler %>%
   left_join(class_mapping, by = "metabolite") %>%
-  mutate(display_class = replace_na(display_class, "Other"))
-
+  left_join(met_df %>% select(metabolite, refined_origin), by = "metabolite") %>%
+  mutate(
+    display_class = trimws(as.character(display_class)),
+    display_class = if_else(
+      is.na(display_class) | !(display_class %in% names(final_palette)),
+      "Other",
+      display_class
+    ),
+    display_class = factor(display_class, levels = names(final_palette)),
+    refined_origin = factor(
+      refined_origin,
+      levels = c("Host", "Symbiont", "Both", "Unknown")
+    )
+  )
 pb <- ggplot(met_summary_classed_scler, aes(x = ubiquity_all, y = avg_abundance)) +
   geom_point(
-    aes(fill = display_class),
-    shape = 21,
+    aes(color = display_class, shape = refined_origin),
     size = 3,
     stroke = 0.4,
-    color = "black",
     alpha = 0.85
   ) +
-  scale_fill_manual(values = final_palette) +
+  scale_color_manual(values = final_palette) +
+  scale_shape_manual(values = origin_shapes) +
   scale_y_continuous(
     labels = label_number(scale_cut = cut_short_scale())
   ) + 
@@ -346,8 +360,9 @@ pb <- ggplot(met_summary_classed_scler, aes(x = ubiquity_all, y = avg_abundance)
   ) +
   labs(
     x = "Scleractinian Ubiquity",
-    y = "Abundance",
-    fill = "Compound Class",
+    y = "Average Abundance",
+    color = "Compound Class",
+    shape = "Metabolite Origin",
   ) + 
   theme_pubr() + 
   theme(
@@ -861,8 +876,22 @@ legend_dummy <- ggplot(met_plot_df, aes(x = XGBoost_Importance, y = RandomForest
       order = 2
     )
   )
-
 unified_legend <- get_legend(legend_dummy)
+
+row_ab_ubqabundance <- plot_grid(pa + theme(legend.position = "none"),
+                                 pb + theme(legend.position = "none"), 
+                                 labels = c("A", "B"),
+                                 label_size = 18)
+row_ab_ubqabundance <- plot_grid(unified_legend,row_ab_ubqabundance,
+                                 ncol=1,
+                                 rel_heights=c(0.3,1))
+ggsave(
+  "/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/fig2_ubqabundance.jpg",
+  row_ab_ubqabundance,
+  width = 16,
+  height = 9,
+  dpi = 300
+)
 
 row_ab <- plot_grid(
   p1 + theme(legend.position = "none") + labs(subtitle = "XGBoost"), 
@@ -893,10 +922,10 @@ row_fg <- plot_grid(
 )
 
 row_cde <- plot_grid(
-  row_cd, row_e,
+  row_c, row_de,
   nrow = 2)
 row_cde <- plot_grid(
-  unified_legend, row_e,
+  unified_legend, row_c,
   nrow = 2, rel_heights = c(0.4,1))
 
 ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/fig5cde_ppt.jpg", 
@@ -912,7 +941,6 @@ true_final_figure <- plot_grid(
   rel_heights = c(0.4, 1, 1, 1.2, 1, 1) # Adjust heights based on content density
 )
 
-# Save high-resolution for publication
 ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/fig5_new.png", 
        true_final_figure, width = 18, height = 24, dpi = 600, bg = "white")
 
