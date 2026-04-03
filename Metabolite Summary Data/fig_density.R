@@ -114,8 +114,8 @@ p_volcano <- ggplot(plot_data_volcano, aes(x = log2FC, y = neg_log_p_adj, color 
   geom_hline(yintercept = sig_threshold, linetype = "dashed", color = "grey70", linewidth = 0.8) +
   geom_point(alpha = 0.6, size = 2.5) +
   facet_wrap(~refined_origin, ncol = 2) +
-  xlim(-20,20) +
-  ylim(0,75) + 
+  xlim(-25,25) +
+  ylim(0,100) + 
   scale_color_manual(values = cols_origin) +
   labs(
     x = "log2 Fold Change",
@@ -271,8 +271,8 @@ p_volcano2 <- ggplot(plot_data_volcano, aes(x = log2FC, y = neg_log_p_adj)) +
     breaks = classes,
     na.value = "gray60"
   ) +
-  ylim(0,75) + 
-  xlim(-20,20) +
+  ylim(0,100) + 
+  xlim(-25,25) +
   # scale_shape_manual(
   #   name = "Metabolite Origin",
   #   values = origin_shapes,
@@ -313,6 +313,8 @@ p_tag <- plot_data_volcano %>%
   geom_vline(xintercept = c(-2, 2), linetype = "dashed", color = "grey70") +
   geom_hline(yintercept = sig_threshold, linetype = "dashed", color = "grey70") +
   geom_point(aes(color = display_class), size = 3, alpha = 0.8) +
+  xlim(-25,25) +
+  ylim(0,75) + 
   # Label specific metabolite
   # geom_text_repel(
   #   data = . %>% filter(metabolite == "x23838_655_56593_11_538"),
@@ -332,6 +334,8 @@ p_dag <- plot_data_volcano %>%
   geom_vline(xintercept = c(-2, 2), linetype = "dashed", color = "grey70") +
   geom_hline(yintercept = sig_threshold, linetype = "dashed", color = "grey70") +
   geom_point(aes(color = display_class), size = 3, alpha = 0.8) +
+  xlim(-25,25) +
+  ylim(0,75) + 
   # Label specific metabolite
   # geom_text_repel(
   #   data = . %>% filter(metabolite == "x39055_948_80202_15_826"),
@@ -351,6 +355,8 @@ p_madag <- plot_data_volcano %>%
   geom_vline(xintercept = c(-2, 2), linetype = "dashed", color = "grey70") +
   geom_hline(yintercept = sig_threshold, linetype = "dashed", color = "grey70") +
   geom_point(aes(color = display_class), size = 3, alpha = 0.8) +
+  xlim(-25,25) +
+  ylim(0,75) + 
   # # Label specific metabolite
   # geom_text_repel(
   #   data = . %>% filter(metabolite == "x15256_518_49365_7_407"),
@@ -377,6 +383,8 @@ TAG <- plot_data_volcano %>%
   geom_vline(xintercept = c(-2, 2), linetype = "dashed", color = "grey70") +
   geom_hline(yintercept = sig_threshold, linetype = "dashed", color = "grey70") +
   geom_point(aes(color = display_class), size = 3, alpha = 0.8) +
+  xlim(-25,25) +
+  ylim(0,75) + 
   scale_color_manual(values = class_colors) +
   labs(title = "TQ/THQs", x = "log2 Fold Change", y = "-log10(adj. p-value)") +
   theme_pubr() +
@@ -388,6 +396,8 @@ DAG <- plot_data_volcano %>%
   geom_vline(xintercept = c(-2, 2), linetype = "dashed", color = "grey70") +
   geom_hline(yintercept = sig_threshold, linetype = "dashed", color = "grey70") +
   geom_point(aes(color = display_class), size = 3, alpha = 0.8) +
+  xlim(-25,25) +
+  ylim(0,75) + 
   scale_color_manual(values = class_colors) +
   labs(title = "Neutral GSL", x = "log2 Fold Change", y = "-log10(adj. p-value)") +
   theme_pubr() +
@@ -399,6 +409,8 @@ MADAG <- plot_data_volcano %>%
   geom_vline(xintercept = c(-2, 2), linetype = "dashed", color = "grey70") +
   geom_hline(yintercept = sig_threshold, linetype = "dashed", color = "grey70") +
   geom_point(aes(color = display_class), size = 3, alpha = 0.8) +
+  xlim(-25,25) +
+  ylim(0,75) + 
   scale_color_manual(values = class_colors) +
   labs(title = "Ceramides", x = "log2 Fold Change", y = "-log10(adj. p-value)") +
   theme_pubr() +
