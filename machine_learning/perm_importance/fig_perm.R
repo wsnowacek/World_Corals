@@ -265,12 +265,7 @@ pred_df %>%
   count(Scleractinia) %>%
   mutate(percent = n / sum(n) * 100)
 
-genus_summary <- pred_df %>%
-  group_by(missed_on_run) %>%
-  count(host_genus) %>%
-  mutate(percent = n / sum(n) * 100)
-
-scler_summary <- pred_df %>%
+pred_df %>%
   filter(Scleractinia == "Scleractinia") %>%
   count(host_genus, sort = TRUE) %>% 
   mutate(percent = n / sum(n) * 100) %>%
