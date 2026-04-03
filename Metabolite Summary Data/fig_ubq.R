@@ -695,6 +695,132 @@ ubqabundance_rf
 
 # volcano
 
+comm_long <- df %>%
+  pivot_longer(
+    cols = starts_with("x"), 
+    names_to  = "metabolite",
+    values_to = "abundance"
+  )
+
+comm_long <- comm_long %>%
+  mutate(abundance = as.numeric(as.character(abundance)))
+
+stats_data <- comm_long %>%
+  select(-scleractinia) %>%                    
+  left_join(df %>% select(sample, scleractinia), by = "sample") %>%
+  filter(!is.na(scleractinia)) %>%
+  mutate(group = if_else(as.character(scleractinia) == "1", "Scleractinia", "Other"))
+
+# compute L2FC and p-values per metabolite
+volcano_results <- stats_data %>%
+  group_by(metabolite) %>%
+  summarise(
+    mean_scler = mean(abundance[group == "Scleractinia"], na.rm = TRUE),
+    mean_other = mean(abundance[group == "Other"], na.rm = TRUE),
+    p_val_raw = wilcox.test(abundance ~ group)$p.value,
+    .groups = "drop"
+  ) %>%
+  mutate(
+    p_adj = p.adjust(p_val_raw, method = "bonferroni"),
+    log2FC = log2((mean_scler + 1) / (mean_other + 1)),
+    # Use adjusted p-value for the y-axis
+    neg_log_p_adj = -log10(p_adj)
+  )
+
+class_order <- c(target_classes, "Other")
+
+plot_data_volcano <- volcano_results %>%
+  inner_join(
+    met_df %>% select(metabolite, compound_class, refined_origin),
+    by = "metabolite"
+  ) %>%
+  mutate(
+    compound_class = trimws(as.character(compound_class)),
+    refined_origin = as.character(refined_origin),
+    display_class = if_else(
+      is.na(compound_class) | !(compound_class %in% names(final_palette)),
+      "Other",
+      compound_class
+    ),
+    refined_origin = if_else(is.na(refined_origin), "Unknown", refined_origin),
+    display_class = factor(display_class, levels = class_order)
+  )
+
+classes <- levels(droplevels(plot_data_volcano$display_class))
+class_colors <- final_palette[classes]
+m <- nrow(volcano_results)   
+sig_threshold <- -log10(0.05 / m)
+
+make_volcano <- function(df, title = NULL) {
+  ggplot(df, aes(x = log2FC, y = neg_log_p_adj)) +
+    geom_vline(xintercept = c(-2, 2), linetype = "dashed", color = "grey70") +
+    geom_hline(yintercept = sig_threshold, linetype = "dashed", color = "grey70", linewidth = 0.8) +
+    
+    geom_point(aes(color = display_class), alpha = 0.75, size = 2.5) +
+    
+    scale_color_manual(
+      name = "Compound Class",
+      values = class_colors,
+      breaks = classes,
+      na.value = "gray60"
+    ) +
+    
+    ylim(0, 100) +
+    xlim(-25, 25) +
+    
+    labs(
+      x = "log2 Fold Change",
+      y = "-log10(adj. p-value)",
+      title = title
+    ) +
+    
+    theme_pubr() +
+    theme(
+      legend.position = "right",   # show legend now
+      axis.title = element_text(size = 15),
+      plot.title = element_text(face = "bold", hjust = 0.5)
+    )
+}
+
+plot_data_xgb <- plot_data_volcano %>%
+  filter(metabolite %in% met_summary_xgb$metabolite)
+
+plot_data_rf <- plot_data_volcano %>%
+  filter(metabolite %in% met_summary_rf$metabolite)
+
+p_volcano_xgb <- make_volcano(plot_data_xgb)
+p_volcano_rf  <- make_volcano(plot_data_rf)
+
+legend <- get_legend(
+  p_volcano_rf +
+    theme(
+      legend.position = "top",
+      legend.title = element_text(size = 16, face = "bold"),
+      legend.text  = element_text(size = 14),
+      legend.key.size = unit(0.8, "cm")
+    )
+)
+p_combined <- plot_grid(
+  legend,
+  plot_grid(
+    p_volcano_xgb + theme(legend.position = "none"),
+    p_volcano_rf + theme(legend.position = "none"),
+    labels = c("A", "B"),
+    label_size = 18,
+    ncol = 2,
+    align = "hv"
+  ),
+  ncol = 1,
+  rel_heights = c(0.15, 1)
+)
+ggsave(
+  "/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/volcano_ml.jpg",
+  p_combined,
+  width = 16,
+  height = 9,
+  dpi = 300
+)
+
 #################################################################################
 
 # combine into single figure 
