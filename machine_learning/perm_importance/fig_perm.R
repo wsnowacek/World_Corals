@@ -219,3 +219,59 @@ final_plot <- plot_grid(
 )
 ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/perm_importance.jpg", 
        final_plot, width = 16, height = 14, dpi = 300)
+
+
+################################################################################
+
+## analyze feature sets KBest
+ft_df <- read.csv(here("machine_learning/perm_importance", "perm_feature_sets_kbest.csv"))
+# 13 fts in all KBest 
+# 42 fts in host KBest
+
+all_13df <- met_df %>%
+  filter(metabolite %in% ft_df$all_500)
+# 2 PC alkyl, 2 LysoPC alkyl, 1 DGCC, 1 ceramide, 3 other, 6 unknown
+all_13df %>%
+  arrange(desc(scler_ubiquity))
+# 5 100% scler ubiquity, all are 80% + except 1 unknown compound 0.2% scler and 2.9% non-scler
+
+host_42df <- met_df %>%
+  filter(metabolite %in% ft_df$coralonly_500)
+
+host_42df %>%
+  count(compound_class) %>%
+  arrange(desc(compound_class))
+# 15 unknown, 5 ceramides, 4 PC alkyl, 3 PE monoalkyl monoacyl, 3 LysoPC alkyl, rest 2 or less
+host_42df %>%
+  arrange(desc(scler_ubiquity))
+# 6 scler ubiquity 100%, 30 >= 90%, 34 >= 80%, 
+sum(host_42df$scler_ubiquity <= 10, na.rm = TRUE)
+
+################################################################################
+
+## analyze missed classifications KBest
+pred_df <- read.csv(here("machine_learning/perm_importance", "missed_classifs_kbest.csv"))
+
+pred_df <- pred_df %>%
+  mutate(Scleractinia = if_else(host_order == "Scleractinia",
+                                "Scleractinia",
+                                "Other"))
+pred_df %>%
+  count(Scleractinia)
+# 31 Scleractinia, 45 other 
+
+pred_df %>%
+  group_by(missed_on_run) %>%
+  count(Scleractinia) %>%
+  mutate(percent = n / sum(n) * 100)
+
+genus_summary <- pred_df %>%
+  group_by(missed_on_run) %>%
+  count(host_genus) %>%
+  mutate(percent = n / sum(n) * 100)
+
+scler_summary <- pred_df %>%
+  filter(Scleractinia == "Scleractinia") %>%
+  count(host_genus, sort = TRUE) %>% 
+  mutate(percent = n / sum(n) * 100) %>%
+  arrange(desc(percent))
