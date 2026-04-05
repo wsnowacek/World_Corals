@@ -278,7 +278,7 @@ pa <- ggplot(met_summary_classed, aes(x = ubiquity_all, y = avg_abundance)) +
   ) +
   labs(
     x = "Ubiquity",
-    y = "Abundance",
+    y = "Average Abundance",
     color = "Compound Class", # Updated label
     shape = "Metabolite Origin"
   ) + 
@@ -304,9 +304,9 @@ pa
 
 ## remake this plot using only Scleractinian samples and metabolites (regardless of origin)
 ## that are only found in Scleractinia (e.g. met_df$)
-# host_only_mets <- met_df %>%
-#   filter(scler_ubiquity != 0) %>%
-#   pull(metabolite)
+host_only_mets <- met_df %>%
+  filter(scler_ubiquity != 0) %>%
+  pull(metabolite)
 
 met_presence_scler_host <- df %>%
   filter(scleractinia == 1) %>% # Only Scleractinian samples

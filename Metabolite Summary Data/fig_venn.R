@@ -65,6 +65,29 @@ cols_sclero    <- c("1" = "#DE7862FF", "0" = "#D8AF39FF")
 # 
 # met_df <- feature_importance_comparison_all %>%
 #   inner_join(met_df, by = "metabolite")
+################################################################################
+
+# total ubiquity 
+sum(met_df$total_ubiquity == 100, na.rm = TRUE)
+# 10 ubiquitous compounds found in all samples
+sum(met_df$total_ubiquity > 90, na.rm = TRUE)
+# 413 compounds found in 90% or more of all samples
+
+# Scleractinia summary stats
+sum(met_df$scler_ubiquity == 100, na.rm = TRUE)
+# 59 ubiquitous compounds detected across all Scleractinian samples
+sum(met_df$scler_ubiquity > 80, na.rm = TRUE)
+# 2157 compounds found in over 80% of Scleractinian samples
+sum(met_df$scler_ubiquity == 0, na.rm = TRUE)
+# 841 compounds never found in Scleractinians
+
+# Non-Scleractinia summary stats
+sum(met_df$non_scler_ubiquity == 100, na.rm = TRUE)
+# 146 compounds found across all non Scleractinian samples
+sum(met_df$non_scler_ubiquity > 80, na.rm = TRUE)
+# 754 compounds found in over 90% of non Scleractinian samples
+sum(met_df$non_scler_ubiquity == 0, na.rm = TRUE)
+# 2105 compounds never found in non Scleractinian samples
 
 ################################################################################
 ## categories for venns
@@ -535,4 +558,3 @@ final_layout <- plot_grid(
   rel_heights = c(0.8, 1)
 )
 ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/ecological_core.jpg", final_layout, width=20,height=16,dpi=300)
-
