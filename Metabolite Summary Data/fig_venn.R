@@ -9,6 +9,9 @@ library(ggdendro)
 library(ggridges)
 library(dendextend)
 library(RColorBrewer)
+library(corrplot)  
+library(reshape2)
+library(pheatmap)
 library(ggpubr)
 library(forcats)
 library(ggvenn)
@@ -51,6 +54,52 @@ cols_phylum <- c("#24492EFF", "#015B58FF", "#2C6184FF", "#59629BFF", "#89689DFF"
 cols_sclero    <- c("1" = "#DE7862FF", "0" = "#D8AF39FF")
 
 ################################################################################
+
+### for custom compound_class
+met_df <- met_df %>%
+  mutate(
+    compound_class = recode(
+      compound_class,
+      "Carotenoids (C40, Î²-Î²)" = "Carotenoids",
+      "Oxidized glycerophospholipids" = "OxPL",
+      "Glycerophosphoethanolamines" = "GPEtn",
+      "Neutral glycosphingolipids" = "Neutral GSL",
+      "Triacylglycerols" = "TAG",
+      "Diacylglycerols" = "DAG",
+      "Prenyl quinone meroterpenoids" = "TQ/THQs"
+    )
+  )
+
+### take top 20 compound_class by count, with Unknown forced to end
+target_classes <- met_df %>%
+  count(compound_class, sort = TRUE) %>%
+  slice_head(n = 20) %>%
+  pull(compound_class) %>%
+  trimws()
+
+target_classes <- c(
+  setdiff(target_classes, "Unknown"),
+  intersect(target_classes, "Unknown")
+)
+
+### colors
+provided_hex <- c(
+  "#1F77B4FF", "#FF7F0EFF", "#2CA02CFF", "#D62728FF",
+  "#9467BDFF", "#8C564BFF", "#E377C2FF", "deepskyblue4", "#BCBD22FF",
+  "#17BECFFF", "#AEC7E8FF", "#FFBB78FF", "#98DF8AFF", "#FF9896FF",
+  "#C5B0D5FF", "#C49C94FF", "#F7B6D2FF", "#9EDAE5FF", "#DBDB8DFF",
+  "#C7C7C7FF"
+)
+
+spec_colors <- setNames(provided_hex[seq_along(target_classes)], target_classes)
+
+final_palette <- c(spec_colors, "Other" = "gray30")
+class_order <- c(target_classes, "Other")
+
+origin_shapes <- c("Host" = 16, "Symbiont" = 3, "Both" = 17, "Unknown" = 8)
+###########################################################
+
+
 ## categories for venns
 
 # flowers
@@ -107,6 +156,95 @@ p_flower_family <- draw_flower(df_scler, "host_family")
 ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/flower_plot_family.jpg", 
        p_flower_family, width = 10, height = 8, dpi = 300)
 
+################################################################################
+
+# richness by host_family 
+
+scler_df <- df %>% filter (df$scleractinia == 1)
+scler_df$richness <- rowSums(scler_df %>% select(starts_with("x")) > 0, na.rm = TRUE)
+scler_df$host_family <- reorder(scler_df$host_family, scler_df$richness, FUN = mean)
+
+family_palette <- c("#E29191FF", "#99DD92FF", "#93D8B9FF", "#94C4D3FF", "#949ACEFF", 
+                    "#B394CCFF", "#CC96B1FF", "#CCA499FF", "#DFE592FF", "#FFA560FF", 
+                    "#6BFF63FF", "#65FFCCFF", "#65C4FFFF", "#656BFFFF", "#AD65FFFF", 
+                    "#FF65F4FF", "#FF6584FF", "#FF6565FF")
+
+family_counts <- scler_df %>%
+  group_by(host_family) %>%
+  summarise(n = n(), .groups = "drop")
+
+scler_df <- scler_df %>%
+  left_join(family_counts, by = "host_family") %>%
+  mutate(family_label = paste0(host_family, " (n=", n, ")"))
+
+scler_df$family_label <- reorder(scler_df$family_label, scler_df$richness, FUN = mean)
+
+p_family_richness <- ggbarplot(
+  scler_df, 
+  x = "family_label", 
+  y = "richness",
+  fill = "family_label",      # Match fill to the new label
+  color = "black",
+  add = "mean_sd",
+  error.plot = "pointrange",
+  orientation = "horizontal",
+  palette = family_palette,   # The 18 colors will map to the new labels
+  label = FALSE
+) +
+  labs(
+    y = "Metabolite Richness",
+    x = "Host Family"
+  ) +
+  theme_pubr(base_size = 14) +
+  theme(
+    legend.position = "none",
+    axis.text.y = element_text(size = 12),
+    axis.title.x = element_text(size = 16),
+    axis.title.y = element_text(size = 16),
+    plot.title = element_text(hjust = 0.5, face = "bold")
+  )
+
+print(p_family_richness)
+
+# jaccard similarity index correlation plot by family 
+
+family_pa_matrix <- scler_df %>%
+  pivot_longer(cols = starts_with("x"), names_to = "metabolite", values_to = "val") %>%
+  group_by(host_family, metabolite) %>%
+  summarise(present = any(val > 0, na.rm = TRUE), .groups = "drop") %>%
+  mutate(present = as.numeric(present)) %>%
+  pivot_wider(names_from = metabolite, values_from = present, values_fill = 0) %>%
+  column_to_rownames("host_family")
+
+jaccard_dist <- vegdist(family_pa_matrix, method = "jaccard", binary = TRUE)
+jaccard_sim_matrix <- as.matrix(1 - jaccard_dist)
+
+plot_matrix <- jaccard_sim_matrix
+diag(plot_matrix) <- 0  # Setting to NA or 0 removes the text/color 
+
+# 2. Define a Red Color Palette
+# Using a gradient from a very light pink/white to a deep coral red
+red_palette <- colorRampPalette(c("#FFF5F0", "#FEE0D2", "#FC9272", "#FB6A4A", "#DE2D26", "#A50F15"))(100)
+
+# 3. Create the Heatmap
+p_jaccard <- pheatmap(
+  plot_matrix,
+  clustering_distance_rows = jaccard_dist, 
+  clustering_distance_cols = jaccard_dist,
+  clustering_method = "ward.D2",
+  color = red_palette,
+  display_numbers = TRUE,
+  number_format = "%.2f",
+  number_color = "white",     
+  fontsize_number = 10,       
+  fontsize_row = 14,        
+  fontsize_col = 14,
+  na_col = "white",            
+  border_color = "white",
+  filename = "/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/family_jaccard_heatmap.png",
+  width = 12,                  # Inches
+  height = 10                  # Inches
+)
 
 ################################################################################
 
@@ -198,19 +336,18 @@ p_core_venn <- ggvenn(
   stroke_size = 0.5, 
   set_name_size = 5,
   text_size = 4,
-  show_percentage = TRUE # Optional: helpful to see proportion of the core
+  show_percentage = TRUE 
 ) +
   theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 16))
 
 print(p_core_venn)
-
 # ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/venn_core_origin.jpg", 
 #        p_core_venn, width = 6, height = 5, dpi = 300)
 
 ################################################################################
 ## categories for venns
 
-met_df_filtered <- met_df %>% 
+met_df_filtered <- met_df %>%
   filter(refined_origin != "Unknown")
 
 get_venn_list <- function(data) {
@@ -220,13 +357,10 @@ get_venn_list <- function(data) {
   )
 }
 
-# Define the subsets
 list_all <- get_venn_list(met_df_filtered)
-list_xgb <- get_venn_list(met_df_filtered %>% arrange(desc(XGBoost_Importance)) %>% head(43))
-list_rf  <- get_venn_list(met_df_filtered %>% arrange(desc(RandomForest_Importance)) %>% head(1541))
 
 ### plot
-cols_origin <- c("Host" = "#97B9CBFF", "Symbiont" = "#9057C6FF", 
+cols_origin <- c("Host" = "#97B9CBFF", "Symbiont" = "#9057C6FF",
                  "Both" = "#FFE1BDFF", "Unknown" = "#8DC657FF")
 venn_fill <- c(cols_origin["Host"], cols_origin["Symbiont"])
 
@@ -234,7 +368,8 @@ p_a <- ggvenn(list_all, fill_color = venn_fill, stroke_size = 0.5, set_name_size
   labs() + theme(plot.title = element_text(hjust = 0.5, face = "bold"))
 
 
-#######################
+################################################################################
+
 # volcano
 # choose only metabolites in core_df
 core_abundance_df <- df %>%
@@ -271,52 +406,6 @@ volcano_results <- stats_data %>%
     neg_log_p_adj = -log10(p_adj)
   )
 
-
-###########################################################
-
-### for custom compound_class
-met_df <- met_df %>%
-  mutate(
-    compound_class = recode(
-      compound_class,
-      "Carotenoids (C40, Î²-Î²)" = "Carotenoids",
-      "Oxidized glycerophospholipids" = "OxPL",
-      "Glycerophosphoethanolamines" = "GPEtn",
-      "Neutral glycosphingolipids" = "Neutral GSL",
-      "Triacylglycerols" = "TAG",
-      "Diacylglycerols" = "DAG",
-      "Prenyl quinone meroterpenoids" = "TQ/THQs"
-    )
-  )
-
-### take top 20 compound_class by count, with Unknown forced to end
-target_classes <- met_df %>%
-  count(compound_class, sort = TRUE) %>%
-  slice_head(n = 20) %>%
-  pull(compound_class) %>%
-  trimws()
-
-target_classes <- c(
-  setdiff(target_classes, "Unknown"),
-  intersect(target_classes, "Unknown")
-)
-
-### colors
-provided_hex <- c(
-  "#1F77B4FF", "#FF7F0EFF", "#2CA02CFF", "#D62728FF",
-  "#9467BDFF", "#8C564BFF", "#E377C2FF", "deepskyblue4", "#BCBD22FF",
-  "#17BECFFF", "#AEC7E8FF", "#FFBB78FF", "#98DF8AFF", "#FF9896FF",
-  "#C5B0D5FF", "#C49C94FF", "#F7B6D2FF", "#9EDAE5FF", "#DBDB8DFF",
-  "#C7C7C7FF"
-)
-
-spec_colors <- setNames(provided_hex[seq_along(target_classes)], target_classes)
-
-final_palette <- c(spec_colors, "Other" = "gray30")
-class_order <- c(target_classes, "Other")
-
-origin_shapes <- c("Host" = 16, "Symbiont" = 3, "Both" = 17, "Unknown" = 8)
-
 ### volcano plotting data
 plot_data_volcano <- volcano_results %>%
   inner_join(
@@ -339,7 +428,6 @@ classes <- levels(droplevels(plot_data_volcano$display_class))
 class_colors <- final_palette[classes]
 
 ###########################################################
-
 
 sig_threshold <- -log10(0.05)
 
@@ -585,7 +673,6 @@ met_summary_classed <- met_df %>%
 
 met_summary_classed <- met_summary_classed %>%
   mutate(
-    # If display_class is NA, use the compound_class value
     display_class = if_else(is.na(display_class), as.character(compound_class), as.character(display_class)),
     # Re-apply the factor levels (adding "Fatty acyl carnitines" if it wasn't in class_order)
     display_class = factor(display_class, levels = unique(c(class_order, "Fatty acyl carnitines")))
@@ -653,8 +740,6 @@ combined_ubiquity_plot <- plot_grid(
   axis = "bt"          # Ensures bottom and top axes stay in line
 )
 
-# 2. Save the combined figure
-# Note: Increased width to 16 to accommodate two 8-inch wide plots side-by-side
 ggsave(
   "/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/combined_ubiquity_plots.jpg", 
   combined_ubiquity_plot, 
@@ -663,17 +748,31 @@ ggsave(
   dpi = 300
 )
 
-# non-scler ubiquity abundance of 841 compounds never found in scleractinia
-# scler ubiquity abundance of 841 compounds never found in outgroups
+# non-scler ubiquity abundance of compounds never found in scleractinia
+# scler ubiquity abundance of compounds never found in outgroups
 
-# met_df_scler_80 <- met_df %>%
-#   filter(scler_ubiquity > 80)
-# 
-# met_df_non_scler_80 <- met_df %>%
-#   filter(non_scler_ubiquity > 80)
+################################################################################
 
-## plots to make
+## scler ubiquity abundance of compounds shared amongst all families
 
-# bar plot of richness by family with confidence interval
-# ubiquity abundance of ecological core metabolites shared among all families
-# jaccard similarity index correlation plot by family 
+plot_df_core <- core_df %>%
+  left_join(
+    met_summary_classed %>% 
+      select(metabolite, scler_ubiquity, scler_avg), 
+    by = "metabolite"
+  )
+
+p_core <- make_ubiquity_plot(
+  plot_df_core,
+  x_var = "scler_ubiquity",
+  y_var = "scler_avg",
+  x_label = "Scleractinia Ubiquity (Core Metabolites)"
+) 
+
+# ggsave(
+#   "/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/ecological_core_ubiquity.jpg", 
+#   p_core, 
+#   width = 12, 
+#   height = 8, 
+#   dpi = 300
+# )
