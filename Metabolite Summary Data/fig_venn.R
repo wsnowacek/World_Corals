@@ -904,33 +904,52 @@ ggsave(
 
 ################################################################################
 
+# Upset plot of non Scleractinians by phylum
+
 upset_data <- df %>%
   filter(scleractinia == 0, !is.na(host_phylum)) %>%
-  pivot_longer(cols = starts_with("x"), names_to = "metabolite", values_to = "val") %>%
+  pivot_longer(
+    cols = starts_with("x"),
+    names_to = "metabolite",
+    values_to = "val"
+  ) %>%
   group_by(host_phylum, metabolite) %>%
-  summarise(present = as.numeric(any(val > 0, na.rm = TRUE)), .groups = "drop") %>%
-  pivot_wider(names_from = host_phylum, values_from = present, values_fill = 0)
+  summarise(
+    present = as.integer(any(val > 0, na.rm = TRUE)),
+    .groups = "drop"
+  ) %>%
+  pivot_wider(
+    names_from = host_phylum,
+    values_from = present,
+    values_fill = 0
+  )
 
-# Get the names of the phyla columns for the plot
-phyla_names <- colnames(upset_data)[-1]
-
-upset_df <- as.data.frame(upset_data)
+# Keep only membership columns
+upset_mat <- upset_data %>%
+  select(-metabolite) %>%
+  as.data.frame()
 
 png(
-  filename = "/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/upset_phylum_final.png",
-  width = 16, 
-  height = 9, 
-  units = "in", 
+  filename = "/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/upset_phylum.jpg",
+  width = 16,
+  height = 9,
+  units = "in",
   res = 300
 )
 
+set_cols <- cols_phylum[colnames(upset_mat)]
+set_cols[is.na(set_cols)] <- "grey25"
+
 upset(
-  upset_df, 
-  sets = phyla_names, 
-  main.bar.color = "grey25", 
-  sets.bar.color = cols_phylum[phyla_names], # Matches colors to phylum names
+  upset_mat,
+  nsets = ncol(upset_mat),
+  sets = colnames(upset_mat),
+  keep.order = TRUE,
   order.by = "freq",
-  text.scale = 1.5
+  main.bar.color = "grey25",
+  sets.bar.color = set_cols,
+  mb.ratio = c(0.7, 0.3),
+  text.scale = c(2, 1.8, 1.5, 1.5, 1.5, 1.5)
 )
 
 dev.off()

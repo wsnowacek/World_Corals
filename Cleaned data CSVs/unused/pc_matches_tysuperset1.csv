@@ -1,0 +1,1942 @@
+feature_id,pepmass,LipidClass,compound_class,coraldb_compound_name
+22863,768.5908,PC,Unknown,PC(O-16:0/20:4) [M+H]+
+25770,796.6222,PC,Unknown,PC(O-18:0/20:4) [M+H]+
+3156,482.3606,PC,Lyso-PC(alkyl),Lyso-PC(O-16:0) [M+H]+
+20449,766.5752,PC,Unknown,PC(O-36:5) [M+H]+
+6124,510.3921,PC,Lyso-PC(alkyl),Lyso-PC(O-18:0) [M+H]+
+23789,794.6065,PC,Unknown,PC(O-18:1/20:4) [M+H]+
+22902,794.605,PC,Unknown,PC(O-18:1/20:4) [M+H]+
+24987,796.6222,PC,Unknown,PC(O-18:0/20:4) [M+H]+
+21844,792.591,PC,Unknown,PC(O-38:6) [M+H]+
+25808,746.6064,PC,Glycerophosphocholines,PC(O-34:1) [M+H]+
+24253,770.6064,PC,Unknown,PC(O-16:0/20:3) [M+H]+
+2457,496.34,PC,Lyso-PC(acyl),Lyso-PC(16:0) [M+H]+
+4782,524.3715,PC,Lyso-PC(acyl),Lyso-PC(18:0) [M+H]+
+21652,742.5758,PC,Unknown,PC(O-34:3) [M+H]+
+19879,806.5703,PC,Unknown,PC(16:0/22:6) [M+H]+
+25995,838.6323,PC,Unknown,PC(40:4) [M+H]+
+20887,782.5699,PC,Glycerophosphocholines,PC(36:4) / PC(O-36:5;O) [M+H]+
+23464,744.591,PC,Unknown,PC(O-34:2) [M+H]+
+26056,772.6218,PC,Unknown,PC(O-36:2) [M+H]+
+23284,810.6013,PC,Unknown,PC(38:4) / PC(38:5;O) [M+H]+
+20945,808.5851,PC,Unknown,PC(38:5) [M+H]+
+25734,822.6362,PC,Unknown,PC(O-18:0/22:5) [M+H]+
+24084,760.5857,PC,Unknown,PC(34:1) [M+H]+
+19613,756.5545,PC,Unknown,PC(34:3) [M+H]+
+28396,774.6379,PC,Unknown,PC(O-18:0/18:1) [M+H]+
+24157,836.6165,PC,Unknown,PC(O-18:0/22:5) [M+H]+
+24123,810.6008,PC,Unknown,PC(38:4) / PC(38:5;O) [M+H]+
+27095,798.6385,PC,Unknown,PC(O-18:0/20:3) [M+H]+
+27743,798.6451,PC,Phosphosphingolipids,PC(O-18:0/20:3) [M+H]+
+27615,824.6541,PC,Unknown,PC(O-20:0/20:4) [M+H]+
+24838,770.6077,PC,Unknown,PC(O-16:0/20:3) [M+H]+
+28291,824.6539,PC,Unknown,PC(O-20:0/20:4) [M+H]+
+24892,820.6207,PC,Unknown,PC(O-18:0/22:6) [M+H]+
+22869,771.5978,PC,Unknown,NA
+21530,758.57,PC,Glycerophosphocholines,PC(34:2) [M+H]+
+18452,780.5542,PC,Glycerophosphocholines,PC(36:5) [M+H]+
+24359,782.6066,PC,Glycerophosphocholines,PC(O-37:4) [M+H]+
+19262,740.5591,PC,Unknown,PC(O-34:4) [M+H]+
+23241,834.6009,PC,Unknown,PC(40:6) [M+H]+
+26753,788.6173,PC,Unknown,PC(36:1) [M+H]+
+26910,799.6408,PC,Unknown,SM(40:3;O3) [M+H]+
+24344,786.6008,PC,Unknown,PC(36:2) [M+H]+
+22416,784.586,PC,Glycerophosphocholines,PC(36:3) / PC(O-36:4;O) [M+H]+
+9373,538.424,PC,Lyso-PC(alkyl),Lyso-PC(O-20:0) [M+H]+
+20567,890.4567,PC,Unknown,NA
+22065,808.5852,PC,Unknown,PC(16:0/22:5) [M+H]+
+26412,822.6389,PC,Unknown,PC(O-18:0/22:5) [M+H]+
+25766,799.6293,PC,Glycerophosphocholines,SM(40:3;O3) [M+H]+
+4496,496.3764,PC,Lyso-PC(alkyl),Lyso-PC(O-17:0) [M+H]+
+22037,768.5913,PC,Glycerophosphocholines,PC(O-16:0/20:4) [M+H]+
+3153,963.7133,PC,Glycerophosphocholines,NA
+11249,814.5446,PC,Neutral glycosphingolipids,NA
+23073,784.5852,PC,Glycerophosphocholines,PC(36:3) / PC(O-36:4;O) [M+H]+
+25393,812.6174,PC,Unknown,PC(38:3) / PC(38:4;O) [M+H]+
+19452,766.5755,PC,Unknown,PC(O-36:5) [M+H]+
+23416,924.4443,PC,Unknown,NA
+1430,568.3397,PC,Lyso-PC(acyl),Lyso-PC(22:6) [M+H]+
+25672,720.5906,PC,Glycerophosphocholines,PC(O-32:0) [M+H]+
+16835,754.5384,PC,Unknown,PC(34:4) [M+H]+
+25626,794.6061,PC,Unknown,PC(O-18:1/20:4) [M+H]+
+26368,786.6361,PC,Glycerophosphocholines,PC(O-37:2) [M+H]+
+14979,878.5697,PC,Unknown,PC(22:6/22:6) [M+H]+
+27019,814.6333,PC,Unknown,PC(38:2) [M+H]+
+20835,766.5751,PC,Unknown,PC(O-36:5) [M+H]+
+29222,814.6681,PC,Glycerophosphocholines,NA
+26171,798.6338,PC,Unknown,PC(O-18:0/20:3) [M+H]+
+23949,734.5696,PC,Unknown,PC(32:0) [M+H]+
+27012,810.6391,PC,Unknown,PC(O-39:4) [M+H]+
+24752,732.5909,PC,Glycerophosphocholines,PC(O-33:1) [M+H]+
+19863,894.4489,PC,Unknown,NA
+15781,798.589,PC,DGCC,DGCC(38:7) [M+H]+
+20464,769.5826,PC,Phosphosphingolipids,NA
+8001,552.4031,PC,Lyso-PC(acyl),Lyso-PC(20:0) [M+H]+
+20849,732.5534,PC,Glycerophosphocholines,PC(32:1) [M+H]+
+28832,800.6534,PC,Glycerophosphocholines,PC(O-38:2) [M+H]+
+7773,524.4078,PC,Lyso-PC(alkyl),Lyso-PC(O-19:0) [M+H]+
+24951,818.6027,PC,Unknown,PC(O-36:3;O3) [M+H]+
+3523,508.3764,PC,Lyso-PC(alkyl),Lyso-PC(O-18:1) [M+H]+
+22872,718.5757,PC,Glycerophosphocholines,PC(O-32:1) [M+H]+
+24094,744.5907,PC,Unknown,PC(O-34:2) [M+H]+
+25471,770.6136,PC,Neutral glycosphingolipids,PC(O-16:0/20:3) [M+H]+
+22629,692.5604,PC,Glycerophosphocholines,PC(O-30:0) [M+H]+
+17609,790.5744,PC,Unknown,PC(O-38:7) [M+H]+
+26641,796.5828,PC,Glycerophosphocholines,NA
+23742,820.6208,PC,Unknown,PC(O-18:0/22:6) [M+H]+
+23381,768.5909,PC,Unknown,PC(O-16:0/20:4) [M+H]+
+27936,800.6522,PC,Unknown,PC(O-38:2) [M+H]+
+6113,1019.7758,PC,Unknown,NA
+12813,1183.9349,PC,Unknown,NA
+28313,748.6206,PC,Glycerophosphocholines,PC(O-34:0) [M+H]+
+5118,628.2418,PC,Unknown,NA
+2750,522.3562,PC,Lyso-PC(acyl),Lyso-PC(18:1) [M+H]+
+26267,808.6195,PC,Unknown,PC(O-39:5) [M+H]+
+20278,792.5896,PC,Unknown,PC(O-38:6) [M+H]+
+4177,524.3721,PC,Lyso-PC(acyl),Lyso-PC(18:0) [M+H]+
+24311,773.6137,PC,Unknown,NA
+22336,766.5749,PC,Unknown,PC(O-36:5) [M+H]+
+2173,496.3403,PC,Lyso-PC(acyl),Lyso-PC(16:0) [M+H]+
+22303,780.5908,PC,Glycerophosphocholines,PC(O-37:5) [M+H]+
+28474,866.665,PC,Unknown,PC(42:4) [M+H]+
+26806,772.623,PC,Glycerophosphocholines,PC(O-36:2) [M+H]+
+24948,799.6297,PC,Glycerophosphocholines,SM(40:3;O3) [M+H]+
+19935,782.5693,PC,Glycerophosphocholines,PC(36:4) / PC(O-36:5;O) [M+H]+
+1649,544.3403,PC,Lyso-PC(acyl),Lyso-PC(20:4) [M+H]+
+26729,864.6478,PC,Glycerophosphocholines,PC(42:5) [M+H]+
+25126,808.623,PC,Glycerophosphocholines,PC(O-39:5) [M+H]+
+27488,760.6228,PC,Glycerophosphocholines,PC(O-35:1) [M+H]+
+22052,834.6012,PC,Unknown,PC(40:6) [M+H]+
+19525,794.5746,PC,Unknown,PC(37:5) [M+H]+
+21966,795.5986,PC,Unknown,NA
+28244,850.6693,PC,Unknown,PC(O-42:5) [M+H]+
+5030,550.3872,PC,Lyso-PC(acyl),Lyso-PC(20:1) [M+H]+
+23368,794.6066,PC,Glycerophosphocholines,PC(O-18:1/20:4) [M+H]+
+27851,840.6487,PC,Unknown,PC(40:3) [M+H]+
+26749,838.6317,PC,Unknown,PC(40:4) [M+H]+
+7615,664.4925,PC,Glycerophosphocholines,NA
+26200,810.6378,PC,Unknown,PC(O-39:4) [M+H]+
+1853,570.3565,PC,Lyso-PC(acyl),Lyso-PC(22:5) [M+H]+
+21528,794.569,PC,Unknown,PC(37:5) [M+H]+
+15607,784.5859,PC,Unknown,PC(36:3) / PC(O-36:4;O) [M+H]+
+29070,816.6485,PC,Unknown,PC(38:1) [M+H]+
+16962,812.5531,PC,Glycerophosphocholines,NA
+6315,538.3871,PC,Lyso-PC(acyl),Lyso-PC(19:0) [M+H]+
+20507,706.5386,PC,Glycerophosphocholines,PC(30:0) [M+H]+
+19366,1409.0852,PC,Unknown,NA
+9206,790.5609,PC,Oxidized glycerophospholipids,PC(O-38:7) [M+H]+
+21377,938.4596,PC,Oxidized glycerophospholipids,NA
+20579,754.5746,PC,Glycerophosphocholines,PC(O-35:4) [M+H]+
+5847,508.3773,PC,Lyso-PC(alkyl),Lyso-PC(O-18:1) [M+H]+
+20570,792.5898,PC,Unknown,PC(O-38:6) [M+H]+
+20110,766.5755,PC,Unknown,PC(O-36:5) [M+H]+
+30851,802.6695,PC,Unknown,PC(O-36:3;O2) [M+H]+
+26468,796.6276,PC,Neutral glycosphingolipids,PC(O-18:0/20:4) [M+H]+
+24997,822.6338,PC,Glycerophosphocholines,PC(O-18:0/22:5) [M+H]+
+25820,800.6292,PC,Glycerophosphocholines,PC(37:2) [M+H]+
+26314,840.6394,PC,Unknown,PC(40:3) [M+H]+
+3862,580.3978,PC,Oxidized Lyso-PC(acyl),Lyso-PC(21:1;O) [M+H]+
+18224,764.5597,PC,Unknown,PC(O-36:6) [M+H]+
+19118,794.5765,PC,Unknown,PC(37:5) [M+H]+
+20974,742.5745,PC,Glycerophosphocholines,PC(O-34:3) [M+H]+
+17097,892.4353,PC,Unknown,NA
+21661,780.5918,PC,Glycerophosphocholines,PC(O-37:5) [M+H]+
+22360,792.5902,PC,Unknown,PC(O-38:6) [M+H]+
+11125,552.4388,PC,Lyso-PC(alkyl),Lyso-PC(O-21:0) [M+H]+
+2695,572.3721,PC,Lyso-PC(acyl),Lyso-PC(22:4) [M+H]+
+21182,754.5745,PC,Unknown,PC(O-35:4) [M+H]+
+27311,852.6496,PC,Unknown,NA
+24286,808.6229,PC,Unknown,PC(O-39:5) [M+H]+
+25440,770.5678,PC,Glycerophosphoethanolamines,NA
+27604,822.6348,PC,Unknown,PC(O-18:0/22:5) [M+H]+
+19989,832.5846,PC,Unknown,PC(40:7) [M+H]+
+13569,800.5814,PC,Glycerophosphocholines,PC(O-36:4;O2) [M+H]+
+18233,812.5778,PC,Unknown,PC(O-37:5;O) [M+H]+
+22209,704.5585,PC,Glycerophosphocholines,PC(O-31:1) [M+H]+
+34590,976.6557,PC,Unknown,NA
+13509,782.5711,PC,Glycerophosphocholines,PC(36:4) / PC(O-36:5;O) [M+H]+
+18316,796.5898,PC,Unknown,NA
+22784,784.586,PC,Glycerophosphocholines,PC(36:3) / PC(O-36:4;O) [M+H]+
+22302,758.5698,PC,Unknown,PC(34:2) [M+H]+
+21746,820.5892,PC,Neutral glycosphingolipids,PC(39:6) [M+H]+
+23279,792.5907,PC,Unknown,PC(O-38:6) [M+H]+
+23738,780.5897,PC,Glycerophosphocholines,PC(O-37:5) [M+H]+
+10506,832.5705,PC,Oxidized glycerophospholipids,PC(40:7) [M+H]+
+10880,832.5951,PC,Oxidized DGCC,DGCC(16:0/22:6;O2) [M+H]+
+29207,826.6699,PC,Glycerophosphocholines,PC(O-40:3) [M+H]+
+23646,782.6063,PC,Glycerophosphocholines,PC(O-37:4) [M+H]+
+16665,764.5597,PC,Unknown,PC(O-36:6) [M+H]+
+12499,842.5686,PC,Glycerophosphocholines,NA
+7725,704.4654,PC,Unknown,PC(O-32:8) [M+H]+
+7067,776.5453,PC,Depsipeptides,NA
+23860,806.605,PC,Glycerophosphocholines,PC(O-39:6) [M+H]+
+17509,764.5594,PC,Unknown,PC(O-36:6) [M+H]+
+15726,726.3912,PC,Unknown,NA
+26567,848.6539,PC,Glycerophosphocholines,PC(O-42:6) [M+H]+
+21121,792.5904,PC,Unknown,PC(O-38:6) [M+H]+
+14034,858.6237,PC,Glycerophosphocholines,PC(O-39:4;O3) [M+H]+
+13564,784.5859,PC,Glycerophosphocholines,PC(36:3) / PC(O-36:4;O) [M+H]+
+11174,708.4958,PC,Unknown,PC(O-32:6) [M+H]+
+909,542.3247,PC,Lyso-PC(acyl),Lyso-PC(20:5) [M+H]+
+15747,871.5331,PC,Unknown,NA
+20777,798.6014,PC,Unknown,PC(37:3) [M+H]+
+1133,518.3248,PC,Lyso-PC(acyl),Lyso-PC(18:3) [M+H]+
+25021,862.6322,PC,Unknown,PC(42:6) [M+H]+
+1654,454.3294,PC,Lyso-PC(alkyl),Lyso-PC(O-14:0) [M+H]+
+16446,738.5447,PC,Glycerophosphocholines,PC(O-34:5) [M+H]+
+25954,864.6461,PC,Glycerophosphocholines,PC(42:5) [M+H]+
+23499,836.6164,PC,Glycerophosphocholines,PC(O-18:0/22:5) [M+H]+
+3358,510.3573,PC,Lyso-PC(acyl),Lyso-PC(17:0) [M + H]+
+23127,780.5908,PC,Unknown,PC(O-37:5) [M+H]+
+1858,480.345,PC,Lyso-PC(alkyl),Lyso-PC(O-16:1) [M+H]+
+25233,786.6015,PC,Unknown,PC(36:2) [M+H]+
+12157,815.5422,PC,Unknown,NA
+22429,768.5899,PC,Unknown,PC(O-16:0/20:4) [M+H]+
+6654,608.4296,PC,Oxidized Lyso-PC(acyl),Lyso-PC(23:1;O) [M+H]+
+25919,862.6303,PC,Unknown,PC(42:6) [M+H]+
+25926,794.6038,PC,Unknown,PC(O-18:1/20:4) [M+H]+
+25934,774.4353,PC,Oxidized glycerophospholipids,NA
+25199,836.6162,PC,Unknown,PC(40:5) [M+H]+
+16749,800.5816,PC,Unknown,PC(O-36:4;O2) [M+H]+
+25654,784.622,PC,Glycerophosphocholines,PC(O-37:3) [M+H]+
+2436,572.3715,PC,Lyso-PC(acyl),Lyso-PC(22:4) [M+H]+
+31781,914.7208,PC,Triacylglycerols,NA
+25245,744.5908,PC,Unknown,PC(O-34:2) [M+H]+
+19586,792.5904,PC,Unknown,PC(O-38:6) [M+H]+
+23157,860.6157,PC,Unknown,NA
+15777,800.5899,PC,Glycerophosphocholines,PC(O-36:4;O2) [M+H]+
+15425,800.5818,PC,Glycerophosphocholines,PC(O-36:4;O2) [M+H]+
+12833,566.455,PC,Lyso-PC(alkyl),Lyso-PC(O-22:0) [M+H]+
+16046,778.5385,PC,Unknown,PC(36:6) [M+H]+
+19106,662.518,PC,Neutral glycosphingolipids,NA
+7882,804.5383,PC,Oxidized glycerophospholipids,PC(38:7) [M+H]+
+4614,608.4292,PC,Oxidized Lyso-PC(acyl),Lyso-PC(23:1;O) [M+H]+
+21130,755.5778,PC,Unknown,NA
+24478,795.6385,PC,Phosphosphingolipids,SM(41:4;O2) [M+H]+
+27227,848.6527,PC,Unknown,PC(O-42:6) [M+H]+
+8549,844.5697,PC,Oxidized glycerophospholipids,NA
+23085,774.6083,PC,Unknown,PC(35:1) [M+H]+
+24529,734.5968,PC,Unknown,NA
+15435,810.6028,PC,Glycerophosphocholines,PC(38:4) / PC(38:5;O) [M+H]+
+26625,762.6015,PC,Unknown,NA
+23882,718.5753,PC,Unknown,PC(O-32:1) [M+H]+
+6292,536.4081,PC,Glycerophosphocholines,NA
+17110,828.6116,PC,Glycerophosphocholines,PC(O-38:4;O2) [M+H]+
+23195,744.5904,PC,Glycerophosphocholines,PC(O-34:2) [M+H]+
+1759,572.3346,PC,Oxidized Lyso-PC(acyl),Lyso-PC(21:5;O) [M+H]+
+24906,758.606,PC,Glycerophosphocholines,PC(O-35:2) [M+H]+
+14673,828.552,PC,Unknown,PC(40:9) [M+H]+
+26643,732.5911,PC,Unknown,PC(O-33:1) [M+H]+
+17282,786.5908,PC,Unknown,NA
+13838,712.3751,PC,Unknown,NA
+23648,770.6045,PC,Unknown,PC(O-36:3) [M+H]+
+2420,522.3562,PC,Lyso-PC(acyl),Lyso-PC(18:1) [M+H]+
+4772,1047.7359,PC,Unknown,NA
+16018,844.6468,PC,Glycerophosphocholines,NA
+2969,480.3456,PC,Lyso-PC(alkyl),Lyso-PC(O-16:1) [M+H]+
+27388,812.6496,PC,Unknown,PC(O-39:3) [M+H]+
+26398,797.6319,PC,Unknown,HexCer(39:4;O3) [M+H]+
+25197,830.5709,PC,Glycerophosphoethanolamines,NA
+2175,546.3569,PC,Lyso-PC(acyl),Lyso-PC(20:3) [M+H]+
+3878,496.3766,PC,Lyso-PC(alkyl),Lyso-PC(O-17:0) [M+H]+
+14411,868.5938,PC,Unknown,NA
+29461,842.6656,PC,Unknown,PC(40:2) [M+H]+
+23136,772.5905,PC,Marine-bacterial DPEs,NA
+21235,780.5914,PC,Glycerophosphocholines,PC(O-37:5) [M+H]+
+19911,822.6024,PC,Unknown,PC(39:5) [M+H]+
+19671,795.5765,PC,Unknown,NA
+16224,1374.0771,PC,Unknown,NA
+7487,762.5288,PC,Unknown,NA
+15604,728.523,PC,Unknown,PC(32:23 [M+H]+
+18107,828.6121,PC,Glycerophosphocholines,PC(O-38:4;O2) [M+H]+
+1776,520.3399,PC,Lyso-PC(acyl),Lyso-PC(18:2) [M+H]+
+22856,806.6053,PC,Glycerophosphocholines,PC(O-39:6) [M+H]+
+16943,810.6024,PC,Glycerophosphocholines,PC(38:4) / PC(38:5;O) [M+H]+
+18573,784.5856,PC,Unknown,PC(36:3) / PC(O-36:4;O) [M+H]+
+11284,580.4342,PC,Lyso-PC(acyl),Lyso-PC(22:0) [M+H]+
+27852,772.6232,PC,Unknown,PC(O-36:2) [M+H]+
+21864,794.6002,PC,Glycerophosphocholines,PC(O-18:1/20:4) [M+H]+
+2300,468.3453,PC,Lyso-PC(alkyl),Lyso-PC(O-15:0) [M+H]+
+19600,812.6159,PC,Glycerophosphocholines,PC(38:3) / PC(38:4;O) [M+H]+
+20780,716.5641,PC,Unknown,PC(O-32:2) [M+H]+
+29246,800.6545,PC,Unknown,PC(O-38:2) [M+H]+
+30478,828.6845,PC,Unknown,PC(O-40:2) [M+H]+
+19040,756.5536,PC,Glycerophosphocholines,PC(34:3) [M+H]+
+26842,798.6805,PC,Unknown,NA
+28054,994.7272,PC,Glycerophosphocholines,NA
+15749,794.5112,PC,Unknown,NA
+4509,508.3759,PC,Lyso-PC(alkyl),Lyso-PC(O-18:1) [M+H]+
+1181,468.3088,PC,Lyso-PC(acyl),Lyso-PC(14:0) [M+H]+
+21726,784.5855,PC,Glycerophosphocholines,PC(36:3) / PC(O-36:4;O) [M+H]+
+4031,494.361,PC,Lyso-PC(alkyl),Lyso-PC(O-17:1) [M+H]+
+26548,746.6073,PC,Unknown,PC(O-34:1) [M+H]+
+16223,1350.0769,PC,Unknown,NA
+24180,862.6317,PC,Unknown,PC(42:6) [M+H]+
+8288,918.6229,PC,Unknown,NA
+6672,666.5085,PC,Unknown,NA
+3141,548.3697,PC,Lyso-PC(acyl),Lyso-PC(20:2) [M+H]+
+34263,960.6323,PC,Depsipeptides,NA
+17135,812.617,PC,Glycerophosphocholines,PC(38:3) / PC(38:4;O) [M+H]+
+18480,898.6327,PC,Glycerophosphocholines,NA
+6297,678.4714,PC,Oxidized glycerophospholipids,NA
+21061,834.6002,PC,Unknown,PC(40:6) [M+H]+
+17932,770.575,PC,Unknown,NA
+27545,836.6549,PC,Glycerophosphocholines,PC(O-41:5) [M+H]+
+25874,758.6044,PC,Unknown,PC(O-35:2) [M+H]+
+2451,991.6722,PC,Unknown,NA
+24973,784.6216,PC,Glycerophosphocholines,PC(O-37:3) [M+H]+
+21072,794.5705,PC,Glycerophosphocholines,PC(37:5) [M+H]+
+14609,784.5861,PC,Glycerophosphocholines,PC(36:3) / PC(O-36:4;O) [M+H]+
+20656,758.5711,PC,Glycerophosphocholines,PC(34:2) [M+H]+
+18482,806.5697,PC,Unknown,PC(16:0/22:6) [M+H]+
+6180,975.7121,PC,Unknown,NA
+22718,800.6169,PC,Unknown,PC(37:2) [M+H]+
+24540,822.601,PC,Glycerophosphocholines,PC(39:5) [M+H]+
+30907,776.6537,PC,Glycerophosphocholines,PC(O-36:0) [M+H]+
+28157,802.6339,PC,Unknown,NA
+19686,804.5914,PC,Glycerophosphocholines,PC(O-35:3;O3) [M+H]+
+1537,504.3457,PC,Glycerophosphocholines,NA
+17807,713.5596,PC,Phosphosphingolipids,NA
+25949,850.6328,PC,Unknown,NA
+13672,852.5531,PC,Glycerophosphocholines,PC(20:5:22:6) [M+H]+
+24593,850.5148,PC,Unknown,NA
+29015,838.6722,PC,Glycerophosphocholines,PC(O-41:4) [M+H]+
+20499,812.5779,PC,Glycerophosphocholines,NA
+26619,758.6066,PC,Unknown,PC(O-35:2) [M+H]+
+27797,814.6333,PC,Unknown,PC(38:2) [M+H]+
+18820,740.559,PC,Glycerophosphocholines,PC(O-34:4) [M+H]+
+17062,784.5865,PC,Unknown,PC(36:3) / PC(O-36:4;O) [M+H]+
+28390,826.6673,PC,Unknown,PC(O-40:3) [M+H]+
+23235,718.5754,PC,Glycerophosphocholines,PC(O-32:1) [M+H]+
+19361,710.5488,PC,Glycerophosphocholines,NA
+6046,636.4598,PC,Glycerophosphocholines,NA
+9045,706.5032,PC,Unknown,NA
+18629,764.5591,PC,Unknown,PC(O-36:6) [M+H]+
+24167,732.5907,PC,Glycerophosphocholines,PC(O-33:1) [M+H]+
+19457,788.5546,PC,Glycerophosphocholines,PC(O-38:8) [M+H]+
+2463,512.3707,PC,Glycerophosphocholines,NA
+8399,818.5549,PC,Oxidized glycerophospholipids,NA
+24733,824.6166,PC,Unknown,PC(39:4) [M+H]+
+20576,736.5638,PC,Unknown,NA
+19642,836.5762,PC,Glycerophosphocholines,NA
+27567,850.6661,PC,Unknown,PC(O-42:5) [M+H]+
+24907,788.6091,PC,Unknown,PC(36:1) [M+H]+
+4050,508.3763,PC,Lyso-PC(alkyl),Lyso-PC(O-18:1) [M+H]+
+31736,977.7771,PC,Unknown,NA
+16642,776.5617,PC,Glycerophosphocholines,NA
+23083,822.6028,PC,Glycerophosphocholines,PC(39:5) [M+H]+
+14519,810.6016,PC,Glycerophosphocholines,PC(38:4) / PC(38:5;O) [M+H]+
+24839,846.6378,PC,Unknown,NA
+16341,820.5921,PC,Neutral glycosphingolipids,PC(39:6) [M+H]+
+1421,494.3242,PC,Lyso-PC(acyl),Lyso-PC(16:1) [M+H]+
+20151,744.5614,PC,MGDG,MGDG(16:1/16:1) [M+NH4]+
+14961,788.559,PC,Unknown,PC(O-38:8) [M+H]+
+13794,826.5964,PC,Glycerophosphocholines,PC(O-38:5;O2) [M+H]+
+25508,774.6023,PC,Unknown,PC(35:1) [M+H]+
+22214,742.5747,PC,Unknown,PC(O-34:3) [M+H]+
+29087,850.6714,PC,Glycerophosphocholines,PC(O-42:5) [M+H]+
+19714,740.5604,PC,Unknown,PC(O-34:4) [M+H]+
+21037,812.6156,PC,Unknown,PC(38:3) / PC(38:4;O) [M+H]+
+27475,786.6381,PC,Glycerophosphocholines,PC(O-37:2) [M+H]+
+23366,769.6235,PC,Phosphosphingolipids,SM(39:3;O2) [M+H]+
+23829,750.602,PC,Unknown,NA
+24597,848.5174,PC,Unknown,NA
+18198,812.6174,PC,Glycerophosphocholines,PC(38:3) / PC(38:4;O) [M+H]+
+21275,768.5894,PC,Glycerophosphocholines,PC(O-16:0/20:4) [M+H]+
+15478,826.596,PC,Unknown,PC(O-38:5;O2) [M+H]+
+23090,820.6217,PC,Glycerophosphocholines,PC(O-18:0/22:6) [M+H]+
+2213,506.3606,PC,Lyso-PC(alkyl),Lyso-PC(O-18:2) [M+H]+
+18613,786.5998,PC,Glycerophosphocholines,PC(36:2) [M+H]+
+30575,972.7409,PC,Unknown,NA
+21935,732.5556,PC,Unknown,PC(32:1) [M+H]+
+18321,790.5742,PC,Unknown,PC(O-38:7) [M+H]+
+11311,817.6043,PC,Unknown,NA
+5949,790.5233,PC,Oxidized glycerophospholipids,NA
+27546,968.7104,PC,Unknown,NA
+11637,832.5946,PC,Oxidized DGCC,DGCC(16:0/22:6;O2) [M+H]+
+15536,801.5855,PC,Phosphosphingolipids,NA
+21859,818.6048,PC,Glycerophosphocholines,PC(O-36:3;O3) [M+H]+
+21549,778.5743,PC,Unknown,NA
+18966,790.5742,PC,Unknown,PC(O-38:7) [M+H]+
+22183,812.6168,PC,Glycerophosphocholines,PC(38:3) / PC(38:4;O) [M+H]+
+22382,793.622,PC,Phosphosphingolipids,SM(41:5;O2) [M+H]+
+23990,894.4847,PC,Unknown,NA
+10098,732.4971,PC,Glycerophosphocholines,PC(O-34:8) [M+H]+
+22829,810.6027,PC,Glycerophosphocholines,PC(38:4) / PC(38:5;O) [M+H]+
+9546,566.4184,PC,Lyso-PC(acyl),Lyso-PC(21:0) [M+H]+
+18235,750.5462,PC,Glycerophosphocholines,NA
+23315,850.6361,PC,Glycerophosphocholines,NA
+14764,826.5953,PC,Glycerophosphocholines,PC(O-38:5;O2) [M+H]+
+22608,758.51,PC,Unknown,NA
+15750,786.5966,PC,Glycerophosphocholines,PC(36:2) [M+H]+
+3465,483.4081,PC,NA,NA
+2259,536.3342,PC,Oxidized glycerophospholipids,NA
+30129,868.6806,PC,Glycerophosphocholines,NA
+15734,782.5711,PC,Glycerophosphocholines,PC(36:4) / PC(O-36:5;O) [M+H]+
+18689,752.5602,PC,Unknown,NA
+14197,826.5958,PC,Glycerophosphocholines,PC(O-38:5;O2) [M+H]+
+26306,824.649,PC,Glycerophosphocholines,PC(O-20:0/20:4) [M+H]+
+29289,892.6789,PC,Glycerophosphocholines,NA
+8103,578.4192,PC,Lyso-PC(acyl),Lyso-PC(22:1) [M+H]+
+12732,800.5819,PC,Glycerophosphocholines,PC(O-36:4;O2) [M+H]+
+15389,926.6308,PC,Unknown,NA
+29385,788.6545,PC,Glycerophosphocholines,PC(O-37:1) [M+H]+
+9214,756.499,PC,Glycerophosphocholines,NA
+11542,818.593,PC,Unknown,PC(O-36:3;O3) [M+H]+
+13505,810.6009,PC,Glycerophosphocholines,PC(38:4) / PC(38:5;O) [M+H]+
+24382,812.6159,PC,Unknown,PC(38:3) / PC(38:4;O) [M+H]+
+17088,780.5517,PC,Unknown,PC(36:5) [M+H]+
+16218,804.5544,PC,Unknown,PC(38:7) [M+H]+
+21014,767.6082,PC,Phosphosphingolipids,SM(39:4;O2) [M+H]+
+18226,740.5592,PC,Unknown,PC(O-34:4) [M+H]+
+9974,758.5341,PC,Glycerophosphocholines,NA
+25111,990.6945,PC,Glycerophosphocholines,NA
+20882,900.647,PC,Glycerophosphocholines,NA
+29686,1022.7583,PC,Unknown,NA
+6289,776.5062,PC,Oxidized glycerophospholipids,NA
+20100,716.558,PC,Glycerophosphocholines,PC(O-32:2) [M+H]+
+2133,508.34,PC,Lyso-PC(acyl),Lyso-PC(17:1) [M+H]+
+7190,552.403,PC,Lyso-PC(acyl),Lyso-PC(20:0) [M+H]+
+10524,692.5235,PC,Glycerophosphocholines,PC(29:0) [M+H]+
+30837,844.6832,PC,Glycerophosphocholines,PC(40:1) [M+H]+
+27989,890.664,PC,Unknown,NA
+14589,782.5706,PC,Glycerophosphocholines,PC(36:4) / PC(O-36:5;O) [M+H]+
+27084,762.6286,PC,Unknown,NA
+26765,788.5569,PC,Glycerophosphocholines,PC(O-38:8) [M+H]+
+14909,844.6453,PC,Glycerophosphocholines,NA
+27296,823.6708,PC,Unknown,SM(43:4;O2) [M+H]+
+3750,822.5295,PC,Oxidized glycerophospholipids,NA
+2916,550.3512,PC,Oxidized Lyso-PC(acyl),Lyso-PC(19:2;O) [M+H]+
+16488,678.5079,PC,Glycerophosphocholines,PC(28:0) [M+H]+
+5758,748.5139,PC,Oxidized glycerophospholipids,NA
+24211,706.5737,PC,Glycerophosphocholines,PC(O-31:0) [M+H]+
+24797,806.6026,PC,Glycerophosphocholines,PC(O-39:6) [M+H]+
+25937,776.6201,PC,Glycerophosphocholines,NA
+3190,919.6505,PC,Glycerophosphocholines,NA
+26268,800.618,PC,Glycerophosphocholines,PC(37:2) [M+H]+
+14402,752.522,PC,Glycerophosphocholines,PC(34:5) [M+H]+
+18610,701.5603,PC,Phosphosphingolipids,SM(34:2;O2) [M+H]+
+26442,826.6366,PC,Neutral glycosphingolipids,PC(39:3) [M+H]+
+28202,828.6508,PC,Glycerophosphocholines,NA
+17694,816.5871,PC,Unknown,PC(O-40:9) [M+H]+
+29203,866.6637,PC,Unknown,PC(42:4) [M+H]+
+29525,852.6864,PC,Glycerophosphocholines,PC(O-42:4) [M+H]+
+7109,816.5383,PC,Oxidized glycerophospholipids,NA
+23552,822.6007,PC,Glycerophosphocholines,PC(39:5) [M+H]+
+22189,822.6027,PC,Unknown,PC(39:5) [M+H]+
+9808,804.5771,PC,Oxidized glycerophospholipids,PC(O-35:3;O3) [M+H]+
+27126,1018.7264,PC,Glycerophosphocholines,NA
+16861,872.6169,PC,Glycerophosphocholines,NA
+10881,814.5841,PC,Oxidized DGCC,DGCC(38:7-O) [M+H]+
+20246,818.6065,PC,Unknown,PC(O-36:3;O3) [M+H]+
+11157,798.5667,PC,Glycerophosphocholines,PC(O-36:5;O2) [M+H]+
+20569,828.6112,PC,Glycerophosphocholines,PC(O-38:4;O2) [M+H]+
+21133,758.5694,PC,Glycerophosphocholines,PC(34:2) [M+H]+
+17885,714.5447,PC,Glycerophosphocholines,PC(O-32:3) [M+H]+
+13469,824.5795,PC,Glycerophosphocholines,PC(O-38:6;O2) [M+H]+
+27202,816.6408,PC,Unknown,PC(38:1) [M+H]+
+24996,772.5864,PC,Unknown,NA
+17695,796.591,PC,Unknown,NA
+12083,798.5649,PC,Glycerophosphocholines,PC(O-36:5;O2) [M+H]+
+7123,524.4078,PC,Lyso-PC(alkyl),Lyso-PC(O-19:0) [M+H]+
+25366,896.5034,PC,Unknown,NA
+22472,794.6035,PC,Glycerophosphocholines,PC(O-18:1/20:4) [M+H]+
+18191,766.5468,PC,Unknown,NA
+15651,840.6149,PC,Glycerophosphocholines,NA
+13479,808.5858,PC,Glycerophosphocholines,PC(38:5) [M+H]+
+17749,730.5385,PC,Unknown,PC(32:2) [M+H]+
+22694,822.6023,PC,Unknown,PC(39:5) [M+H]+
+21752,741.5914,PC,Phosphosphingolipids,SM(37:3;O2) [M+H]+
+17133,830.5668,PC,Unknown,PC(40:8) [M+H]+
+12461,826.5379,PC,Glycerophosphocholines,PC(40:10) [M+H]+
+7076,522.3931,PC,Lyso-PC(alkyl),Lyso-PC(O-19:1) [M+H]+
+2793,548.3716,PC,Lyso-PC(acyl),Lyso-PC(20:2) [M+H]+
+24100,768.5933,PC,Glycerophosphocholines,PC(O-16:0/20:4) [M+H]+
+11266,606.4501,PC,Glycerophosphocholines,NA
+23200,846.5022,PC,Glycerophosphocholines,NA
+3996,481.2931,PC,Unknown,NA
+11569,800.5826,PC,Glycerophosphocholines,PC(O-36:4;O2) [M+H]+
+31497,842.7006,PC,Glycerophosphocholines,NA
+16794,704.5233,PC,Glycerophosphocholines,PC(30:1) [M+H]+
+28614,892.6777,PC,Unknown,NA
+20654,770.5714,PC,Glycerophosphocholines,NA
+21175,790.5734,PC,Unknown,PC(O-38:7) [M+H]+
+29314,996.7408,PC,Glycerophosphocholines,NA
+15393,828.61,PC,Glycerophosphocholines,PC(O-38:4;O2) [M+H]+
+17065,785.5897,PC,Glycerophosphocholines,NA
+24030,776.6161,PC,Unknown,NA
+12422,816.5985,PC,Oxidized DGCC,DGCC(38:8-O) [M+H]+
+26555,992.7103,PC,Glycerophosphocholines,NA
+14635,778.5383,PC,Glycerophosphocholines,PC(36:6) [M+H]+
+1871,508.3398,PC,Lyso-PC(acyl),Lyso-PC(17:1) [M+H]+
+14949,881.5778,PC,Glycerophosphocholines,NA
+3748,574.3878,PC,Glycerophosphocholines,NA
+4749,650.4369,PC,Oxidized glycerophospholipids,NA
+7402,636.461,PC,Glycerophosphocholines,NA
+26667,890.6656,PC,Unknown,NA
+11487,784.5281,PC,Glycerophosphocholines,NA
+23793,774.5999,PC,Unknown,PC(35:1) [M+H]+
+21932,758.5693,PC,Unknown,PC(34:2) [M+H]+
+17403,806.5691,PC,Unknown,PC(16:0/22:6) [M+H]+
+13484,798.5653,PC,Glycerophosphocholines,PC(O-36:5;O2) [M+H]+
+22075,824.6173,PC,Unknown,PC(39:4) [M+H]+
+18048,774.5346,PC,Unknown,NA
+11661,782.5709,PC,Glycerophosphocholines,PC(36:4) / PC(O-36:5;O) [M+H]+
+28077,852.65,PC,Glycerophosphocholines,NA
+25842,802.6358,PC,Glycerophosphocholines,NA
+15531,812.6166,PC,Glycerophosphocholines,PC(38:3) / PC(38:4;O) [M+H]+
+25186,850.6341,PC,Unknown,NA
+18545,1435.062,PC,Unknown,NA
+22074,758.5105,PC,Depsipeptides,NA
+25759,848.65,PC,Unknown,PC(O-42:6) [M+H]+
+18148,826.5965,PC,Glycerophosphocholines,PC(O-38:5;O2) [M+H]+
+13542,802.5944,PC,Glycerophosphocholines,PC(O-38:1) [M+H]+
+12162,782.5724,PC,Glycerophosphocholines,PC(36:4) / PC(O-36:5;O) [M+H]+
+7369,678.4708,PC,Oxidized glycerophospholipids,NA
+28891,776.6521,PC,Unknown,PC(O-36:0) [M+H]+
+14861,762.5446,PC,Glycerophosphocholines,NA
+11079,564.4391,PC,Glycerophosphocholines,NA
+29309,760.6232,PC,Glycerophosphocholines,PC(O-35:1) [M+H]+
+19560,828.6162,PC,Unknown,PC(O-38:4;O2) [M+H]+
+4497,762.492,PC,Unknown,NA
+20877,1454.0576,PC,Unknown,NA
+2823,572.1886,PC,Unknown,NA
+23833,840.61,PC,Glycerophosphocholines,NA
+12716,824.581,PC,Glycerophosphocholines,PC(O-38:6;O2) [M+H]+
+19296,1383.0694,PC,Unknown,NA
+16239,699.5473,PC,Unknown,NA
+28282,1020.7429,PC,Glycerophosphocholines,NA
+21447,808.5857,PC,Glycerophosphocholines,PC(38:5) [M+H]+
+18796,812.6183,PC,Glycerophosphocholines,PC(38:3) / PC(38:4;O) [M+H]+
+17233,808.5833,PC,Unknown,PC(38:5) [M+H]+
+25835,1492.2015,PC,Unknown,NA
+25791,888.6467,PC,Glycerophosphocholines,NA
+24197,886.634,PC,Glycerophosphocholines,NA
+17003,738.5437,PC,Glycerophosphocholines,PC(O-34:5) [M+H]+
+16780,786.5997,PC,Unknown,PC(36:2) [M+H]+
+23694,706.5729,PC,Glycerophosphocholines,PC(O-31:0) [M+H]+
+13921,840.6161,PC,Unknown,NA
+15459,804.5543,PC,Unknown,PC(38:7) [M+H]+
+23201,848.4966,PC,Unknown,NA
+13354,802.5399,PC,Glycerophosphocholines,PC(38:8) [M+H]+
+6605,522.3923,PC,Lyso-PC(alkyl),Lyso-PC(O-19:1) [M+H]+
+1945,546.3566,PC,Lyso-PC(acyl),Lyso-PC(20:3) [M+H]+
+12046,818.5909,PC,Unknown,PC(O-36:3;O3) [M+H]+
+5762,538.3873,PC,Lyso-PC(acyl),Lyso-PC(19:0) [M+H]+
+32325,932.7466,PC,Unknown,NA
+13923,810.6019,PC,Glycerophosphocholines,PC(38:4) / PC(38:5;O) [M+H]+
+8110,708.5187,PC,Depsipeptides,NA
+32425,908.2604,PC,NA,NA
+19804,800.5378,PC,Oxidized glycerophospholipids,NA
+4476,550.3858,PC,Glycerophosphocholines,Lyso-PC(20:1) [M+H]+
+26723,734.6063,PC,Glycerophosphocholines,NA
+22941,738.5771,PC,Unknown,NA
+25605,407.8196,PC,Unknown,NA
+9652,692.5239,PC,Unknown,PC(29:0) [M+H]+
+18497,1436.066,PC,Unknown,NA
+17212,826.598,PC,Glycerophosphocholines,PC(O-38:5;O2) [M+H]+
+23037,876.6449,PC,Glycerophosphocholines,NA
+24025,826.6339,PC,Glycerophosphocholines,PC(39:3) [M+H]+
+16648,764.5771,PC,Unknown,PC(O-36:6) [M+H]+
+16787,806.5707,PC,Glycerophosphocholines,PC(16:0/22:6) [M+H]+
+12553,798.5643,PC,Glycerophosphocholines,PC(O-36:5;O2) [M+H]+
+2784,508.34,PC,Lyso-PC(acyl),Lyso-PC(17:1) [M+H]+
+19742,778.5758,PC,Unknown,NA
+18051,813.6201,PC,Unknown,NA
+17067,824.607,PC,DGCC,DGCC(18:2/22:6) [M+H]+
+8843,804.5392,PC,Oxidized glycerophospholipids,PC(38:7) [M+H]+
+3292,596.3917,PC,Oxidized glycerophospholipids,NA
+27578,864.6452,PC,Glycerophosphocholines,PC(42:5) [M+H]+
+25352,821.6549,PC,Phosphosphingolipids,NA
+24352,822.6311,PC,Glycerophosphocholines,PC(O-18:0/22:5) [M+H]+
+26438,836.6532,PC,Unknown,PC(O-41:5) [M+H]+
+10179,846.5854,PC,Oxidized glycerophospholipids,NA
+21162,824.6208,PC,Neutral glycosphingolipids,PC(39:4) [M+H]+
+23578,866.6325,PC,Neutral glycosphingolipids,NA
+16424,810.6035,PC,Glycerophosphocholines,PC(38:4) / PC(38:5;O) [M+H]+
+16524,1476.0785,PC,Unknown,NA
+22716,756.5923,PC,Glycerophosphocholines,NA
+26177,966.693,PC,Glycerophosphocholines,NA
+23178,806.6075,PC,Unknown,PC(O-39:6) [M+H]+
+18686,810.601,PC,Unknown,PC(38:4) / PC(38:5;O) [M+H]+
+6802,890.5887,PC,Unknown,NA
+20474,744.5589,PC,Unknown,PC(33:2) [M+H]+
+14726,608.4653,PC,Lyso-PC(acyl),Lyso-PC(24:0) [M+H]+
+18759,796.5857,PC,Glycerophosphocholines,NA
+20014,706.5397,PC,Glycerophosphocholines,PC(30:0) [M+H]+
+2545,526.3501,PC,Glycerophosphocholines,NA
+18020,752.5594,PC,Unknown,NA
+17077,854.6276,PC,Unknown,NA
+17477,774.5389,PC,Glycerophosphocholines,NA
+29845,880.678,PC,Unknown,NA
+14518,736.5266,PC,Glycerophosphocholines,NA
+26278,812.6191,PC,Unknown,PC(38:3) / PC(38:4;O) [M+H]+
+5264,620.2582,PC,Unknown,NA
+8268,760.553,PC,Unknown,NA
+14354,798.5662,PC,Glycerophosphocholines,PC(O-36:5;O2) [M+H]+
+24690,760.5871,PC,Unknown,PC(34:1) [M+H]+
+18919,780.5525,PC,Unknown,PC(36:5) [M+H]+
+21677,822.6028,PC,Glycerophosphocholines,PC(39:5) [M+H]+
+15051,824.5818,PC,Glycerophosphocholines,PC(O-38:6;O2) [M+H]+
+18947,664.5276,PC,Glycerophosphocholines,PC(O-28:0) [M+H]+
+23527,758.5674,PC,Glycerophosphocholines,PC(34:2) [M+H]+
+13898,812.5589,PC,Unknown,NA
+21363,900.6484,PC,Unknown,NA
+8831,694.5029,PC,Depsipeptides,NA
+25828,1493.2027,PC,Unknown,NA
+24920,838.6305,PC,Unknown,PC(40:4) [M+H]+
+16240,828.6122,PC,Glycerophosphocholines,PC(O-38:4;O2) [M+H]+
+11008,822.5651,PC,Glycerophosphocholines,NA
+3640,494.3605,PC,Lyso-PC(alkyl),Lyso-PC(O-17:1) [M+H]+
+10999,734.5346,PC,Unknown,NA
+11294,800.527,PC,Oxidized glycerophospholipids,NA
+1791,482.3259,PC,Lyso-PC(acyl),Lyso-PC(15:0) [M+H]+
+18044,810.5617,PC,Glycerophosphocholines,NA
+8706,814.562,PC,Unknown,PC(O-36:5;O3) / PC(36:4;O2) [M+H]+
+18000,810.6019,PC,Glycerophosphocholines,PC(38:4) / PC(38:5;O) [M+H]+
+5387,680.4864,PC,Unknown,NA
+30315,946.7261,PC,Glycerophosphocholines,NA
+9607,706.4812,PC,Glycerophosphocholines,NA
+1058,570.3206,PC,Oxidized Lyso-PC(acyl),Lyso-PC(21:6;O) [M+H]+
+10202,736.512,PC,Unknown,PC(O-34:6) [M+H]+
+607,516.3072,PC,Lyso-PC(acyl),Lyso-PC(18:4) [M+H]+
+6918,790.5238,PC,Unknown,NA
+2949,510.3561,PC,Lyso-PC(acyl),Lyso-PC(17:0) [M + H]+
+9451,564.4391,PC,Glycerophosphocholines,NA
+16227,764.5582,PC,Glycerophosphocholines,PC(O-36:6) [M+H]+
+20116,756.5543,PC,Glycerophosphocholines,PC(34:3) [M+H]+
+19242,828.6095,PC,Glycerophosphocholines,PC(O-38:4;O2) [M+H]+
+28090,878.663,PC,Glycerophosphocholines,NA
+22590,427.8173,PC,Unknown,NA
+29172,790.6322,PC,Glycerophosphocholines,PC(36:0) [M+H]+
+6751,650.4779,PC,Glycerophosphocholines,NA
+13566,736.5281,PC,Glycerophosphocholines,PC(O-34:6) [M+H]+
+22732,730.5739,PC,Unknown,PC(O-33:2) [M+H]+
+21452,774.6016,PC,Unknown,PC(35:1) [M+H]+
+21371,704.5598,PC,Glycerophosphocholines,PC(O-31:1) [M+H]+
+25750,814.6296,PC,Glycerophosphocholines,PC(38:2) [M+H]+
+16255,896.6184,PC,Unknown,NA
+17244,748.5862,PC,Unknown,NA
+24148,824.6159,PC,Glycerophosphocholines,PC(39:4) [M+H]+
+16190,798.5633,PC,Glycerophosphocholines,PC(O-36:5;O2) [M+H]+
+9660,832.5716,PC,Oxidized glycerophospholipids,PC(40:7) [M+H]+
+26965,876.6491,PC,Glycerophosphocholines,NA
+24988,746.6053,PC,Glycerophosphocholines,PC(O-34:1) [M+H]+
+13632,868.5863,PC,Glycerophosphocholines,NA
+23231,826.6361,PC,Glycerophosphocholines,PC(39:3) [M+H]+
+19711,720.552,PC,Glycerophosphocholines,NA
+23708,862.6329,PC,Glycerophosphocholines,PC(42:6) [M+H]+
+2227,570.3576,PC,Lyso-PC(acyl),Lyso-PC(22:5) [M+H]+
+19682,790.5739,PC,Unknown,PC(O-38:7) [M+H]+
+27974,813.658,PC,Unknown,NA
+11207,824.58,PC,Glycerophosphocholines,PC(O-38:6;O2) [M+H]+
+20854,813.6195,PC,Lipopeptides,NA
+21244,732.5545,PC,Unknown,PC(32:1) [M+H]+
+29422,818.6641,PC,Unknown,NA
+24531,746.5686,PC,Unknown,PC(33:1) [M+H]+
+12725,860.601,PC,Oxidized glycerophospholipids,NA
+16206,880.5855,PC,Glycerophosphocholines,NA
+15792,801.592,PC,Phosphosphingolipids,NA
+18981,832.5844,PC,Unknown,PC(40:7) [M+H]+
+22894,762.6005,PC,Unknown,NA
+21847,730.5766,PC,Unknown,PC(O-33:2) [M+H]+
+10927,800.5825,PC,Glycerophosphocholines,PC(O-36:4;O2) [M+H]+
+8604,680.4664,PC,Unknown,NA
+21755,392.7961,PC,Unknown,NA
+22402,720.5521,PC,Glycerophosphocholines,NA
+7416,818.5529,PC,Oxidized glycerophospholipids,NA
+20534,780.5874,PC,Glycerophosphocholines,PC(O-37:5) [M+H]+
+21651,1484.1434,PC,Unknown,NA
+5656,646.4462,PC,Glycerophosphocholines,NA
+11168,816.5775,PC,Unknown,PC(O-40:9) [M+H]+
+20111,678.5438,PC,Glycerophosphocholines,NA
+13680,786.5422,PC,Unknown,NA
+22636,860.6163,PC,Glycerophosphocholines,NA
+8822,804.5782,PC,Oxidized glycerophospholipids,PC(O-35:3;O3) [M+H]+
+18942,816.5863,PC,Unknown,PC(O-40:9) [M+H]+
+11360,842.5919,PC,Unknown,PC(O-38:5;O3) [M+H]+
+18172,756.5543,PC,Glycerophosphocholines,PC(34:3) [M+H]+
+21809,718.5751,PC,Glycerophosphocholines,PC(O-32:1) [M+H]+
+12811,828.6138,PC,Glycerophosphocholines,PC(O-38:4;O2) [M+H]+
+24108,848.6171,PC,Unknown,NA
+15892,762.544,PC,Unknown,NA
+25986,848.6142,PC,Glycerophosphocholines,NA
+10653,816.5767,PC,Oxidized glycerophospholipids,PC(O-36:4;O3) / PC(36:3;O2) [M+H]+
+22626,746.5696,PC,Unknown,PC(33:1) [M+H]+
+9653,798.5671,PC,Glycerophosphocholines,PC(O-36:5;O2) [M+H]+
+18023,842.589,PC,Oxidized glycerophospholipids,PC(O-38:5;O3) [M+H]+
+5561,552.4032,PC,Lyso-PC(acyl),Lyso-PC(20:0) [M+H]+
+4999,734.498,PC,Oxidized glycerophospholipids,PC(O-34:7) [M+H]+
+18932,782.5677,PC,Glycerophosphocholines,PC(36:4) / PC(O-36:5;O) [M+H]+
+9518,694.5373,PC,Glycerophosphocholines,NA
+28933,842.6245,PC,Glycerophosphocholines,NA
+20721,748.5866,PC,Glycerophosphocholines,NA
+25943,786.6005,PC,Glycerophosphocholines,PC(36:2) [M+H]+
+33275,830.6974,PC,Glycerophosphocholines,NA
+14110,808.5867,PC,Glycerophosphocholines,PC(38:5) [M+H]+
+31934,854.6998,PC,Glycerophosphocholines,PC(O-42:3) [M+H]+
+20762,678.5441,PC,Glycerophosphocholines,NA
+28539,758.6482,PC,Unknown,NA
+16479,814.5742,PC,Unknown,PC(O-36:5;O3) / PC(36:4;O2) [M+H]+
+18668,746.5694,PC,Glycerophosphocholines,PC(33:1) [M+H]+
+30568,830.6656,PC,Unknown,PC(39:1) [M+H]+
+21554,754.577,PC,HexCer,HexCer(37:3;O3) [M+H]+
+15401,802.5931,PC,Glycerophosphocholines,PC(O-38:1) [M+H]+
+19238,690.5417,PC,Glycerophosphocholines,PC(O-30:1) [M+H]+
+1769,494.3239,PC,Lyso-PC(acyl),Lyso-PC(16:1) [M+H]+
+17580,814.6073,PC,Unknown,NA
+21137,844.607,PC,Unknown,PC(O-38:4;O3) [M+H]+
+15213,808.5878,PC,Unknown,PC(38:5) [M+H]+
+4975,554.3827,PC,Oxidized Lyso-PC(acyl),Lyso-PC(19:0;O) [M+H]+
+22243,802.5522,PC,Unknown,PC(38:8) [M+H]+
+20461,1423.0938,PC,Unknown,NA
+5205,638.4772,PC,Glycerophosphocholines,NA
+21543,860.6149,PC,Unknown,NA
+27678,748.6211,PC,Glycerophosphocholines,PC(O-34:0) [M+H]+
+22691,792.5893,PC,Unknown,PC(O-38:6) [M+H]+
+9043,832.5959,PC,Oxidized DGCC,DGCC(16:0/22:6;O2) [M+H]+
+22893,785.5486,PC,Unknown,NA
+19864,690.5425,PC,Glycerophosphocholines,PC(O-30:1) [M+H]+
+3573,496.3761,PC,Lyso-PC(alkyl),Lyso-PC(O-17:0) [M+H]+
+22313,774.6018,PC,Glycerophosphocholines,PC(35:1) [M+H]+
+17141,852.612,PC,Glycerophosphocholines,NA
+10739,682.4813,PC,Glycerophosphocholines,PC(O-30:5) [M+H]+
+16017,754.5384,PC,Glycerophosphocholines,PC(34:4) [M+H]+
+13839,824.5604,PC,Glycerophosphocholines,NA
+30445,948.5915,PC,Oxidized glycerophospholipids,NA
+20987,818.6054,PC,Unknown,PC(O-36:3;O3) [M+H]+
+21030,1453.1094,PC,Unknown,NA
+16583,708.531,PC,Unknown,NA
+17710,866.6062,PC,Unknown,NA
+5619,522.3916,PC,Lyso-PC(alkyl),Lyso-PC(O-19:1) [M+H]+
+13467,860.6008,PC,Oxidized glycerophospholipids,NA
+12928,808.5876,PC,Glycerophosphocholines,PC(38:5) [M+H]+
+18849,788.5554,PC,Glycerophosphocholines,NA
+27441,834.6281,PC,Unknown,NA
+18699,692.5229,PC,Unknown,PC(29:0) [M+H]+
+27007,790.6302,PC,Glycerophosphocholines,PC(36:0) [M+H]+
+18100,692.5242,PC,Glycerophosphocholines,PC(29:0) [M+H]+
+10046,682.4826,PC,Glycerophosphocholines,PC(O-30:5) [M+H]+
+21978,844.607,PC,Unknown,PC(O-38:4;O3) [M+H]+
+13917,710.5125,PC,Glycerophosphocholines,PC(O-32:5) [M+H]+
+22163,716.5588,PC,Unknown,PC(O-32:2) [M+H]+
+20332,742.5752,PC,Glycerophosphocholines,PC(O-34:3) [M+H]+
+28568,876.6829,PC,Glycerophosphocholines,PC(O-44:6) [M+H]+
+16263,826.5796,PC,Oxidized glycerophospholipids,PC(O-38:5;O2) [M+H]+
+9389,816.5772,PC,Oxidized glycerophospholipids,PC(O-40:9) [M+H]+
+12019,856.6083,PC,Unknown,NA
+15838,788.5598,PC,Unknown,PC(O-38:8) [M+H]+
+18366,730.5387,PC,Glycerophosphocholines,PC(32:2) [M+H]+
+13748,828.6114,PC,Unknown,PC(O-38:4;O2) [M+H]+
+27252,878.5461,PC,Depsipeptides,NA
+29958,904.7168,PC,Glycerophosphocholines,NA
+13162,830.5888,PC,Unknown,PC(O-37:4;O3) [M+H]+
+18153,814.6288,PC,Glycerophosphocholines,PC(38:2) [M+H]+
+15230,812.5811,PC,Unknown,PC(O-37:5;O) [M+H]+
+18860,766.5742,PC,Glycerophosphocholines,PC(O-36:5) [M+H]+
+14952,798.5878,PC,DGCC,DGCC(38:7) [M+H]+
+2496,508.3391,PC,Glycerophosphocholines,NA
+4956,824.5444,PC,Oxidized glycerophospholipids,NA
+22026,748.5862,PC,Unknown,NA
+23448,784.5867,PC,Unknown,PC(36:3) / PC(O-36:4;O) [M+H]+
+3166,516.3225,PC,Glycerophosphocholines,NA
+10808,708.4961,PC,Glycerophosphocholines,PC(O-32:6) [M+H]+
+12726,802.5962,PC,Glycerophosphocholines,PC(O-38:1) [M+H]+
+14791,814.5819,PC,Oxidized DGCC,DGCC(38:7-O) [M+H]+
+16000,870.6029,PC,Glycerophosphocholines,NA
+15424,830.5697,PC,Unknown,PC(40:8) [M+H]+
+3600,536.3763,PC,Lyso-PC(acyl),Lyso-PC(19:1) [M+H]+
+6496,680.4871,PC,Unknown,NA
+14364,786.5968,PC,Unknown,PC(36:2) [M+H]+
+1488,584.372,PC,Glycerophosphocholines,NA
+17944,854.6283,PC,Glycerophosphocholines,NA
+21041,740.5617,PC,Glycerophosphocholines,PC(O-34:4) [M+H]+
+5616,647.4595,PC,Unknown,NA
+16624,790.5747,PC,Glycerophosphocholines,PC(O-38:7) [M+H]+
+18897,898.6285,PC,Unknown,NA
+31816,870.6977,PC,Unknown,NA
+3854,624.4231,PC,Oxidized glycerophospholipids,PC(23:0;O) [M+H]+
+17382,842.5884,PC,Oxidized glycerophospholipids,PC(O-38:5;O3) [M+H]+
+20843,760.581,PC,Glycerophosphocholines,PC(34:1) [M+H]+
+15495,852.6131,PC,Glycerophosphocholines,NA
+8602,772.5123,PC,Oxidized glycerophospholipids,NA
+23643,819.637,PC,Unknown,NA
+16124,826.5964,PC,Glycerophosphocholines,PC(O-38:5;O2) [M+H]+
+22686,758.5723,PC,Glycerophosphocholines,PC(34:2) [M+H]+
+11921,828.6133,PC,Glycerophosphocholines,PC(O-38:4;O2) [M+H]+
+30071,800.6562,PC,Glycerophosphocholines,PC(O-38:2) [M+H]+
+18110,830.6237,PC,Glycerophosphocholines,NA
+17368,804.5524,PC,Glycerophosphocholines,PC(38:7) [M+H]+
+34627,960.7783,PC,Glycerophosphocholines,NA
+7967,788.545,PC,Oxidized glycerophospholipids,PC(O-38:8) [M+H]+
+5913,820.5209,PC,Unknown,NA
+22220,714.5422,PC,Glycerophosphocholines,PC(O-32:3) [M+H]+
+18895,772.5848,PC,Unknown,NA
+30507,762.641,PC,Unknown,NA
+28935,862.6726,PC,Glycerophosphocholines,NA
+23211,828.5551,PC,Glycerophosphocholines,NA
+15064,712.5266,PC,Glycerophosphocholines,PC(O-32:4) [M+H]+
+21432,770.5704,PC,Glycerophosphocholines,NA
+13184,726.5079,PC,Glycerophosphocholines,PC(32:4) / PC(O-32:5;O) [M+H]+
+11418,846.5829,PC,Oxidized glycerophospholipids,NA
+3148,975.7057,PC,Unknown,NA
+21787,838.6321,PC,Glycerophosphocholines,PC(40:4) [M+H]+
+11839,822.5662,PC,Glycerophosphocholines,NA
+6701,712.514,PC,Unknown,PC(O-32:4) [M+H]+
+26451,874.6702,PC,Glycerophosphocholines,PC(O-44:7) [M+H]+
+2649,506.3607,PC,Lyso-PC(alkyl),Lyso-PC(O-18:2) [M+H]+
+17358,726.5469,PC,HexCer,HexCer(35:3;O3) [M+H]+
+11831,826.5967,PC,Glycerophosphocholines,PC(O-38:5;O2) [M+H]+
+29744,802.6645,PC,Glycerophosphocholines,PC(O-36:3;O2) [M+H]+
+29735,864.6869,PC,Glycerophosphocholines,NA
+12545,826.5977,PC,Glycerophosphocholines,PC(O-38:5;O2) [M+H]+
+6845,678.4498,PC,Glycerophosphocholines,NA
+18975,778.5756,PC,Unknown,NA
+12943,594.45,PC,Lyso-PC(acyl),Lyso-PC(23:0) [M+H]+
+14190,846.6193,PC,Unknown,NA
+12764,786.5461,PC,Unknown,PC(O-35:4;O2) [M+H]+
+8366,776.5457,PC,Depsipeptides,NA
+17331,784.5459,PC,Unknown,NA
+31826,828.6862,PC,Unknown,PC(O-40:2) [M+H]+
+29688,851.7054,PC,Unknown,SM(45:4;O2) [M+H]+
+9144,818.5924,PC,Unknown,PC(O-36:3;O3) [M+H]+
+23040,756.5928,PC,Glycerophosphocholines,NA
+17336,754.538,PC,Glycerophosphocholines,PC(34:4) [M+H]+
+10481,580.4342,PC,Lyso-PC(acyl),Lyso-PC(22:0) [M+H]+
+29434,876.6827,PC,Unknown,PC(O-44:6) [M+H]+
+14458,870.603,PC,Glycerophosphocholines,NA
+28074,918.6953,PC,Glycerophosphocholines,NA
+18124,720.556,PC,Glycerophosphocholines,NA
+27581,874.6673,PC,Unknown,PC(O-44:7) [M+H]+
+26647,922.5173,PC,Unknown,NA
+5565,664.4553,PC,Oxidized glycerophospholipids,NA
+17314,788.5583,PC,Glycerophosphocholines,PC(O-38:8) [M+H]+
+5577,676.4323,PC,Unknown,NA
+19356,778.5745,PC,Unknown,NA
+22607,812.6166,PC,Unknown,PC(38:3) / PC(38:4;O) [M+H]+
+18247,832.5836,PC,Unknown,PC(40:7) [M+H]+
+10789,814.5974,PC,Glycerophosphocholines,DGCC(38:7-O) [M+H]+
+20104,756.615,PC,Unknown,NA
+21686,972.6882,PC,Unknown,NA
+29756,920.7081,PC,Glycerophosphocholines,NA
+20881,810.5979,PC,Unknown,PC(38:4) / PC(38:5;O) [M+H]+
+21573,834.6014,PC,Glycerophosphocholines,PC(40:6) [M+H]+
+2840,452.35,PC,Glycerophosphocholines,NA
+3595,566.381,PC,Oxidized Lyso-PC(acyl),Lyso-PC(20:1;O) [M+H]+
+13199,392.7969,PC,Unknown,NA
+28437,798.5972,PC,Glycerophosphocholines,PC(37:3) [M+H]+
+26432,804.648,PC,Unknown,NA
+2337,596.374,PC,Glycerophosphocholines,NA
+22487,834.6005,PC,Glycerophosphocholines,PC(40:6) [M+H]+
+32145,906.7324,PC,Glycerophosphocholines,NA
+20578,690.5424,PC,Glycerophosphocholines,PC(O-30:1) [M+H]+
+22958,1453.1429,PC,Unknown,NA
+24823,764.6164,PC,Glycerophosphocholines,NA
+27102,1044.7426,PC,Unknown,NA
+23934,796.6182,PC,Glycerophosphocholines,PC(O-18:0/20:4) [M+H]+
+15922,762.601,PC,Glycerophosphocholines,NA
+10802,818.595,PC,Unknown,PC(O-36:3;O3) [M+H]+
+14746,664.4927,PC,Glycerophosphocholines,NA
+29586,928.6755,PC,Glycerophosphoethanolamines,NA
+10188,790.5609,PC,Oxidized glycerophospholipids,PC(O-38:7) [M+H]+
+2107,959.6827,PC,Unknown,NA
+20029,812.5547,PC,Glycerophosphocholines,NA
+17909,780.5529,PC,Unknown,PC(36:5) [M+H]+
+24324,802.632,PC,Unknown,NA
+35362,910.7602,PC,Unknown,NA
+21290,392.7963,PC,Unknown,NA
+30108,814.6699,PC,Glycerophosphocholines,NA
+13697,844.6071,PC,Unknown,PC(O-38:4;O3) [M+H]+
+23842,730.5736,PC,Glycerophosphocholines,PC(O-33:2) [M+H]+
+31396,804.6836,PC,Unknown,PC(O-38:0) [M+H]+
+20555,834.6016,PC,Glycerophosphocholines,PC(40:6) [M+H]+
+20390,722.5699,PC,Glycerophosphocholines,NA
+9444,818.553,PC,Oxidized glycerophospholipids,NA
+18101,834.5985,PC,Glycerophosphocholines,PC(40:6) [M+H]+
+16021,852.6143,PC,Glycerophosphocholines,NA
+11522,822.5639,PC,Glycerophosphocholines,NA
+6552,620.4306,PC,Unknown,NA
+1684,438.3345,PC,Glycerophosphocholines,NA
+20183,810.6002,PC,Unknown,PC(38:4) / PC(38:5;O) [M+H]+
+21192,1425.116,PC,Unknown,NA
+16848,792.5543,PC,Unknown,NA
+3581,598.395,PC,Phosphosphingolipids,NA
+19433,792.5102,PC,Unknown,NA
+4937,632.432,PC,Unknown,NA
+5267,634.4464,PC,Unknown,NA
+19177,764.558,PC,Unknown,PC(O-36:6) [M+H]+
+15964,712.5284,PC,Glycerophosphocholines,PC(O-32:4) [M+H]+
+23124,782.6064,PC,Glycerophosphocholines,PC(O-37:4) [M+H]+
+11746,832.6058,PC,Unknown,PC(O-37:3;O3) [M+H]+
+23470,1488.1687,PC,Unknown,NA
+16364,870.6065,PC,Unknown,NA
+13562,796.5738,PC,DGCC,DGCC(38:8) [M+H]+
+3047,483.4085,PC,NA,NA
+33222,856.7137,PC,Unknown,PC(O-42:2) [M+H]+
+14641,580.4697,PC,Glycerophosphocholines,NA
+13253,906.6446,PC,Oxidized glycerophospholipids,NA
+5137,636.4623,PC,Glycerophosphocholines,NA
+16406,852.5917,PC,Glycerophosphocholines,NA
+23581,808.619,PC,Glycerophosphocholines,PC(O-39:5) [M+H]+
+8775,816.5768,PC,Oxidized glycerophospholipids,PC(O-36:4;O3) / PC(36:3;O2) [M+H]+
+27124,774.6349,PC,Glycerophosphocholines,PC(O-18:0/18:1) [M+H]+
+26343,778.6305,PC,Unknown,NA
+18778,730.5386,PC,Glycerophosphocholines,PC(32:2) [M+H]+
+21772,720.5534,PC,Glycerophosphocholines,NA
+12780,578.4548,PC,Glycerophosphocholines,NA
+28756,854.667,PC,Glycerophosphocholines,NA
+18620,842.5907,PC,Unknown,PC(O-38:5;O3) [M+H]+
+12834,786.5655,PC,Glycerophosphocholines,PC(O-35:4;O2) [M+H]+
+21680,806.6029,PC,Unknown,PC(O-39:6) [M+H]+
+22586,780.492,PC,Glycerophosphocholines,NA
+21867,734.5671,PC,Glycerophosphocholines,PC(32:0) [M+H]+
+12003,788.5852,PC,Unknown,NA
+16055,854.5643,PC,Cyclic peptides,PC(20:4:22:6) [M+H]+
+8625,786.5687,PC,Unknown,PC(O-35:4;O2) [M+H]+
+22213,800.6157,PC,Glycerophosphocholines,PC(37:2) [M+H]+
+17504,840.5884,PC,Unknown,NA
+17214,850.5963,PC,Glycerophosphocholines,PC(40:6;O) [M+H]+
+7127,804.5379,PC,Oxidized glycerophospholipids,PC(38:7) [M+H]+
+26707,850.6637,PC,Glycerophosphocholines,PC(O-42:5) [M+H]+
+9916,800.5832,PC,Glycerophosphocholines,PC(O-36:4;O2) [M+H]+
+14649,592.47,PC,Glycerophosphocholines,NA
+9665,828.576,PC,Oxidized glycerophospholipids,NA
+18734,765.5924,PC,Phosphosphingolipids,SM(39:5;O2) [M+H]+
+20503,1411.1053,PC,Unknown,NA
+4012,534.392,PC,Glycerophosphocholines,NA
+20194,690.5418,PC,Unknown,PC(O-30:1) [M+H]+
+20269,930.6802,PC,Unknown,NA
+3724,548.3697,PC,Glycerophosphocholines,Lyso-PC(20:2) [M+H]+
+6850,800.5451,PC,Oxidized glycerophospholipids,NA
+17165,714.5438,PC,Glycerophosphocholines,PC(O-32:3) [M+H]+
+12275,830.5904,PC,Unknown,PC(O-37:4;O3) [M+H]+
+4559,600.4036,PC,Glycerophosphocholines,NA
+5760,576.4044,PC,Glycerophosphocholines,NA
+25183,834.6385,PC,Unknown,NA
+17638,896.6167,PC,Glycerophosphocholines,NA
+10900,832.6042,PC,Glycerophosphocholines,PC(O-37:3;O3) [M+H]+
+18318,944.6595,PC,Unknown,NA
+8099,674.4767,PC,Depsipeptides,NA
+19927,399.7846,PC,Unknown,NA
+9783,714.5133,PC,NA,NA
+17850,798.5233,PC,Unknown,NA
+25085,840.6482,PC,Glycerophosphocholines,PC(40:3) [M+H]+
+4230,693.5186,PC,Glycerophosphocholines,SM(31:1;O4) [M+H]+
+18303,838.6302,PC,Glycerophosphocholines,PC(40:4) [M+H]+
+12794,592.47,PC,Glycerophosphocholines,NA
+8999,678.5108,PC,Unknown,PC(28:0) [M+H]+
+19827,820.5865,PC,Unknown,PC(39:6) [M+H]+
+30701,920.7083,PC,Unknown,NA
+23474,732.5915,PC,Unknown,PC(O-33:1) [M+H]+
+15476,794.5684,PC,Glycerophosphocholines,PC(37:5) [M+H]+
+25938,874.5322,PC,Glycerophosphocholines,NA
+3186,947.7153,PC,Unknown,NA
+17417,688.5262,PC,Glycerophosphocholines,NA
+20040,754.5733,PC,Glycerophosphocholines,PC(O-35:4) [M+H]+
+30545,864.6843,PC,Glycerophosphocholines,NA
+19015,848.6172,PC,Glycerophosphocholines,NA
+10032,816.5782,PC,Oxidized glycerophospholipids,PC(O-36:4;O3) / PC(36:3;O2) [M+H]+
+6498,564.4022,PC,Glycerophosphocholines,Lyso-DGCC(22:5) [M+H]+
+23800,720.5877,PC,Unknown,PC(O-32:0) [M+H]+
+24664,864.6435,PC,Glycerophosphocholines,PC(42:5) [M+H]+
+8554,676.4934,PC,Unknown,PC(28:1) [M+H]+
+21485,692.5599,PC,Glycerophosphocholines,PC(O-30:0) [M+H]+
+26622,852.6487,PC,Glycerophosphocholines,NA
+5698,774.5305,PC,Oxidized glycerophospholipids,PC(O-37:8) [M+H]+
+4809,522.3931,PC,Lyso-PC(alkyl),Lyso-PC(O-19:1) [M+H]+
+1251,532.3411,PC,Glycerophosphocholines,NA
+5249,594.4142,PC,Oxidized Lyso-PC(acyl),Lyso-PC(22:1;O) [M+H]+
+18335,664.5283,PC,Glycerophosphocholines,PC(O-28:0) [M+H]+
+20697,828.6311,PC,DGCC,DGCC(40:6) [M+H]+
+4857,540.4042,PC,Glycerophosphocholines,NA
+14055,762.5423,PC,Glycerophosphocholines,NA
+28529,788.6529,PC,Glycerophosphocholines,PC(O-37:1) [M+H]+
+9489,772.5117,PC,Glycerophosphoserines,NA
+3480,526.3874,PC,Glycerophosphocholines,NA
+3149,1445.0687,PC,Unknown,NA
+25065,427.8167,PC,Unknown,NA
+14059,828.6087,PC,Glycerophosphocholines,PC(O-38:4;O2) [M+H]+
+27892,804.6414,PC,Glycerophosphocholines,NA
+31223,790.6686,PC,Unknown,PC(O-37:0) [M+H]+
+16927,748.5694,PC,Lipopeptides,NA
+9601,842.5939,PC,Unknown,PC(O-38:5;O3) [M+H]+
+14534,758.571,PC,Glycerophosphocholines,PC(34:2) [M+H]+
+18693,794.5679,PC,Glycerophosphocholines,PC(37:5) [M+H]+
+3242,963.6106,PC,Unknown,NA
+23508,852.6464,PC,Glycerophosphocholines,NA
+5788,680.4488,PC,Oxidized glycerophospholipids,NA
+9364,802.5608,PC,Oxidized glycerophospholipids,PC(O-36:5;O3) [M+H]+
+29370,774.6373,PC,Unknown,PC(O-18:0/18:1) [M+H]+
+16515,780.5523,PC,Glycerophosphocholines,PC(36:5) [M+H]+
+8655,734.498,PC,Oxidized glycerophospholipids,PC(O-34:7) [M+H]+
+12635,816.6113,PC,Glycerophosphocholines,NA
+12133,734.5124,PC,Glycerophosphocholines,PC(O-34:7) [M+H]+
+8471,724.5146,PC,Unknown,NA
+6173,1019.6759,PC,Unknown,NA
+20652,814.6313,PC,Glycerophosphocholines,PC(38:2) [M+H]+
+27767,794.6478,PC,Unknown,NA
+13014,710.5136,PC,Unknown,PC(O-32:5) [M+H]+
+28560,1046.7564,PC,Glycerophosphocholines,NA
+17528,856.5806,PC,Glycerophosphocholines,PC(20:3:22:6) [M+H]+
+17541,882.5987,PC,Unknown,PC(22:6/22:4) [M+H]+
+18956,818.5871,PC,Oxidized glycerophospholipids,PC(O-36:3;O3) [M+H]+
+16649,842.5873,PC,Unknown,PC(O-38:5;O3) [M+H]+
+13228,870.6213,PC,Unknown,NA
+10393,402.7921,PC,Unknown,NA
+22787,772.589,PC,Unknown,NA
+14273,852.6148,PC,Glycerophosphocholines,NA
+14221,870.6202,PC,Unknown,NA
+6832,832.5963,PC,Oxidized DGCC,DGCC(16:0/22:6;O2) [M+H]+
+19044,636.4953,PC,Glycerophosphocholines,PC(O-26:0) [M+H]+
+11138,728.521,PC,Glycerophosphocholines,PC(32:3) [M+H]+
+32482,880.7159,PC,Glycerophosphocholines,PC(O-44:4) [M+H]+
+20765,874.6334,PC,Unknown,NA
+23000,734.5706,PC,Unknown,PC(32:0) [M+H]+
+16469,399.7857,PC,Unknown,NA
+26642,914.6623,PC,Glycerophosphocholines,NA
+15688,406.8125,PC,Unknown,NA
+6128,624.4206,PC,Oxidized glycerophospholipids,PC(23:0;O) [M+H]+
+30666,998.7571,PC,Glycerophosphocholines,NA
+14592,828.6122,PC,Glycerophosphocholines,PC(O-38:4;O2) [M+H]+
+22413,729.5913,PC,Unknown,NA
+32302,830.7011,PC,Glycerophosphocholines,NA
+10206,802.5611,PC,Oxidized glycerophospholipids,PC(O-36:5;O3) [M+H]+
+4085,536.3726,PC,Lyso-PC(acyl),Lyso-PC(19:1) [M+H]+
+22091,762.6013,PC,Unknown,NA
+31947,932.5965,PC,Glycerophosphocholines,NA
+16867,882.6033,PC,Glycerophosphocholines,PC(22:6/22:4) [M+H]+
+27242,802.6344,PC,Glycerophosphocholines,NA
+21158,406.8121,PC,Unknown,NA
+20547,772.5891,PC,Marine-bacterial DPEs,NA
+26010,788.6167,PC,Unknown,PC(36:1) [M+H]+
+29679,906.5797,PC,Oxidized glycerophospholipids,NA
+16221,762.5441,PC,Glycerophosphocholines,NA
+30613,918.6941,PC,Unknown,NA
+2850,600.3667,PC,Oxidized glycerophospholipids,NA
+23027,1467.1549,PC,Unknown,NA
+11352,800.5347,PC,Unknown,NA
+5233,776.5088,PC,Oxidized glycerophospholipids,NA
+15854,792.552,PC,Glycerophosphocholines,NA
+9212,814.5599,PC,Oxidized glycerophospholipids,PC(O-36:5;O3) / PC(36:4;O2) [M+H]+
+1076,452.3141,PC,Glycerophosphocholines,NA
+8593,694.5404,PC,Glycerophosphocholines,NA
+12215,844.6072,PC,Unknown,PC(O-38:4;O3) [M+H]+
+22401,820.6209,PC,Glycerophosphocholines,PC(O-18:0/22:6) [M+H]+
+18483,768.5563,PC,Unknown,NA
+24806,1470.1275,PC,Unknown,NA
+15590,814.56,PC,Oxidized glycerophospholipids,PC(O-36:5;O3) / PC(36:4;O2) [M+H]+
+4051,538.3865,PC,Lyso-PC(acyl),Lyso-PC(19:0) [M+H]+
+4748,652.4497,PC,Unknown,NA
+4484,1003.7437,PC,Unknown,NA
+19415,810.6,PC,Glycerophosphocholines,PC(38:4) / PC(38:5;O) [M+H]+
+21508,732.5555,PC,Glycerophosphocholines,PC(32:1) [M+H]+
+15855,736.529,PC,Glycerophosphocholines,PC(O-34:6) [M+H]+
+36317,942.7899,PC,Unknown,NA
+25596,876.5297,PC,Unknown,NA
+15789,896.6097,PC,Glycerophosphocholines,NA
+10874,772.5508,PC,Glycerophosphocholines,PC(O-34:4;O2) [M+H]+
+533,796.6208,PC,Glycerophosphocholines,PC(O-18:0/20:4) [M+H]+
+29318,762.6372,PC,Unknown,NA
+4997,562.385,PC,Glycerophosphocholines,NA
+14164,894.6027,PC,Glycerophosphocholines,NA
+5723,536.4081,PC,Glycerophosphocholines,NA
+6925,510.3582,PC,Lyso-PC(acyl),Lyso-PC(17:0) [M + H]+
+20340,808.5838,PC,Glycerophosphocholines,PC(38:5) [M+H]+
+18030,902.6498,PC,Unknown,NA
+18086,784.5875,PC,Glycerophosphocholines,PC(36:3) / PC(O-36:4;O) [M+H]+
+5688,735.53,PC,Unknown,SM(33:2;O5) [M+H]+
+20219,824.615,PC,Glycerophosphocholines,PC(39:4) [M+H]+
+19221,752.5614,PC,Glycerophosphocholines,NA
+6825,686.4772,PC,Glycerophosphocholines,NA
+12124,786.5671,PC,Glycerophosphocholines,PC(O-35:4;O2) [M+H]+
+23424,734.5702,PC,Unknown,PC(32:0) [M+H]+
+11206,838.5592,PC,Oxidized glycerophospholipids,PC(38:6;O2) [M+H]+
+4003,652.4563,PC,Oxidized glycerophospholipids,NA
+6382,674.4754,PC,Unknown,NA
+9528,912.6126,PC,Glycerophosphocholines,NA
+22247,804.5903,PC,Unknown,PC(O-35:3;O3) [M+H]+
+11179,788.5795,PC,Glycerophosphocholines,NA
+24930,748.5854,PC,Unknown,NA
+24408,821.6529,PC,Phosphosphingolipids,NA
+5764,540.4021,PC,Glycerophosphocholines,NA
+19731,715.5738,PC,Unknown,NA
+26940,866.6611,PC,Glycerophosphocholines,PC(42:4) [M+H]+
+28655,864.6901,PC,Unknown,NA
+25138,802.6304,PC,Glycerophosphocholines,NA
+27083,878.6639,PC,Unknown,NA
+8119,754.5231,PC,Oxidized glycerophospholipids,PC(34:4) [M+H]+
+17568,880.585,PC,Glycerophosphocholines,NA
+22253,736.5856,PC,Unknown,NA
+19092,866.6033,PC,Unknown,NA
+13393,758.5704,PC,Unknown,PC(34:2) [M+H]+
+7877,816.5774,PC,Oxidized glycerophospholipids,PC(O-36:4;O3) / PC(36:3;O2) [M+H]+
+22167,692.5599,PC,Glycerophosphocholines,PC(O-30:0) [M+H]+
+22645,848.6172,PC,Glycerophosphocholines,NA
+6103,1031.77,PC,Unknown,NA
+3904,748.4768,PC,Oxidized glycerophospholipids,NA
+8507,802.5625,PC,Oxidized glycerophospholipids,PC(O-36:5;O3) [M+H]+
+18308,718.5395,PC,Glycerophosphocholines,NA
+22320,717.592,PC,Phosphosphingolipids,NA
+22877,766.5726,PC,Unknown,PC(O-36:5) [M+H]+
+31516,816.6838,PC,Glycerophosphocholines,NA
+9779,814.5622,PC,Oxidized glycerophospholipids,PC(O-36:5;O3) / PC(36:4;O2) [M+H]+
+1665,478.33,PC,Glycerophosphocholines,NA
+12608,720.5547,PC,Glycerophosphocholines,NA
+28885,840.6481,PC,Glycerophosphocholines,PC(40:3) [M+H]+
+22205,806.6064,PC,Unknown,PC(O-39:6) [M+H]+
+6971,666.4704,PC,Oxidized glycerophospholipids,NA
+6768,666.3007,PC,Unknown,NA
+6002,806.5561,PC,Oxidized glycerophospholipids,PC(16:0/22:6) [M+H]+
+22690,838.6319,PC,Unknown,PC(40:4) [M+H]+
+26349,748.617,PC,Unknown,PC(O-34:0) [M+H]+
+14659,814.5561,PC,Oxidized glycerophospholipids,PC(O-36:5;O3) / PC(36:4;O2) [M+H]+
+19611,854.6291,PC,Glycerophosphocholines,NA
+22677,818.605,PC,Unknown,PC(O-36:3;O3) [M+H]+
+34351,870.7249,PC,Unknown,NA
+18129,734.5469,PC,Glycerophosphocholines,NA
+16714,594.4852,PC,Glycerophosphocholines,NA
+32536,816.6859,PC,Glycerophosphocholines,NA
+5887,820.5307,PC,Oxidized glycerophospholipids,NA
+22063,746.5714,PC,Glycerophosphocholines,PC(33:1) [M+H]+
+32367,856.7177,PC,Glycerophosphocholines,PC(O-42:2) [M+H]+
+2440,526.3167,PC,Unknown,NA
+20704,728.5642,PC,Neutral glycosphingolipids,NA
+5957,550.387,PC,Lyso-PC(acyl),Lyso-PC(20:1) [M+H]+
+9465,774.5684,PC,Unknown,PC(O-34:2;O) [M+H]+
+7631,814.5619,PC,Oxidized glycerophospholipids,PC(O-36:5;O3) / PC(36:4;O2) [M+H]+
+31118,932.5965,PC,Glycerophosphocholines,NA
+1445,424.3186,PC,Glycerophosphocholines,NA
+24069,852.6488,PC,Unknown,NA
+12650,808.5876,PC,Glycerophosphocholines,PC(38:5) [M+H]+
+21385,850.6323,PC,Glycerophosphocholines,NA
+17673,786.5998,PC,Glycerophosphocholines,PC(36:2) [M+H]+
+24591,720.5903,PC,Glycerophosphocholines,PC(O-32:0) [M+H]+
+25384,792.6323,PC,Lipopeptides,NA
+19848,848.6159,PC,Unknown,NA
+21759,838.5937,PC,Glycerophosphocholines,NA
+26813,791.6335,PC,Unknown,NA
+7214,564.4039,PC,Glycerophosphocholines,Lyso-DGCC(22:5) [M+H]+
+7269,578.4192,PC,Lyso-PC(acyl),Lyso-PC(22:1) [M+H]+
+17529,838.6335,PC,Glycerophosphocholines,PC(40:4) [M+H]+
+18093,802.5968,PC,Glycerophosphocholines,PC(O-38:1) [M+H]+
+24056,788.6125,PC,Unknown,PC(36:1) [M+H]+
+13962,884.643,PC,Glycerophosphocholines,NA
+22114,810.5971,PC,Glycerophosphocholines,PC(38:4) / PC(38:5;O) [M+H]+
+31346,904.7169,PC,Glycerophosphocholines,NA
+31236,880.7207,PC,Unknown,PC(O-44:4) [M+H]+
+6848,744.4807,PC,Oxidized glycerophospholipids,NA
+6106,1007.7398,PC,Neutral glycosphingolipids,NA
+5964,848.549,PC,Unknown,NA
+22783,820.5864,PC,Glycerophosphocholines,PC(39:6) [M+H]+
+3837,991.7463,PC,Unknown,NA
+10907,722.5352,PC,Glycerophosphocholines,NA
+16392,864.5907,PC,Glycerophosphocholines,NA
+11070,796.5528,PC,Unknown,NA
+22151,814.6315,PC,Glycerophosphocholines,PC(38:2) [M+H]+
+7761,692.4865,PC,Oxidized glycerophospholipids,NA
+27038,822.5415,PC,Glycerophosphocholines,NA
+22577,854.6281,PC,Glycerophosphocholines,NA
+16548,620.5016,PC,Glycerophosphocholines,NA
+10923,758.5119,PC,Unknown,NA
+15320,738.5441,PC,Unknown,PC(O-34:5) [M+H]+
+7353,708.4824,PC,Oxidized glycerophospholipids,PC(O-32:6) [M+H]+
+16293,814.5815,PC,Oxidized DGCC,DGCC(38:7-O) [M+H]+
+1813,498.3554,PC,Glycerophosphocholines,NA
+20051,828.6136,PC,Glycerophosphocholines,PC(O-38:4;O2) [M+H]+
+10737,788.5821,PC,Glycerophosphocholines,NA
+22391,828.5667,PC,Unknown,PC(40:9) [M+H]+
+27411,916.6775,PC,Unknown,NA
+16181,716.5299,PC,Unknown,NA
+18771,786.5385,PC,Unknown,NA
+37079,940.8158,PC,Unknown,NA
+3282,665.4873,PC,Glycerophosphocholines,NA
+3132,1029.7217,PC,Neutral glycosphingolipids,NA
+8420,604.4346,PC,Glycerophosphocholines,NA
+5596,738.5091,PC,Glycerophosphocholines,NA
+23561,770.6524,PC,Unknown,NA
+15410,858.6222,PC,Unknown,PC(O-39:4;O3) [M+H]+
+1314,556.3424,PC,Glycerophosphocholines,NA
+12308,776.5225,PC,Glycerophosphocholines,NA
+16463,852.6132,PC,Glycerophosphocholines,NA
+9657,714.5076,PC,Glycerophosphocholines,NA
+22750,776.5765,PC,Glycerophosphocholines,NA
+18328,760.6331,PC,Phosphosphingolipids,NA
+30311,996.7431,PC,Glycerophosphocholines,NA
+23082,786.5974,PC,Unknown,PC(36:2) [M+H]+
+27856,746.6069,PC,Glycerophosphocholines,PC(O-34:1) [M+H]+
+10185,796.5498,PC,Glycerophosphocholines,NA
+29155,932.7115,PC,Unknown,NA
+20467,770.5712,PC,Unknown,NA
+11862,578.4553,PC,Glycerophosphocholines,NA
+25917,760.6188,PC,Unknown,PC(O-35:1) [M+H]+
+13537,752.5232,PC,Phosphosphingolipids,PC(34:5) [M+H]+
+20493,1437.1115,PC,Unknown,NA
+23133,706.5739,PC,Unknown,PC(O-31:0) [M+H]+
+15395,750.5444,PC,Glycerophosphocholines,NA
+24097,520.8881,PC,Unknown,NA
+16266,675.5443,PC,Phosphosphingolipids,NA
+5494,792.5401,PC,Oxidized glycerophospholipids,NA
+16169,830.5687,PC,Glycerophosphocholines,PC(40:8) [M+H]+
+13141,760.5284,PC,Glycerophosphocholines,NA
+20429,818.5654,PC,Glycerophosphocholines,NA
+19142,826.596,PC,Glycerophosphocholines,PC(O-38:5;O2) [M+H]+
+14936,870.6016,PC,Glycerophosphocholines,NA
+6682,748.5145,PC,Oxidized glycerophospholipids,NA
+8476,708.4813,PC,Oxidized glycerophospholipids,PC(O-32:6) [M+H]+
+22724,413.8009,PC,Unknown,NA
+34096,858.7342,PC,Glycerophosphocholines,PC(O-42:1) [M+H]+
+7335,876.5779,PC,Unknown,NA
+12165,802.59760000000006,PC,Glycerophosphocholines,PC(O-38:1) [M+H]+
+22387,826.5957,PC,Glycerophosphocholines,PC(O-38:5;O2) [M+H]+
+33064,854.7082,PC,Unknown,PC(O-42:3) [M+H]+
+6833,560.4083,PC,Glycerophosphocholines,NA
+17519,840.5767,PC,Oxidized glycerophospholipids,NA
+11806,796.5493,PC,Glycerophosphocholines,NA
+11649,838.5579,PC,Oxidized glycerophospholipids,PC(38:6;O2) [M+H]+
+11756,590.4541,PC,Glycerophosphocholines,NA
+20478,1412.109,PC,RiPPs-Thiopeptides,NA
+10170,788.5084,PC,Oxidized glycerophospholipids,NA
+23880,790.5938,PC,Glycerophosphocholines,PC(O-38:7) [M+H]+
+11896,864.636,PC,Oxidized glycerophospholipids,PC(42:5) [M+H]+
+3115,522.356,PC,Lyso-PC(acyl),Lyso-PC(18:1) [M+H]+
+24499,762.5966,PC,Unknown,NA
+1754,1139.7041,PC,Unknown,NA
+8938,784.5529,PC,Unknown,NA
+12269,774.5677,PC,Glycerophosphocholines,PC(O-34:2;O) [M+H]+
+29206,918.6915,PC,Unknown,NA
+30487,842.6644,PC,Glycerophosphocholines,PC(40:2) [M+H]+
+19140,844.4711,PC,Oxidized glycerophospholipids,NA
+16444,427.8175,PC,Unknown,NA
+7212,536.4074,PC,Glycerophosphocholines,NA
+3459,538.3876,PC,Lyso-PC(acyl),Lyso-PC(19:0) [M+H]+
+27308,776.6198,PC,Glycerophosphocholines,NA
+20541,838.6341,PC,Glycerophosphocholines,PC(40:4) [M+H]+
+7125,788.5457,PC,Oxidized glycerophospholipids,PC(O-38:8) [M+H]+
+8569,788.5473,PC,Oxidized glycerophospholipids,PC(O-38:8) [M+H]+
+8447,790.5597,PC,Oxidized glycerophospholipids,PC(O-38:7) [M+H]+
+26855,916.6781,PC,Glycerophosphocholines,NA
+28785,762.6371,PC,Glycerophosphocholines,NA
+5119,688.4545,PC,Oxidized glycerophospholipids,NA
+18251,688.5263,PC,Unknown,NA
+22878,1486.1605,PC,Unknown,NA
+20258,858.6012,PC,Glycerophosphocholines,NA
+27614,900.6849,PC,Glycerophosphocholines,NA
+21575,824.6049,PC,Unknown,PC(39:4) [M+H]+
+21007,704.5598,PC,Glycerophosphocholines,PC(O-31:1) [M+H]+
+18562,816.5871,PC,Unknown,PC(O-40:9) [M+H]+
+16115,822.5616,PC,Glycerophosphocholines,NA
+4325,562.3892,PC,Glycerophosphocholines,Lyso-DGCC(22:6) [M+H]+
+5593,666.4734,PC,Oxidized glycerophospholipids,NA
+32733,842.7014,PC,Glycerophosphocholines,NA
+8650,578.4194,PC,Lyso-PC(acyl),Lyso-PC(22:1) [M+H]+
+19880,823.5314,PC,Linear peptides,NA
+17524,844.6027,PC,Unknown,PC(O-38:4;O3) [M+H]+
+2428,1104.5321,PC,Oxidized glycerophospholipids,NA
+22897,1479.1524,PC,Unknown,NA
+13883,816.5724,PC,Oxidized glycerophospholipids,PC(O-36:4;O3) / PC(36:3;O2) [M+H]+
+9135,842.5927,PC,Unknown,PC(O-38:5;O3) [M+H]+
+14761,844.5909,PC,Unknown,PC(O-38:4;O3) [M+H]+
+28183,920.5573,PC,Unknown,NA
+14881,838.573,PC,Unknown,PC(38:6;O2) [M+H]+
+5734,778.523,PC,Oxidized glycerophospholipids,PC(36:6) [M+H]+
+6858,830.5434,PC,Oxidized MGDG,MGDG(38:9;O) [M+NH4]+
+32558,804.6847,PC,Glycerophosphocholines,PC(O-38:0) [M+H]+
+17236,752.5605,PC,Glycerophosphocholines,NA
+14058,828.5521,PC,Glycerophosphocholines,PC(40:9) [M+H]+
+28948,928.712,PC,Glycerophosphocholines,NA
+29719,813.6839,PC,Unknown,SM(42:2;O2) [M+H]+
+13772,760.5857,PC,Glycerophosphocholines,PC(34:1) [M+H]+
+29437,958.73,PC,Glycerophosphocholines,NA
+19250,744.5575,PC,Glycerophosphocholines,PC(33:2) [M+H]+
+12549,780.4936,PC,Glycerophosphocholines,NA
+17934,774.5979,PC,Glycerophosphocholines,PC(35:1) [M+H]+
+30814,856.6823,PC,Glycerophosphocholines,NA
+14137,844.6058,PC,Unknown,PC(O-38:4;O3) [M+H]+
+12048,734.5335,PC,Glycerophosphocholines,NA
+19543,858.6028,PC,Glycerophosphocholines,NA
+14629,634.4804,PC,Glycerophosphocholines,NA
+24728,1464.1725,PC,Unknown,NA
+31819,886.7264,PC,Glycerophosphocholines,NA
+26809,747.6391,PC,Phosphosphingolipids,SM(37:0;O2) [M+H]+
+7889,818.5913,PC,Unknown,PC(O-36:3;O3) [M+H]+
+6131,1116.6778,PC,Glycerophosphocholines,NA
+17718,830.5703,PC,Glycerophosphocholines,PC(40:8) [M+H]+
+20352,824.6085,PC,Unknown,PC(39:4) [M+H]+
+25618,814.4248,PC,Unknown,NA
+34036,882.7326,PC,Unknown,NA
+11908,814.5589,PC,Oxidized glycerophospholipids,PC(O-36:5;O3) / PC(36:4;O2) [M+H]+
+29115,878.6963,PC,Glycerophosphocholines,NA
+22457,718.5761,PC,Glycerophosphocholines,PC(O-32:1) [M+H]+
+19252,836.618,PC,Glycerophosphocholines,PC(O-18:0/22:5) [M+H]+
+14599,444.8204,PC,Unknown,NA
+13064,852.6164,PC,Unknown,NA
+17840,790.6218,PC,Unknown,NA
+14795,838.559,PC,Oxidized glycerophospholipids,PC(38:6;O2) [M+H]+
+15178,814.5708,PC,Glycerophosphocholines,PC(O-36:5;O3) / PC(36:4;O2) [M+H]+
+32498,815.6947,PC,Unknown,NA
+24515,834.6373,PC,Glycerophosphocholines,NA
+8930,690.5073,PC,Unknown,PC(29:1) [M+H]+
+5331,652.4538,PC,Oxidized glycerophospholipids,NA
+18018,822.5995,PC,Glycerophosphocholines,PC(39:5) [M+H]+
+24028,797.5506,PC,Unknown,NA
+12473,846.5839,PC,Oxidized glycerophospholipids,NA
+8949,409.7817,PC,Unknown,NA
+7710,840.5754,PC,Unknown,NA
+24914,776.6162,PC,Unknown,NA
+21270,854.6277,PC,Glycerophosphocholines,NA
+19074,858.5993,PC,Unknown,NA
+8927,832.5717,PC,Oxidized glycerophospholipids,PC(40:7) [M+H]+
+12323,706.5401,PC,Glycerophosphocholines,PC(30:0) [M+H]+
+15033,894.6016,PC,Glycerophosphocholines,NA
+24178,846.6373,PC,Unknown,NA
+17942,726.5424,PC,Unknown,NA
+25525,804.6114,PC,Unknown,NA
+7984,820.5673,PC,Oxidized glycerophospholipids,PC(39:6) [M+H]+
+23331,846.637,PC,Glycerophosphocholines,NA
+5569,686.4381,PC,Oxidized glycerophospholipids,NA
+21734,762.5808,PC,Glycerophosphocholines,NA
+13215,782.5101,PC,Unknown,NA
+2710,510.3548,PC,Lyso-PC(acyl),Lyso-PC(17:0) [M + H]+
+20705,801.6076,PC,Unknown,NA
+35018,872.7456,PC,Unknown,NA
+19556,772.5833,PC,Unknown,NA
+19345,798.5625,PC,Glycerophosphocholines,PC(O-36:5;O2) [M+H]+
+10791,846.6254,PC,Unknown,NA
+20189,868.6216,PC,Unknown,NA
+25023,854.6281,PC,Glycerophosphocholines,NA
+15152,814.56,PC,Oxidized glycerophospholipids,PC(O-36:5;O3) / PC(36:4;O2) [M+H]+
+32028,894.6939,PC,Glycerophosphocholines,NA
+6344,668.488,PC,Unknown,NA
+16737,846.5969,PC,Glycerophosphocholines,NA
+18750,872.6196,PC,Glycerophosphocholines,NA
+7990,1103.7959,PC,Unknown,NA
+22778,826.6326,PC,Glycerophosphocholines,PC(39:3) [M+H]+
+21044,825.547,PC,Linear peptides,NA
+29468,787.6696,PC,Phosphosphingolipids,NA
+6210,1003.783,PC,Unknown,NA
+13315,618.4854,PC,Glycerophosphocholines,NA
+9795,858.5867,PC,Oxidized glycerophospholipids,NA
+8768,538.4243,PC,Lyso-PC(alkyl),Lyso-PC(O-20:0) [M+H]+
+3771,524.3722,PC,Lyso-PC(acyl),Lyso-PC(18:0) [M+H]+
+19859,1411.1023,PC,Unknown,NA
+21284,800.58,PC,Glycerophosphocholines,PC(O-36:4;O2) [M+H]+
+10919,782.5711,PC,Glycerophosphocholines,PC(36:4) / PC(O-36:5;O) [M+H]+
+26497,818.625,PC,Unknown,NA
+12909,736.5288,PC,Glycerophosphocholines,PC(O-34:6) [M+H]+
+31629,878.7002,PC,Glycerophosphocholines,NA
+20245,874.6318,PC,Unknown,NA
+19028,718.5393,PC,Glycerophosphocholines,NA
+25466,762.6021,PC,Unknown,NA
+5687,654.4716,PC,Unknown,NA
+33106,868.7207,PC,Phosphosphingolipids,NA
+20406,703.576,PC,Phosphosphingolipids,NA
+29681,906.6944,PC,Glycerophosphocholines,NA
+8574,856.5723,PC,Phosphosphingolipids,PC(20:3:22:6) [M+H]+
+10247,788.5828,PC,Glycerophosphocholines,NA
+15277,822.5638,PC,Glycerophosphocholines,NA
+20236,732.5523,PC,Glycerophosphocholines,PC(32:1) [M+H]+
+3078,598.3884,PC,Glycerophosphocholines,NA
+7385,830.5512,PC,Oxidized glycerophospholipids,PC(40:8) [M+H]+
+26408,854.6729,PC,Unknown,NA
+7260,674.4762,PC,Unknown,NA
+12226,854.5618,PC,Depsipeptides,PC(20:4:22:6) [M+H]+
+12644,814.5581,PC,Oxidized glycerophospholipids,PC(O-36:5;O3) / PC(36:4;O2) [M+H]+
+23893,731.6074,PC,Unknown,NA
+25172,748.6204,PC,Glycerophosphocholines,PC(O-34:0) [M+H]+
+3997,532.3779,PC,Glycerophosphocholines,NA
+7036,668.4896,PC,Unknown,NA
+25693,856.6042,PC,Unknown,PC(20:3:22:6) [M+H]+
+35511,1004.8007,PC,Glycerophosphocholines,NA
+20348,782.5672,PC,Glycerophosphocholines,PC(36:4) / PC(O-36:5;O) [M+H]+
+20598,850.5951,PC,Glycerophosphocholines,PC(40:6;O) [M+H]+
+29923,790.6686,PC,Glycerophosphocholines,NA
+19929,784.5918,PC,NA,PC(36:3) / PC(O-36:4;O) [M+H]+
+3830,878.5556,PC,Phosphosphingolipids,PC(22:6/22:6) [M+H]+
+6740,652.4549,PC,Oxidized glycerophospholipids,NA
+12829,832.6058,PC,Unknown,PC(O-37:3;O3) [M+H]+
+13181,684.4954,PC,Glycerophosphocholines,NA
+23144,814.5726,PC,Glycerophosphocholines,PC(O-36:5;O3) / PC(36:4;O2) [M+H]+
+7032,602.419,PC,Lyso-PC(acyl),Lyso-PC(24:3) [M+H]+
+12750,838.6404,PC,Neutral glycosphingolipids,NA
+17161,696.5304,PC,Glycerophosphocholines,NA
+28280,790.6333,PC,Glycerophosphocholines,PC(36:0) [M+H]+
+21609,814.5422,PC,Glycerophosphocholines,NA
+2473,975.68,PC,Unknown,NA
+20148,786.5625,PC,Glycerophosphocholines,PC(O-35:4;O2) [M+H]+
+11088,844.5687,PC,Oxidized glycerophospholipids,NA
+20300,792.6374,PC,Unknown,NA
+20259,798.6027,PC,Glycerophosphocholines,PC(37:3) [M+H]+
+33387,950.604,PC,Unknown,NA
+17980,836.6177,PC,Glycerophosphocholines,PC(O-18:0/22:5) [M+H]+
+31749,1024.7729,PC,Glycerophosphocholines,NA
+15253,778.5383,PC,Glycerophosphocholines,PC(36:6) [M+H]+
+12576,870.6256,PC,Unknown,NA
+16042,836.618,PC,Glycerophosphocholines,PC(40:5) [M+H]+
+24972,848.6537,PC,Glycerophosphocholines,PC(O-42:6) [M+H]+
+18154,762.5309,PC,Unknown,NA
+4078,662.4385,PC,Oxidized glycerophospholipids,NA
+13328,816.6141,PC,Glycerophosphocholines,NA
+12407,846.6222,PC,Unknown,NA
+20512,1473.112,PC,Unknown,NA
+4896,538.3859,PC,Lyso-PC(acyl),Lyso-PC(19:0) [M+H]+
+19313,1423.0964,PC,Unknown,NA
+7858,848.5674,PC,Oxidized glycerophospholipids,PC(40:7;O) [M+H]+
+19218,727.5754,PC,Unknown,NA
+14046,866.5855,PC,Unknown,NA
+15022,868.6042,PC,Unknown,NA
+14838,854.566,PC,Glycerophosphocholines,PC(20:4:22:6) [M+H]+
+17095,724.5302,PC,Glycerophosphocholines,NA
+19384,832.5855,PC,Unknown,PC(40:7) [M+H]+
+16885,884.6173,PC,Unknown,NA
+16486,748.5835,PC,Glycerophosphocholines,NA
+23239,828.5668,PC,Unknown,PC(40:9) [M+H]+
+27988,842.6636,PC,Unknown,PC(40:2) [M+H]+
+11291,636.4632,PC,Unknown,NA
+3785,668.4495,PC,Oxidized glycerophospholipids,NA
+26637,807.6576,PC,Glycerophosphocholines,NA
+8386,832.5727,PC,Oxidized glycerophospholipids,PC(40:7) [M+H]+
+4549,947.681,PC,Unknown,NA
+4823,1072.6162,PC,Unknown,NA
+2155,510.3536,PC,Lyso-PC(acyl),Lyso-PC(17:0) [M + H]+
+7303,678.4503,PC,Unknown,NA
+4107,638.4368,PC,Depsipeptides,NA
+20852,784.5823,PC,Glycerophosphocholines,PC(36:3) / PC(O-36:4;O) [M+H]+
+15963,916.6298,PC,Phosphosphingolipids,NA
+27952,924.5354,PC,Unknown,NA
+8458,844.611,PC,Neutral glycosphingolipids,PC(O-38:4;O3) [M+H]+
+14453,774.5654,PC,Glycerophosphocholines,PC(O-34:2;O) [M+H]+
+15545,830.5796,PC,Glycerophosphocholines,PC(40:8) [M+H]+
+6300,1003.7066,PC,Unknown,NA
+25816,872.6536,PC,Unknown,NA
+25204,788.6151,PC,Glycerophosphocholines,PC(36:1) [M+H]+
+38861,1441.0953,PC,Unknown,NA
+10915,616.4699,PC,Glycerophosphocholines,NA
+11630,832.5883,PC,Oxidized DGCC,PC(40:7) [M+H]+
+3175,955.7281,PC,Glycerophosphocholines,NA
+7908,694.5023,PC,Unknown,NA
+4416,864.5404,PC,Oxidized glycerophospholipids,NA
+11111,756.4968,PC,Glycerophosphocholines,NA
+20828,844.4868,PC,Glycerophosphocholines,NA
+14572,812.5816,PC,Unknown,PC(O-37:5;O) [M+H]+
+17676,782.5799,PC,Unknown,NA
+35419,870.7375,PC,Unknown,NA
+6719,726.4966,PC,Unknown,PC(32:4) / PC(O-32:5;O) [M+H]+
+14201,788.5593,PC,Glycerophosphocholines,PC(O-38:8) [M+H]+
+12371,788.5853,PC,Unknown,NA
+28114,785.6548,PC,Phosphosphingolipids,NA
+16672,770.5697,PC,Glycerophosphocholines,NA
+13957,860.6393,PC,Unknown,PC(O-39:3;O3) [M+H]+
+14180,882.6029,PC,Glycerophosphocholines,PC(22:6/22:4) [M+H]+
+21873,842.628,PC,Glycerophosphocholines,NA
+15479,712.525,PC,Glycerophosphocholines,PC(O-32:4) [M+H]+
+10452,830.5887,PC,Unknown,PC(O-37:4;O3) [M+H]+
+35761,900.7761,PC,Glycerophosphocholines,NA
+22397,850.6332,PC,Unknown,NA
+3728,679.5018,PC,Unknown,NA
+11970,696.4975,PC,Glycerophosphocholines,NA
+2769,538.3862,PC,Lyso-PC(acyl),Lyso-PC(19:0) [M+H]+
+19006,852.6121,PC,Glycerophosphocholines,NA
+36540,884.7491,PC,Glycerophosphocholines,PC(O-44:2) [M+H]+
+5592,510.4318,PC,Unknown,NA
+20054,788.6176,PC,Glycerophosphocholines,PC(36:1) [M+H]+
+28672,832.6787,PC,Unknown,NA
+22390,886.6307,PC,Glycerophosphocholines,NA
+11161,812.58,PC,Glycerophosphocholines,NA
+17131,814.5722,PC,Unknown,PC(O-36:5;O3) / PC(36:4;O2) [M+H]+
+21964,705.5905,PC,Unknown,NA
+33751,914.7592,PC,Glycerophosphocholines,NA
+20252,791.6054,PC,Phosphosphingolipids,NA
+7527,710.4995,PC,Oxidized glycerophospholipids,PC(O-32:5) [M+H]+
+22840,762.5815,PC,Glycerophosphocholines,NA
+6779,640.4575,PC,Unknown,NA
+3804,638.269,PC,Unknown,NA
+12197,594.4506,PC,Lyso-PC(acyl),Lyso-PC(23:0) [M+H]+
+1770,510.3569,PC,Lyso-PC(acyl),Lyso-PC(17:0) [M + H]+
+12752,840.615,PC,Glycerophosphocholines,NA
+3311,636.4238,PC,Unknown,PC(24:1;O) [M+H]+
+33479,924.7432,PC,Glycerophosphocholines,NA
+14501,786.5441,PC,Unknown,NA
+19352,399.7851,PC,Unknown,NA
+24875,852.6464,PC,Unknown,NA
+13804,814.5537,PC,Oxidized glycerophospholipids,PC(O-36:5;O3) / PC(36:4;O2) [M+H]+
+3553,483.3099,PC,Unknown,NA
+13873,580.4699,PC,Glycerophosphocholines,NA
+2443,1007.7008,PC,Neutral glycosphingolipids,NA
+5188,774.5306,PC,Oxidized glycerophospholipids,PC(O-37:8) [M+H]+
+17550,888.5836,PC,Glycerophosphocholines,NA
+20637,770.5095,PC,Glycerophosphocholines,NA
+10795,858.5857,PC,Oxidized glycerophospholipids,NA
+5173,576.3667,PC,Unknown,NA
+24799,800.6175,PC,Unknown,PC(37:2) [M+H]+
+34150,870.7342,PC,Glycerophosphocholines,NA
+5355,684.481,PC,Unknown,NA
+23556,814.5993,PC,Glycerophosphocholines,NA
+17267,748.6094,PC,Unknown,PC(O-34:0) [M+H]+
+13516,856.608,PC,Unknown,NA
+21638,856.6431,PC,Glycerophosphocholines,NA
+25495,830.6629,PC,Glycerophosphocholines,PC(39:1) [M+H]+
+18544,858.5986,PC,Glycerophosphocholines,NA
+22175,772.5873,PC,Glycerophosphocholines,NA
+19392,756.6143,PC,Unknown,NA
+10146,754.5416,PC,Glycerophosphocholines,PC(34:4) [M+H]+
+18877,706.5378,PC,Glycerophosphocholines,PC(30:0) [M+H]+
+4116,698.4585,PC,Oxidized glycerophospholipids,NA
+17445,804.6139,PC,Glycerophosphocholines,NA
+13525,738.5088,PC,Glycerophosphocholines,NA
+29011,1022.7553,PC,Unknown,NA
+14851,738.5442,PC,Unknown,NA
+20498,1472.1018,PC,Unknown,NA
+25499,734.6027,PC,Glycerophosphocholines,PC(O-33:0) [M+H]+
+10232,774.5078,PC,Glycerophosphocholines,NA
+28195,816.6494,PC,Unknown,PC(38:1) [M+H]+
+6883,836.5681,PC,Oxidized glycerophospholipids,NA
+23866,812.5646,PC,Oxidized glycerophospholipids,NA
+23105,760.5881,PC,Glycerophosphocholines,PC(34:1) [M+H]+
+32760,884.7136,PC,Unknown,NA
+14383,728.5252,PC,Glycerophosphocholines,PC(32:23 [M+H]+
+3881,550.3864,PC,Lyso-PC(acyl),Lyso-PC(20:1) [M+H]+
+7201,848.568,PC,Oxidized glycerophospholipids,PC(40:7;O) [M+H]+
+3182,707.4982,PC,Unknown,NA
+30749,813.6854,PC,Phosphosphingolipids,SM(42:2;O2) [M+H]+
+9355,1075.8384,PC,Unknown,NA
+20710,840.648,PC,Glycerophosphocholines,PC(40:3) [M+H]+
+13379,632.4654,PC,Glycerophosphocholines,NA
+15264,888.6343,PC,Phosphosphingolipids,NA
+2611,507.3685,PC,Unknown,NA
+27937,834.6377,PC,Glycerophosphocholines,NA
+3582,598.39,PC,Unknown,NA
+20904,856.6428,PC,Glycerophosphocholines,NA
+16679,860.5796,PC,Glycerophosphocholines,NA
+15267,754.5384,PC,Glycerophosphocholines,PC(34:4) [M+H]+
+35683,898.768,PC,Unknown,NA
+12972,842.6284,PC,Glycerophosphocholines,NA
+13922,816.6132,PC,Glycerophosphocholines,NA
+16941,896.6161,PC,Glycerophosphocholines,NA
+22619,1046.7304,PC,Unknown,NA
+30415,825.6897,PC,Unknown,NA
+14919,606.4876,PC,Glycerophosphocholines,NA
+19539,736.5684,PC,Unknown,NA
+12821,620.466,PC,Glycerophosphocholines,NA
+32490,934.6148,PC,Oxidized glycerophospholipids,NA
+22637,734.5695,PC,Glycerophosphocholines,PC(32:0) [M+H]+
+33379,910.7335,PC,Unknown,NA
+14767,804.5548,PC,Glycerophosphocholines,PC(38:7) [M+H]+
+2717,1143.735,PC,Unknown,NA
+18599,762.5396,PC,Glycerophosphocholines,NA
+33474,858.7318,PC,Unknown,PC(O-42:1) [M+H]+
+21419,876.6466,PC,Unknown,NA
+14230,830.6306,PC,Glycerophosphocholines,NA
+19654,810.5669,PC,Glycerophosphocholines,NA
+18714,1409.0798,PC,Unknown,NA
+10350,552.438,PC,Lyso-PC(alkyl),Lyso-PC(O-21:0) [M+H]+
+10067,590.454,PC,Glycerophosphocholines,NA
+14817,888.6287,PC,Phosphosphingolipids,NA
+26346,759.6405,PC,Phosphosphingolipids,NA
+18034,872.6174,PC,Unknown,NA
+3866,648.4002,PC,Glycerophosphocholines,NA
+13277,784.5235,PC,Unknown,NA
+21087,776.6155,PC,Glycerophosphocholines,NA
+4715,975.6739,PC,Neutral glycosphingolipids,NA
+13155,760.5853,PC,Glycerophosphocholines,PC(34:1) [M+H]+
+18495,689.5584,PC,Phosphosphingolipids,NA
+3689,680.4475,PC,Phosphosphingolipids,NA
+31126,872.7112,PC,Glycerophosphocholines,NA
+26155,872.5029,PC,Unknown,NA
+7568,820.5189,PC,Unknown,NA
+23533,812.6196,PC,Glycerophosphocholines,PC(38:3) / PC(38:4;O) [M+H]+
+17341,796.5469,PC,Glycerophosphocholines,NA
+17426,788.6155,PC,Unknown,PC(36:1) [M+H]+
+31586,898.7321,PC,Pyrrole alkaloids,NA
+19526,842.5904,PC,Oxidized glycerophospholipids,PC(O-38:5;O3) [M+H]+
+2734,1043.7044,PC,Unknown,NA
+20756,846.4816,PC,Unknown,NA
+10243,592.4362,PC,Glycerophosphocholines,NA
+35112,884.7457,PC,Unknown,PC(O-44:2) [M+H]+
+9721,416.7892,PC,Unknown,NA
+9396,830.5896,PC,Unknown,PC(O-37:4;O3) [M+H]+
+33325,844.7175,PC,Glycerophosphocholines,NA
+5073,525.3972,PC,Unknown,NA
+4511,991.7464,PC,Unknown,NA
+29745,890.7053,PC,Unknown,NA
+15466,816.5695,PC,Depsipeptides,PC(O-36:4;O3) / PC(36:3;O2) [M+H]+
+4689,748.5158,PC,Oxidized glycerophospholipids,NA
+11213,830.5903,PC,Unknown,PC(O-37:4;O3) [M+H]+
+33828,842.7039,PC,Glycerophosphocholines,NA
+21955,850.6362,PC,Glycerophosphocholines,NA
+11126,578.4539,PC,Glycerophosphocholines,NA
+6673,576.4037,PC,Unknown,NA
+32897,1000.7717,PC,Glycerophosphocholines,NA
+9997,786.5254,PC,Oxidized glycerophospholipids,NA
+32987,900.7405,PC,Glycerophosphocholines,NA
+19301,802.5413,PC,Glycerophosphocholines,PC(38:8) [M+H]+
+14511,854.6292,PC,Glycerophosphocholines,NA
+4821,1031.7359,PC,Unknown,NA
+19777,800.5299,PC,Unknown,NA
+18830,798.5648,PC,Glycerophosphocholines,PC(O-36:5;O2) [M+H]+
+12389,838.5565,PC,Oxidized glycerophospholipids,PC(38:6;O2) [M+H]+
+34745,856.7168,PC,Glycerophosphocholines,PC(O-42:2) [M+H]+
+17743,772.5496,PC,Glycerophosphocholines,PC(O-34:4;O2) [M+H]+
+28817,806.6634,PC,Halogenated hydrocarbons,NA
+12955,840.5725,PC,Unknown,NA
+26510,900.6894,PC,Glycerophosphocholines,NA
+13762,685.5303,PC,Phosphosphingolipids,NA
+15432,856.5664,PC,Oxidized glycerophospholipids,PC(20:3:22:6) [M+H]+
+21340,728.5576,PC,Unknown,NA
+21641,736.5859,PC,Glycerophosphocholines,NA
+28042,773.6526,PC,Phosphosphingolipids,NA
+3348,921.6628,PC,Neutral glycosphingolipids,NA
+3778,596.4297,PC,Glycerophosphocholines,NA
+28717,958.7358,PC,Neutral glycosphingolipids,NA
+1408,1135.6681,PC,Unknown,NA
+3915,510.3202,PC,Unknown,NA
+24904,790.6246,PC,Unknown,PC(36:0) [M+H]+
+29902,804.6498,PC,Glycerophosphocholines,NA
+17729,802.5319,PC,Unknown,NA
+5990,716.4861,PC,Oxidized glycerophospholipids,PC(30:3;O) [M+H]+
+36988,966.827,PC,Glycerophosphocholines,NA
+3427,1019.7036,PC,Oxidized glycerophospholipids,NA
+6041,596.4283,PC,Glycerophosphocholines,NA
+17732,880.6461,PC,Unknown,NA
+32935,948.7401,PC,Unknown,NA
+4015,1015.742,PC,Unknown,NA
+32556,908.5971,PC,Unknown,NA
+5620,638.4339,PC,Depsipeptides,NA
+2724,1093.7203,PC,Unknown,NA
+1292,524.3355,PC,Glycerophosphocholines,NA
+7875,590.4183,PC,Glycerophosphocholines,NA
+18557,871.6291,PC,Neutral glycosphingolipids,NA
+8349,858.5831,PC,Oxidized glycerophospholipids,NA
+24284,748.5841,PC,Unknown,NA
+15727,814.5731,PC,Glycerophosphocholines,PC(O-36:5;O3) / PC(36:4;O2) [M+H]+
+19381,706.5372,PC,Glycerophosphocholines,PC(30:0) [M+H]+
+20363,1439.089,PC,Unknown,NA
+17128,737.5754,PC,Unknown,NA
+6532,706.5038,PC,Unknown,NA
+6608,846.554,PC,Phosphosphingolipids,NA
+2437,1067.7011,PC,Unknown,NA
+28190,880.6805,PC,Glycerophosphocholines,NA
+6026,1053.7271,PC,Unknown,NA
+10022,564.4397,PC,Glycerophosphocholines,NA
+4519,792.5034,PC,Oxidized glycerophospholipids,NA
+22384,798.553,PC,Glycerophosphocholines,PC(O-36:5;O2) [M+H]+
+34456,896.746,PC,Unknown,NA
+20746,852.6121,PC,Glycerophosphocholines,NA
+25354,876.6499,PC,Unknown,NA
+12289,710.5137,PC,Unknown,PC(O-32:5) [M+H]+
+32423,856.642,PC,Glycerophosphocholines,NA
+7879,550.4237,PC,Glycerophosphocholines,NA
+14220,844.5845,PC,Glycerophosphocholines,NA
+17423,660.5016,PC,Unknown,NA
+14322,712.5267,PC,Glycerophosphocholines,PC(O-32:4) [M+H]+
+6075,634.4481,PC,Unknown,NA
+20836,860.6166,PC,Glycerophosphocholines,NA
+36763,914.7966,PC,Glycerophosphocholines,NA
+7074,634.2751,PC,Unknown,NA
+32572,906.5949,PC,Glycerophosphocholines,NA
+6303,878.557,PC,Phosphosphingolipids,PC(22:6/22:6) [M+H]+
+7386,650.4793,PC,Phosphosphingolipids,NA
+25344,745.6216,PC,Phosphosphingolipids,NA
+20284,722.5631,PC,Unknown,NA
+11723,632.4637,PC,Glycerophosphocholines,NA
+22847,804.5864,PC,Unknown,PC(O-35:3;O3) [M+H]+
+7844,680.5249,PC,Glycerophosphocholines,NA
+5232,890.5567,PC,Glycerophosphocholines,NA
+25483,864.5288,PC,Depsipeptides,NA
+21404,746.5711,PC,Unknown,PC(33:1) [M+H]+
+8498,910.6408,PC,Unknown,NA
+31548,639.9735,PC,Unknown,NA
+10145,784.5551,PC,Unknown,NA
+5580,836.5468,PC,Oxidized glycerophospholipids,NA
+2466,1487.0044,PC,Unknown,NA
+30621,952.5654,PC,Unknown,NA
+20580,838.5943,PC,Glycerophosphocholines,NA
+15941,678.5071,PC,Glycerophosphocholines,PC(28:0) [M+H]+
+10658,860.6012,PC,Oxidized glycerophospholipids,NA
+8956,904.6016,PC,Unknown,NA
+3911,698.4763,PC,Glycerophosphocholines,NA
+20661,840.5909,PC,Glycerophosphocholines,NA
+21659,413.8013,PC,Unknown,NA
+18205,848.6162,PC,Glycerophosphocholines,NA
+11532,770.5587,PC,Unknown,NA
+3289,568.3958,PC,Glycerophosphocholines,NA
+20335,727.5818,PC,Unknown,NA
+24310,890.5256,PC,Unknown,NA
+22655,848.4932,PC,Oxidized glycerophospholipids,NA
+31003,1100.8049,PC,Unknown,NA
+6998,812.5463,PC,Unknown,NA
+24150,800.6186,PC,Glycerophosphocholines,PC(37:2) [M+H]+
+16932,407.8012,PC,Unknown,NA
+13861,814.5988,PC,Glycerophosphocholines,NA
+13020,752.5223,PC,Glycerophosphocholines,PC(34:5) [M+H]+
+31804,868.7141,PC,Unknown,NA
+22085,706.5751,PC,Glycerophosphocholines,PC(O-31:0) [M+H]+
+14667,816.5709,PC,Unknown,NA
+17835,689.5636,PC,Unknown,NA
+26517,856.643,PC,Glycerophosphocholines,NA
+24083,850.6352,PC,Glycerophosphocholines,NA
+28288,932.7159,PC,Neutral glycosphingolipids,NA
+26778,759.631,PC,Unknown,NA
+27762,906.6946,PC,Glycerophosphocholines,NA
+18650,399.7852,PC,Unknown,NA
+35552,886.7649,PC,Glycerophosphocholines,NA
+7488,848.5874,PC,Unknown,DGCC(42:10) [M+H]+
+18417,774.5991,PC,Unknown,PC(35:1) [M+H]+
+3318,506.3575,PC,Lyso-PC(alkyl),Lyso-PC(O-18:2) [M+H]+
+7558,790.5209,PC,Glycerophosphocholines,NA
+17500,872.6185,PC,Unknown,NA
+16496,854.6266,PC,Glycerophosphocholines,NA
+19117,889.6292,PC,Oxidized glycerophospholipids,NA
+20910,720.5558,PC,Glycerophosphocholines,NA
+17143,874.6556,PC,Glycerophosphocholines,PC(O-44:7) [M+H]+
+33469,1002.7842,PC,Glycerophosphocholines,NA
+12051,860.6001,PC,Oxidized glycerophospholipids,NA
+21028,746.5707,PC,Unknown,PC(33:1) [M+H]+
+19411,786.566,PC,Glycerophosphocholines,PC(O-35:4;O2) [M+H]+
+6956,562.4243,PC,Glycerophosphocholines,NA
+18857,744.5557,PC,Unknown,PC(33:2) [M+H]+
+17579,708.5324,PC,Glycerophosphocholines,NA
+22538,762.6026,PC,Glycerophosphocholines,NA
+6738,848.5879,PC,Unknown,DGCC(42:10) [M+H]+
+22204,741.5916,PC,Phosphosphingolipids,SM(37:3;O2) [M+H]+
+5634,762.4904,PC,Glycerophosphocholines,NA
+13992,407.8015,PC,Unknown,NA
+16536,866.5907,PC,Unknown,NA
+23797,748.587,PC,Unknown,NA
+22991,1010.7168,PC,Unknown,NA
+3652,760.4739,PC,Oxidized glycerophospholipids,NA
+9239,886.5948,PC,Unknown,NA
+15246,682.5182,PC,Unknown,NA
+6392,554.4187,PC,Glycerophosphocholines,NA
+5824,776.5078,PC,Oxidized glycerophospholipids,NA
+20508,760.5607,PC,Unknown,NA
+29623,880.564,PC,Oxidized glycerophospholipids,NA
+17091,833.5809,PC,Glycerophosphocholines,NA
+25619,760.5883,PC,Glycerophosphocholines,PC(34:1) [M+H]+
+12570,628.4312,PC,Unknown,NA
+4710,1019.7414,PC,Glycerophosphocholines,NA
+9292,682.483,PC,Glycerophosphocholines,PC(O-30:5) [M+H]+
+15229,634.4824,PC,Glycerophosphocholines,NA
+17420,689.5557,PC,Unknown,NA
+9960,562.4238,PC,Glycerophosphocholines,NA
+20231,1464.1006,PC,Unknown,NA
+25502,757.6231,PC,Phosphosphingolipids,NA
+20156,882.6017,PC,Glycerophosphocholines,PC(22:6/22:4) [M+H]+
+21945,830.6284,PC,Glycerophosphocholines,NA
+8720,848.5922,PC,Unknown,DGCC(42:10) [M+H]+
+21507,826.598,PC,Glycerophosphocholines,PC(O-38:5;O2) [M+H]+
+11533,860.6398,PC,Unknown,PC(O-39:3;O3) [M+H]+
+9708,788.5738,PC,Glycerophosphocholines,PC(O-38:8) [M+H]+
+8098,680.3172,PC,Glycerophosphocholines,NA
+8320,850.5841,PC,Oxidized glycerophospholipids,PC(40:6;O) [M+H]+
+5535,876.5395,PC,Oxidized glycerophospholipids,NA
+17898,677.5573,PC,Phosphosphingolipids,NA
+18950,814.631,PC,Glycerophosphocholines,PC(38:2) [M+H]+
+33327,882.7322,PC,Unknown,NA
+10331,770.5329,PC,Unknown,PC(O-34:5;O2) [M+H]+
+30351,914.7611,PC,Glycerophosphocholines,NA
+24571,1058.7799,PC,Unknown,NA
+7505,834.5859,PC,Oxidized glycerophospholipids,PC(40:6) [M+H]+
+20896,988.6995,PC,Unknown,NA
+35130,926.7553,PC,Glycerophosphocholines,NA
+13387,786.5692,PC,Neutral glycosphingolipids,PC(O-35:4;O2) [M+H]+
+21368,712.5666,PC,Glycerophosphocholines,NA
+20687,392.7954,PC,Unknown,NA
+27423,778.636,PC,Unknown,NA
+16621,868.6016,PC,Unknown,NA
+9769,886.5975,PC,Oxidized glycerophospholipids,NA
+29021,1072.774,PC,Unknown,NA
+26328,834.6568,PC,Glycerophosphocholines,NA
+17566,914.6291,PC,Oxidized glycerophospholipids,NA
+1003,468.3675,PC,Unknown,NA
+16035,708.5282,PC,Glycerophosphocholines,NA
+4435,610.4065,PC,Oxidized glycerophospholipids,NA
+3389,991.7086,PC,Neutral glycosphingolipids,NA
+7587,682.3267,PC,Unknown,NA
+20820,774.6,PC,Glycerophosphocholines,PC(35:1) [M+H]+
+3112,572.373,PC,Lyso-PC(acyl),Lyso-PC(22:4) [M+H]+
+4966,652.2844,PC,Unknown,NA
+6599,870.5214,PC,Oxidized glycerophospholipids,NA
+21869,854.6284,PC,Glycerophosphocholines,NA
+5351,790.5239,PC,Oxidized glycerophospholipids,NA
+11626,430.804,PC,Unknown,NA
+15595,838.6305,PC,Glycerophosphocholines,PC(40:4) [M+H]+
+15895,852.5894,PC,Glycerophosphocholines,NA
+20086,958.6344,PC,Oxidized glycerophospholipids,PC(22:6/28:8) [M+H]+
+17467,756.5532,PC,Glycerophosphocholines,PC(34:3) [M+H]+
+7578,854.5576,PC,Oxidized glycerophospholipids,PC(20:4:22:6) [M+H]+
+23920,828.611,PC,Unknown,PC(38:3;O) [M+H]+
+13002,770.5333,PC,Glycerophosphocholines,PC(O-34:5;O2) [M+H]+
+10709,1329.9337,PC,Unknown,NA
+20237,720.5547,PC,Unknown,NA
+16668,840.5879,PC,Glycerophosphocholines,NA
+11619,710.5099,PC,Unknown,PC(O-32:5) [M+H]+
+20979,1467.1233,PC,Unknown,NA
+22448,764.5804,PC,Glycerophosphocholines,NA
+9981,710.4781,PC,Unknown,NA
+29079,799.6727,PC,Phosphosphingolipids,NA
+8169,860.5909,PC,Unknown,NA
+7351,870.5494,PC,Oxidized glycerophospholipids,NA
+7733,770.493,PC,Oxidized glycerophospholipids,NA
+12334,647.5094,PC,Phosphosphingolipids,NA
+21665,1446.0961,PC,Unknown,NA
+23623,834.6245,PC,Unknown,NA
+20117,758.5698,PC,Glycerophosphocholines,PC(34:2) [M+H]+
+12337,726.5092,PC,Glycerophosphocholines,PC(32:4) / PC(O-32:5;O) [M+H]+
+10878,704.5241,PC,Glycerophosphocholines,PC(30:1) [M+H]+
+27241,785.6543,PC,Phosphosphingolipids,NA
+27694,904.7138,PC,Glycerophosphocholines,NA
+34838,936.6249,PC,Unknown,NA
+13085,834.5883,PC,Oxidized glycerophospholipids,NA
+6373,854.5546,PC,Oxidized glycerophospholipids,PC(20:4:22:6) [M+H]+
+20773,1464.0947,PC,Unknown,NA
+7106,554.4219,PC,Unknown,NA
+14193,661.5259,PC,Phosphosphingolipids,NA
+7050,676.4552,PC,Oxidized glycerophospholipids,NA
+20630,874.5934,PC,Glycerophosphocholines,NA
+7467,880.5713,PC,Oxidized glycerophospholipids,NA
+25180,1042.7432,PC,Glycerophosphocholines,NA
+12164,862.5736,PC,Glycerophosphocholines,NA
+323,586.3503,PC,Oxidized Lyso-PC(acyl),Lyso-PC(22:5;O) [M+H]+
+13407,888.6349,PC,Phosphosphingolipids,NA
+23510,1496.1401,PC,Unknown,NA
+36051,912.7835,PC,Unknown,NA
+17424,686.5131,PC,Unknown,NA
+33835,962.6443,PC,Linear peptides,NA
+10790,760.5493,PC,Glycerophosphocholines,NA
+26709,1060.8304,PC,Unknown,NA
+30580,1074.7903,PC,Glycerophosphocholines,NA
+17667,737.5818,PC,Glycerophosphocholines,NA
+12828,808.5262,PC,Glycerophosphocholines,NA
+28112,1010.7167,PC,Unknown,NA
+17571,816.6508,PC,Glycerophosphocholines,PC(38:1) [M+H]+
+6513,848.5627,PC,Oxidized glycerophospholipids,PC(40:7;O) [M+H]+
+8289,862.5957,PC,Glycerophosphocholines,NA
+29429,886.7283,PC,Glycerophosphocholines,NA
+7476,524.3716,PC,Lyso-PC(acyl),Lyso-PC(18:0) [M+H]+
+10934,878.6166,PC,Unknown,NA
+4269,696.4809,PC,Oxidized glycerophospholipids,NA
+24220,1481.1304,PC,Unknown,NA
+11379,710.4758,PC,Unknown,NA
+18645,1486.0753,PC,Unknown,NA
+5359,846.5488,PC,Oxidized glycerophospholipids,NA
+3321,536.3716,PC,Lyso-PC(acyl),Lyso-PC(19:1) [M+H]+
+30707,918.5822,PC,Oxidized glycerophospholipids,NA
+6618,864.5638,PC,Oxidized glycerophospholipids,NA
+14690,858.6236,PC,Glycerophosphocholines,PC(O-39:4;O3) [M+H]+
+31216,920.5956,PC,Unknown,NA
+22620,892.4688,PC,Unknown,NA
+33021,976.7688,PC,Glycerophosphocholines,NA
+20527,1008.7115,PC,Unknown,NA
+20205,1488.0985,PC,Unknown,NA
+22218,892.4721,PC,Unknown,NA
+26211,814.5767,PC,Glycerophosphocholines,PC(O-36:5;O3) / PC(36:4;O2) [M+H]+
+11074,794.532,PC,Glycerophosphocholines,PC(36:6;O) [M+H]+
+2699,622.3847,PC,Unknown,NA
+22044,878.4574,PC,Unknown,NA
+14668,738.5078,PC,Glycerophosphocholines,NA
+4982,864.5403,PC,Oxidized glycerophospholipids,NA
+6996,904.5723,PC,Glycerophosphocholines,NA
+19631,732.5546,PC,Glycerophosphocholines,PC(32:1) [M+H]+
+16857,701.5575,PC,Unknown,SM(34:2;O2) [M+H]+
+3086,997.6697,PC,Unknown,NA
+27323,1012.7685,PC,Unknown,NA
+342,560.3349,PC,Unknown,NA
+19815,722.5694,PC,Unknown,NA
+5435,896.5663,PC,Oxidized glycerophospholipids,NA
+16699,816.5847,PC,Glycerophosphocholines,PC(O-40:9) [M+H]+
+32683,855.7295,PC,Unknown,NA
+5962,551.4179,PC,Phosphosphingolipids,NA
+23815,902.6268,PC,Glycerophosphocholines,NA
+23234,750.5992,PC,Glycerophosphocholines,NA
+12222,871.613,PC,Unknown,NA
+22627,1002.7526,PC,Glycerophosphocholines,NA
+7831,864.5623,PC,Unknown,NA
+9430,539.8364,PC,Unknown,NA
+19489,818.6085,PC,Glycerophosphocholines,PC(O-36:3;O3) [M+H]+
+11914,869.6031,PC,Unknown,NA
+29490,948.5912,PC,Oxidized glycerophospholipids,NA
+10924,862.5621,PC,Oxidized glycerophospholipids,NA
+14374,844.6422,PC,Glycerophosphocholines,NA
+26478,882.6599,PC,Glycerophosphocholines,NA
+2830,590.3832,PC,Unknown,NA
+3471,610.407,PC,Oxidized glycerophospholipids,NA
+29760,799.6708,PC,Phosphosphingolipids,NA
+8043,864.5873,PC,Glycerophosphocholines,NA
+9620,864.5862,PC,Glycerophosphocholines,NA
+23969,1040.764,PC,Glycerophosphocholines,NA
+25880,1018.7238,PC,Glycerophosphocholines,NA
+9002,682.4742,PC,Unknown,PC(O-30:5) [M+H]+
+8284,884.578,PC,Unknown,NA
+6796,864.5848,PC,Unknown,NA
+6563,860.6059,PC,Unknown,NA
+4453,606.2966,PC,Glycerophosphocholines,NA
+18096,1468.0853,PC,Unknown,NA
+22640,1468.131,PC,Unknown,NA
+5799,803.5554,PC,Phosphosphingolipids,NA
+28103,1036.7372,PC,Unknown,NA
+21666,717.5886,PC,Unknown,NA
+21458,788.6168,PC,Glycerophosphocholines,PC(36:1) [M+H]+
+2515,482.3598,PC,Lyso-PC(alkyl),Lyso-PC(O-16:0) [M+H]+
+24883,750.6041,PC,Glycerophosphocholines,NA
+7767,874.5704,PC,Unknown,NA
+22338,984.7079,PC,Oxidized glycerophospholipids,NA
+2050,558.3576,PC,Glycerophosphocholines,NA
+15293,874.6057,PC,Oxidized glycerophospholipids,NA
+4129,848.5109,PC,Glycerophosphocholines,NA
+17634,916.6835,PC,Glycerophosphocholines,NA
+19451,919.639,PC,Oxidized glycerophospholipids,NA
+21218,720.5547,PC,Glycerophosphocholines,NA
+27671,858.6985,PC,Glycerophosphocholines,NA
+6343,896.5702,PC,Unknown,NA
+12457,906.6448,PC,Oxidized glycerophospholipids,NA
+11854,844.5706,PC,Unknown,NA
+10750,794.5418,PC,Glycerophosphocholines,PC(36:6;O) [M+H]+
+13685,862.6328,PC,Glycerophosphocholines,PC(42:6) [M+H]+
+27897,761.6538,PC,Phosphosphingolipids,NA
+14515,878.567,PC,Glycerophosphocholines,PC(22:6/22:6) [M+H]+
+19868,703.5769,PC,Phosphosphingolipids,NA
+20198,1476.1002,PC,Unknown,NA
+19725,1464.1,PC,Unknown,NA
+5164,708.4738,PC,Depsipeptides,NA
+3169,564.3996,PC,Glycerophosphocholines,Lyso-DGCC(22:5) [M+H]+
+19900,1423.0939,PC,Unknown,NA
+5356,850.5238,PC,Unknown,NA
+33763,922.6097,PC,Phosphosphingolipids,NA
+13830,746.5356,PC,Glycerophosphocholines,NA
+17709,790.5947,PC,Unknown,PC(O-38:7) [M+H]+
+25177,800.5581,PC,Glycerophosphocholines,NA
+28597,1088.8608,PC,Unknown,NA
+30149,880.5287,PC,Unknown,NA
+15966,748.5882,PC,Glycerophosphocholines,NA
+21588,1492.1261,PC,Glycerophosphocholines,NA
+8624,614.4585,PC,Unknown,NA
+10217,745.5495,PC,Glycerophosphocholines,NA
+17120,863.613,PC,Oxidized glycerophospholipids,NA
+39049,1176.9683,PC,Unknown,NA
+19292,877.6304,PC,Oxidized glycerophospholipids,NA
+25610,1110.7714,PC,Glycerophosphocholines,NA
+1114,541.2413,PC,Unknown,NA
+35292,990.6757,PC,Unknown,NA
+7910,699.3929,PC,Unknown,NA
+6520,870.5481,PC,Oxidized glycerophospholipids,NA
+20428,715.5679,PC,Unknown,NA
+28848,936.6639,PC,Glycerophosphocholines,NA
+22101,1480.1294,PC,Unknown,NA
+14500,778.528,PC,Neutral glycosphingolipids,NA
+18405,942.6964,PC,Glycerophosphocholines,NA
+22712,1022.7655,PC,Unknown,NA
+22083,1046.7292,PC,Unknown,NA
+25595,1184.7734,PC,Unknown,NA
+4978,819.552,PC,Unknown,NA
+5196,626.2383,PC,Unknown,NA
+23700,1010.7196,PC,Unknown,NA
+21808,916.6001,PC,Unknown,NA
+18601,1402.109,PC,Unknown,NA
+25212,1146.8654,PC,Unknown,NA
+9758,898.5502,PC,Unknown,NA
+23787,844.665,PC,Unknown,NA
+16907,866.6041,PC,Glycerophosphocholines,NA
+20438,903.6438,PC,Oxidized glycerophospholipids,NA
+15306,908.4682,PC,Unknown,NA
+21880,1008.7074,PC,Unknown,NA
+5146,628.2494,PC,Oxidized glycerophospholipids,NA
