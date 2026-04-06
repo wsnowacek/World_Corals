@@ -17,16 +17,13 @@ library(forcats)
 library(ggvenn)
 library(ggrepel)
 library(ggforce)
+library(ComplexUpset)
+library(UpSetR)
 library(here)
 
 # read in data
 df <- read.csv(here("Cleaned data CSVs", "qc_data.csv"))
 met_df <- read.csv(here("Cleaned data CSVs", "merged_met_plot_df.csv"))
-
-cols_bleaching <- c(
-  "Bleached" = "#FF847CFF", 
-  "Non-Bleached" = "#019875FF", 
-  "Not Applicable" = "#D3D3D3")
 
 df <- df %>%
   mutate(
@@ -47,6 +44,10 @@ df <- df %>%
     host_phylum = factor(host_phylum)
   )
 # color palettes
+cols_bleaching <- c(
+  "Bleached" = "#FF847CFF", 
+  "Non-Bleached" = "#019875FF", 
+  "Not Applicable" = "#D3D3D3")
 cols_location <-c("#002594FF", "#E0B2CDFF", "#54C4E3FF", "#F3AA4FFF")
 # cols_location  <- c("#449DB3FF", "#A3BAC2FF", "#60BFAEFF", "#8C6E5DFF")
 cols_symbiont  <- c("#D84D16FF", "#FFF800FF", "#8FDA04FF")
@@ -509,12 +510,14 @@ met_df_total_all <- met_df %>%
 
 #######################
 met_df_scler_all <- met_df %>%
-  filter(scler_ubiquity == 100)
+  filter(scler_ubiquity >= 95)
+# 494 scler 95% ubq
 
 met_df_non_scler_all <- met_df %>%
-  filter(non_scler_ubiquity == 100)
+  filter(non_scler_ubiquity >= 95)
+# 284 non-scler 95% ubq
 
-# volcano of 59 scler 100% ubiquity and 146 non-scler 100% ubiquity
+# 59 scler 100% ubiquity and 146 non-scler 100% ubiquity
 
 make_volcano <- function(selected_df, outpath = NULL) {
   
@@ -776,3 +779,158 @@ p_core <- make_ubiquity_plot(
 #   height = 8, 
 #   dpi = 300
 # )
+
+################################################################################
+
+## scatterplot of met_df$scler_ubiquity vs met_df$non_scler_ubiquity
+met_df_scatter <- met_df %>%
+  mutate(
+    exclusivity = case_when(
+      scler_ubiquity == 0 & non_scler_ubiquity > 0 ~ "Outgroups only",
+      non_scler_ubiquity == 0 & scler_ubiquity > 0 ~ "Scleractinia only",
+      TRUE ~ "Shared"
+    ) 
+  ) %>%
+  filter(display_class != "Unknown")
+
+ps <- ggplot(met_df_scatter, aes(x = scler_ubiquity, y = non_scler_ubiquity)) +
+  geom_point(
+    aes(color = display_class),
+    alpha = 0.8,
+    size = 3
+  ) +
+  scale_color_manual(values = final_palette) +
+  scale_x_continuous(limits = c(0, 100), breaks = seq(0, 100, 20)) +
+  scale_y_continuous(limits = c(0, 100), breaks = seq(0, 100, 20)) +
+  labs(
+    x = "Scleractinian Ubiquity (%)",
+    y = "Non-Scleractinian Ubiquity (%)",
+    color = "Compound Class"
+  ) +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "grey60") +
+  geom_vline(xintercept = 0, linetype = "dotted", color = "grey70") +
+  geom_hline(yintercept = 0, linetype = "dotted", color = "grey70") +
+  theme_pubr() +
+  theme(
+    axis.title = element_text(size = 16),
+    axis.text = element_text(size = 12),
+    legend.position = "right"
+  )
+ggsave(
+  "/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/ubqplot.jpg",
+  ps,
+  width = 12,
+  height = 8,
+  dpi = 300
+)
+
+################################################################################
+
+## venn diagrams for each combination of metadata variables 
+
+draw_venn_comparison <- function(data, group_var, custom_palette) {
+  venn_list <- data %>%
+    mutate(!!sym(group_var) := as.character(!!sym(group_var))) %>%
+    pivot_longer(cols = starts_with("x"), names_to = "metabolite", values_to = "val") %>%
+    filter(val > 0) %>%
+    group_by(!!sym(group_var)) %>%
+    summarise(mets = list(unique(metabolite)), .groups = "drop") %>%
+    # Remove any groups that ended up with 0 metabolites after filtering
+    filter(lengths(mets) > 0) %>% 
+    deframe()
+  plot_colors <- if(!is.null(names(custom_palette))) {
+    custom_palette[names(venn_list)]
+  } else {
+    custom_palette[1:length(venn_list)]
+  }
+  
+  ggvenn(
+    venn_list, 
+    fill_color = plot_colors,
+    stroke_size = 0.5, 
+    set_name_size = 5,
+    text_size = 4
+  ) 
+}
+
+df_bleach <- df %>% filter(bleaching != "Not Applicable", !is.na(bleaching)) %>%
+  filter(scleractinia == 1)
+
+venn_bleach <- draw_venn_comparison(data = df_bleach, 
+                                    group_var = "bleaching", 
+                                    custom_palette = cols_bleaching)
+
+ggsave(
+  "/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/venntest.jpg",
+  venn_bleach,
+  width = 12,
+  height = 8,
+  dpi = 300
+)
+
+#scler only 
+df_sym <- df %>% filter(scleractinia == 1 & !is.na(symbiont.potential)) 
+venn_sym <- draw_venn_comparison(df_sym, "symbiont.potential", cols_symbiont)
+
+# with outgroups
+df_sym_2 <- df %>% filter(!is.na(symbiont.potential))
+venn_sym2 <- draw_venn_comparison(df_sym_2, "symbiont.potential", cols_symbiont)
+
+venn_sym <- plot_grid(
+  venn_sym, venn_sym2,
+  labels = c("A", "B"),
+  label_size = 20, nrow = 2
+)
+
+ggsave(
+  "/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/vennsym.jpg",
+  venn_sym,
+  width = 8,
+  height = 12,
+  dpi = 300
+)
+
+# scleractinian metabolites by location
+df_loc <- df %>% filter(!is.na(location)) %>% filter(scleractinia == 1)
+venn_loc <- draw_venn_comparison(df_loc, "location", cols_location)
+
+ggsave(
+  "/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/vennloc.jpg",
+  venn_loc,
+  width = 12,
+  height = 8,
+  dpi = 300
+)
+
+################################################################################
+
+upset_data <- df %>%
+  filter(scleractinia == 0, !is.na(host_phylum)) %>%
+  pivot_longer(cols = starts_with("x"), names_to = "metabolite", values_to = "val") %>%
+  group_by(host_phylum, metabolite) %>%
+  summarise(present = as.numeric(any(val > 0, na.rm = TRUE)), .groups = "drop") %>%
+  pivot_wider(names_from = host_phylum, values_from = present, values_fill = 0)
+
+# Get the names of the phyla columns for the plot
+phyla_names <- colnames(upset_data)[-1]
+
+upset_df <- as.data.frame(upset_data)
+
+png(
+  filename = "/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/upset_phylum_final.png",
+  width = 16, 
+  height = 9, 
+  units = "in", 
+  res = 300
+)
+
+upset(
+  upset_df, 
+  sets = phyla_names, 
+  main.bar.color = "grey25", 
+  sets.bar.color = cols_phylum[phyla_names], # Matches colors to phylum names
+  order.by = "freq",
+  text.scale = 1.5
+)
+
+dev.off()
