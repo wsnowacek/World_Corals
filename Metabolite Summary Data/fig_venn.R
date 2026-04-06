@@ -50,85 +50,8 @@ cols_symbiont  <- c("#D84D16FF", "#FFF800FF", "#8FDA04FF")
 cols_phylum <- c("#24492EFF", "#015B58FF", "#2C6184FF", "#59629BFF", "#89689DFF", "#BA7999FF", "#E69B99FF")
 cols_sclero    <- c("1" = "#DE7862FF", "0" = "#D8AF39FF")
 
-# 
-# feature_importance_comparison_all <- read.csv("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/machine_learning/all_mets/featureimportanceallmets.csv")
-# 
-# feature_importance_comparison_all <- feature_importance_comparison_all %>%
-#   dplyr::rename(metabolite = Feature)
-# 
-# present_metabolites <- df %>% 
-#   select(starts_with("x")) %>% 
-#   colnames()
-# 
-# met_df <- met_df %>%
-#   filter(met_df$metabolite %in% present_metabolites)
-# 
-# met_df <- feature_importance_comparison_all %>%
-#   inner_join(met_df, by = "metabolite")
-################################################################################
-
-# total ubiquity 
-sum(met_df$total_ubiquity == 100, na.rm = TRUE)
-# 10 ubiquitous compounds found in all samples
-sum(met_df$total_ubiquity > 90, na.rm = TRUE)
-# 413 compounds found in 90% or more of all samples
-
-# Scleractinia summary stats
-sum(met_df$scler_ubiquity == 100, na.rm = TRUE)
-# 59 ubiquitous compounds detected across all Scleractinian samples
-sum(met_df$scler_ubiquity > 80, na.rm = TRUE)
-# 2157 compounds found in over 80% of Scleractinian samples
-sum(met_df$scler_ubiquity == 0, na.rm = TRUE)
-# 841 compounds never found in Scleractinians
-
-# Non-Scleractinia summary stats
-sum(met_df$non_scler_ubiquity == 100, na.rm = TRUE)
-# 146 compounds found across all non Scleractinian samples
-sum(met_df$non_scler_ubiquity > 80, na.rm = TRUE)
-# 754 compounds found in over 90% of non Scleractinian samples
-sum(met_df$non_scler_ubiquity == 0, na.rm = TRUE)
-# 2105 compounds never found in non Scleractinian samples
-
 ################################################################################
 ## categories for venns
-
-met_df_filtered <- met_df %>% 
-  filter(refined_origin != "Unknown")
-
-get_venn_list <- function(data) {
-  list(
-    Host = data %>% filter(refined_origin %in% c("Host", "Both")) %>% pull(metabolite),
-    Symbiont = data %>% filter(refined_origin %in% c("Symbiont", "Both")) %>% pull(metabolite)
-  )
-}
-
-# Define the subsets
-list_all <- get_venn_list(met_df_filtered)
-list_xgb <- get_venn_list(met_df_filtered %>% arrange(desc(XGBoost_Importance)) %>% head(43))
-list_rf  <- get_venn_list(met_df_filtered %>% arrange(desc(RandomForest_Importance)) %>% head(1541))
-
-### plot
-cols_origin <- c("Host" = "#97B9CBFF", "Symbiont" = "#9057C6FF", 
-                 "Both" = "#FFE1BDFF", "Unknown" = "#8DC657FF")
-venn_fill <- c(cols_origin["Host"], cols_origin["Symbiont"])
-
-p_a <- ggvenn(list_all, fill_color = venn_fill, stroke_size = 0.5, set_name_size = 4) +
-  labs() + theme(plot.title = element_text(hjust = 0.5, face = "bold"))
-
-#xgb 50
-p_b <- ggvenn(list_xgb, fill_color = venn_fill, stroke_size = 0.5, set_name_size = 4) +
-  labs() + theme(plot.title = element_text(hjust = 0.5, face = "bold"))
-
-#Rf 500
-p_c <- ggvenn(list_rf, fill_color = venn_fill, stroke_size = 0.5, set_name_size = 4) +
-  labs() + theme(plot.title = element_text(hjust = 0.5, face = "bold"))
-
-venn_grid <- plot_grid(p_a, p_b, p_c, ncol = 3, labels = c("A", "B", "C"), label_size = 20)
-print(venn_grid)
-ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/venn.jpg", 
-       venn_grid, width = 15, height = 5, dpi = 300)
-
-################################################################################
 
 # flowers
 
@@ -348,82 +271,8 @@ volcano_results <- stats_data %>%
     neg_log_p_adj = -log10(p_adj)
   )
 
-###########################################################
-
-#### Compound Superclass
-target_classes <- trimws(c(
-  "Glycerophospholipids", 
-  "Sphingolipids", 
-  "Oligopeptides", 
-  "Glycerolipids", 
-  "Triacylglycerols", 
-  "Steroids", 
-  "Carotenoids (C40)", 
-  "Fatty esters", 
-  "Diacylglyceryl-carboxyhydroxymethylcholines", 
-  "Triterpenoids", 
-  "Fatty amides", 
-  "Phosphatidylglycerocholines", 
-  "Monogalactosyldiacylglycerol", 
-  "Phosphatidylglyceroethanolamines", 
-  "Monoalkyldiacylglycerols", 
-  "Meroterpenoids",
-  "Unknown"
-))
-
-provided_hex <- c(
-  "#BEAED4", "#FDC086", "#FFFF99", "#386CB0", "#F0027F", "#BF5B17", "#1B9E77",
-  "#D95F02", "#7570B3", "#984EA3", "#66A61E", "#E6AB02", "#666666", "#A6CEE3", "#B2DF8A",
-  "#FB9A99", "#CBD5E8")
-# "#E5D8BD" "#FDDAEC"
-spec_colors <- setNames(provided_hex, target_classes)
-
-final_palette <- c(spec_colors, "Other" = "gray60")
-origin_shapes <- c("Host" = 16, "Symbiont" = 3, "Both" = 17, "Unknown" = 8)
-
-plot_data_volcano <- volcano_results %>%
-  inner_join(
-    met_df %>% select(metabolite, display_class, refined_origin),
-    by = "metabolite"
-  ) %>%
-  mutate(
-    # coerce to character
-    display_class = as.character(display_class),
-    refined_origin = as.character(refined_origin),
-    display_class = if_else(
-      is.na(display_class) | !(display_class %in% names(final_palette)),
-      "Other",
-      display_class
-    ),
-    refined_origin = if_else(is.na(refined_origin), "Unknown", refined_origin)
-  )
-
-classes <- sort(unique(plot_data_volcano$display_class))
-class_colors <- final_palette[classes]
-class_order <- c(target_classes, "Other")
-
-plot_data_volcano <- volcano_results %>%
-  inner_join(
-    met_df %>% select(metabolite, display_class, refined_origin),
-    by = "metabolite"
-  ) %>%
-  mutate(
-    display_class = as.character(display_class),
-    refined_origin = as.character(refined_origin),
-    display_class = if_else(
-      is.na(display_class) | !(display_class %in% names(final_palette)),
-      "Other",
-      display_class
-    ),
-    display_class = factor(display_class, levels = class_order),
-    refined_origin = if_else(is.na(refined_origin), "Unknown", refined_origin)
-  )
-
-classes <- levels(plot_data_volcano$display_class)
-class_colors <- final_palette[classes]
 
 ###########################################################
-
 
 ### for custom compound_class
 met_df <- met_df %>%
@@ -558,3 +407,273 @@ final_layout <- plot_grid(
   rel_heights = c(0.8, 1)
 )
 ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/ecological_core.jpg", final_layout, width=20,height=16,dpi=300)
+
+
+################################################################################
+
+### filters for subsequent analysis
+
+met_df_total_all <- met_df %>%
+  filter(total_ubiquity == 100)
+# 10 metabolites
+# all metabolites inferred_origin = both
+# 5 unknown, 2 primary amides, 1 simple phenolic acid, 1 glycerophoshocholine, 1 TQ/THQ
+
+#######################
+met_df_scler_all <- met_df %>%
+  filter(scler_ubiquity == 100)
+
+met_df_non_scler_all <- met_df %>%
+  filter(non_scler_ubiquity == 100)
+
+# volcano of 59 scler 100% ubiquity and 146 non-scler 100% ubiquity
+
+make_volcano <- function(selected_df, outpath = NULL) {
+  
+  selected_metabolites <- intersect(selected_df$metabolite, colnames(df))
+  
+  abundance_df <- df %>%
+    select(sample, all_of(selected_metabolites), scleractinia)
+  
+  comm_long <- abundance_df %>%
+    pivot_longer(
+      cols = starts_with("x"),
+      names_to = "metabolite",
+      values_to = "abundance"
+    ) %>%
+    mutate(abundance = as.numeric(as.character(abundance)))
+  
+  stats_data <- comm_long %>%
+    select(-scleractinia) %>%
+    left_join(df %>% select(sample, scleractinia), by = "sample") %>%
+    filter(!is.na(scleractinia)) %>%
+    mutate(group = if_else(as.character(scleractinia) == "1", "Scleractinia", "Other"))
+  
+  volcano_results <- stats_data %>%
+    group_by(metabolite) %>%
+    summarise(
+      mean_scler = mean(abundance[group == "Scleractinia"], na.rm = TRUE),
+      mean_other = mean(abundance[group == "Other"], na.rm = TRUE),
+      p_val_raw = wilcox.test(abundance ~ group)$p.value,
+      .groups = "drop"
+    ) %>%
+    mutate(
+      p_adj = p.adjust(p_val_raw, method = "bonferroni"),
+      log2FC = log2((mean_scler + 1) / (mean_other + 1)),
+      neg_log_p_adj = -log10(p_adj)
+    )
+  
+  plot_data_volcano <- volcano_results %>%
+    inner_join(
+      met_df %>% select(metabolite, compound_class, refined_origin),
+      by = "metabolite"
+    ) %>%
+    mutate(
+      compound_class = trimws(as.character(compound_class)),
+      refined_origin = as.character(refined_origin),
+      display_class = if_else(
+        is.na(compound_class) | !(compound_class %in% names(final_palette)),
+        "Other",
+        compound_class
+      ),
+      refined_origin = if_else(is.na(refined_origin), "Unknown", refined_origin),
+      display_class = factor(display_class, levels = class_order)
+    )
+  
+  classes <- levels(droplevels(plot_data_volcano$display_class))
+  class_colors <- final_palette[classes]
+  sig_threshold <- -log10(0.05)
+  
+  p <- ggplot(plot_data_volcano, aes(x = log2FC, y = neg_log_p_adj)) +
+    geom_vline(xintercept = c(-2, 2), linetype = "dashed", color = "grey70") +
+    geom_hline(yintercept = sig_threshold, linetype = "dashed", color = "grey70", linewidth = 0.8) +
+    geom_point(aes(color = display_class, shape = refined_origin), alpha = 0.75, size = 3.5) +
+    scale_color_manual(
+      name = "Compound Class",
+      values = class_colors,
+      breaks = classes,
+      na.value = "gray60"
+    ) +
+    scale_shape_manual(
+      name = "Metabolite Origin",
+      values = origin_shapes,
+      na.value = 16
+    ) +
+    ylim(0, 75) +
+    xlim(-10, 10) +
+    labs(
+      x = "log2 Fold Change",
+      y = "-log10(adj. p-value)"
+    ) +
+    theme_pubr() +
+    theme(
+      legend.position = "right",
+      axis.title = element_text(size = 20),
+      axis.text = element_text(size = 14)
+    )
+  
+  if (!is.null(outpath)) {
+    ggsave(outpath, p, width = 14, height = 10, dpi = 300)
+  }
+  
+  return(p)
+}
+
+p_volcano_scler_all <- make_volcano(
+  met_df_scler_all,
+  "/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/volcano_scler_all.jpg"
+)
+
+p_volcano_non_scler_all <- make_volcano(
+  met_df_non_scler_all,
+  "/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/volcano_non_scler_all.jpg"
+)
+
+volcano_ubiquitous <- plot_grid(
+  p_volcano_scler_all, 
+  p_volcano_non_scler_all, 
+  nrow = 2, 
+  labels = c("A", "B"), 
+  label_size = 18,
+  rel_heights = c(1, 1)
+)
+ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/volcano_ubq.jpg", volcano_ubiquitous, width=12,height=14,dpi=300)
+
+#######################
+
+met_df_scler_none <- met_df %>%
+  filter(scler_ubiquity == 0)
+
+met_df_non_scler_none <- met_df %>%
+  filter(non_scler_ubiquity == 0)
+
+scler_none_mets <- met_df_scler_none$metabolite
+non_scler_none_mets <- met_df_non_scler_none$metabolite
+
+# calculate average abundances
+group_abundances <- df %>%
+  pivot_longer(
+    cols = starts_with("x"), 
+    names_to = "metabolite", 
+    values_to = "value"
+  ) %>%
+  mutate(is_scler = ifelse(host_order == "Scleractinia", "scler_avg", "non_scler_avg")) %>%
+  group_by(metabolite, is_scler) %>%
+  summarise(avg_val = mean(value, na.rm = TRUE), .groups = "drop") %>%
+  pivot_wider(names_from = is_scler, values_from = avg_val)
+
+# update the summary dataframe to include both group-specific averages
+met_summary_classed <- met_df %>%
+  select(
+    metabolite, 
+    display_class, 
+    compound_class, 
+    refined_origin,
+    scler_ubiquity, 
+    non_scler_ubiquity
+  ) %>%
+  left_join(group_abundances, by = "metabolite") %>%
+  mutate(
+    category = case_when(
+      metabolite %in% non_scler_none_mets ~ "Coral-only",
+      metabolite %in% scler_none_mets     ~ "Non-coral-only",
+      TRUE                                ~ "Shared/Other"
+    ),
+    refined_origin = factor(refined_origin, levels = c("Host", "Symbiont", "Both", "Unknown")),
+    display_class = factor(display_class, levels = class_order)
+  )
+
+met_summary_classed <- met_summary_classed %>%
+  mutate(
+    # If display_class is NA, use the compound_class value
+    display_class = if_else(is.na(display_class), as.character(compound_class), as.character(display_class)),
+    # Re-apply the factor levels (adding "Fatty acyl carnitines" if it wasn't in class_order)
+    display_class = factor(display_class, levels = unique(c(class_order, "Fatty acyl carnitines")))
+  )
+
+make_ubiquity_plot <- function(selected_df, x_var, y_var, x_label) {
+  
+  plot_df <- met_summary_classed %>%
+    filter(metabolite %in% selected_df$metabolite)
+  
+  ggplot(plot_df, aes(x = .data[[x_var]], y = .data[[y_var]])) +
+    geom_point(
+      aes(color = display_class, shape = refined_origin),
+      size = 3,
+      stroke = 0.8,
+      alpha = 0.85
+    ) +
+    scale_color_manual(values = final_palette) +
+    scale_shape_manual(values = origin_shapes) +
+    scale_y_continuous(
+      labels = label_number(scale_cut = cut_short_scale())
+    ) +
+    scale_x_continuous(
+      limits = c(0, 100),
+      breaks = seq(0, 100, by = 20)
+    ) +
+    labs(
+      x = x_label,
+      y = "Average Abundance",
+      color = "Compound Class",
+      shape = "Metabolite Origin"
+    ) +
+    theme_pubr() +
+    theme(
+      legend.position  = "right",
+      axis.title       = element_text(size = 14),
+      axis.text        = element_text(size = 12)
+    )
+}
+
+# non-Scleractinia ubiquity of metabolites never found in Scleractinia
+p_scler_none <- make_ubiquity_plot(
+  met_df_scler_none,
+  x_var = "non_scler_ubiquity",
+  y_var = "non_scler_avg",
+  x_label = "Non-Scleractinian Ubiquity"
+)
+
+
+# opposite - metabolites absent in Scleractinia
+p_non_scler_none <- make_ubiquity_plot(
+  met_df_non_scler_none,
+  x_var = "scler_ubiquity",
+  y_var = "scler_avg",
+  x_label = "Scleractinian Ubiquity"
+)
+
+combined_ubiquity_plot <- plot_grid(
+  p_scler_none, 
+  p_non_scler_none, 
+  labels = c("A", "B"), 
+  label_size = 18,
+  ncol = 2,
+  align = "h",         # Aligns the axes horizontally
+  axis = "bt"          # Ensures bottom and top axes stay in line
+)
+
+# 2. Save the combined figure
+# Note: Increased width to 16 to accommodate two 8-inch wide plots side-by-side
+ggsave(
+  "/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/combined_ubiquity_plots.jpg", 
+  combined_ubiquity_plot, 
+  width = 16, 
+  height = 8, 
+  dpi = 300
+)
+
+# non-scler ubiquity abundance of 841 compounds never found in scleractinia
+# scler ubiquity abundance of 841 compounds never found in outgroups
+
+# met_df_scler_80 <- met_df %>%
+#   filter(scler_ubiquity > 80)
+# 
+# met_df_non_scler_80 <- met_df %>%
+#   filter(non_scler_ubiquity > 80)
+
+## plots to make
+
+# bar plot of richness by family with confidence interval
+# ubiquity abundance of ecological core metabolites shared among all families
+# jaccard similarity index correlation plot by family 
