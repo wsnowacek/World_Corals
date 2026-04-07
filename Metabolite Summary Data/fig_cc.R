@@ -540,6 +540,7 @@ final_plot <- plot_grid(
   ncol = 1, 
   rel_heights = c(1, 1) 
 )
-ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/fig3_ITS2.jpg", final_plot, width=12,height=10,dpi=300)
+ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/fig3_ITS2.jpg", 
+       final_plot, width=14,height=10,dpi=300)
 
 ################################################################################
