@@ -11,14 +11,19 @@ library(vegan)
 library(scales)
 library(UpSetR)
 library(ComplexUpset)
+library(UpSetR)
 library(rstatix)
 library(ggpubr)
+library(patchwork)
+library(cowplot)
+library(here)
 
 # read data
 df <- read.csv(here("Cleaned data CSVs", "ITS2full.csv"))
+df <- df %>%
+  select(-X.1)
 
 met_df <- read.csv(here("Cleaned data CSVs", "merged_met_plot_df.csv"))
-
 
 # define color palettes
 present_metabolites <- df %>% 
@@ -149,6 +154,7 @@ its2_levels <- c(
   "Durusdinium",
   "Mix"
 )
+
 ################################################################################
 
 its2_barplot <- df %>%
@@ -240,6 +246,39 @@ bar3 <- ggplot(bar3_df, aes(x = bleaching_label, y = prop, fill = ITS2.Letter, a
   theme_pubr() +
   theme(axis.title.x = element_blank())
 bar3
+
+################################################################################
+
+# by location
+
+bar4_df <- df %>%
+  filter(
+    !is.na(ITS2.Letter), ITS2.Letter != "",
+    ITS2.Letter != "No Seq",
+    !is.na(location)
+  ) %>%
+  count(location, ITS2.Letter, name = "n") %>%
+  group_by(location) %>%
+  mutate(
+    total_n = sum(n),
+    prop = n / total_n
+  ) %>%
+  ungroup() %>%
+  mutate(
+    loc_label = paste0(location, " (n=", total_n, ")")
+  )
+
+bar4 <- ggplot(bar4_df, aes(x = loc_label, y = prop, fill = ITS2.Letter)) +
+  geom_col() +
+  scale_fill_manual(values = its2_palette, breaks = its2_levels) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  labs(
+    y = "Proportion of Samples",
+    fill = "Symbiont Genus",
+  ) + guides(alpha = "none") +
+  theme_pubr() +
+  theme(axis.title.x = element_blank())
+bar4
 
 ################################################################################
 
@@ -335,8 +374,6 @@ stat.test_entropy <- entropy_df %>%
 stat.test_entropy <- stat.test_entropy %>%
   filter(p.adj < 0.05)
 
-
-# Manual Y-positioning for brackets
 max_y_ent <- max(entropy_df$MetabolicEntropy, na.rm = TRUE)
 n_comp_ent <- nrow(stat.test_entropy)
 
@@ -384,14 +421,11 @@ entropy <- ggplot(entropy_df, aes(x = ITS2.Letter, y = MetabolicEntropy, fill = 
 
 ## pcoas
 ## filter to remove "mix" samples
-keep_genera <- c("Symbiodinium", "Breviolum", "Cladocopium", "Durusdinium")
+keep_genera <- c("Symbiodinium", "Breviolum", "Cladocopium", "Durusdinium", "Mix")
 
 # Filter and ensure numeric data is clean
 corals_4g <- df %>%
   filter(ITS2.Letter %in% keep_genera, !is.na(sample_id))
-
-corals_4g <- corals_4g %>%
-  select(-X.1)
 
 permanova_numeric_data <- corals_4g %>% select(starts_with("x"))
 keep_rows <- rowSums(is.na(permanova_numeric_data)) < ncol(permanova_numeric_data)
@@ -471,6 +505,7 @@ p <- ggplot(pcoa_points, aes(x = PCoA1, y = PCoA2, color = ITS2.Letter, fill = I
   ) +
   theme_pubr() +
   theme(legend.position = "right")
+p
 
 ################################################################################
 
@@ -506,7 +541,7 @@ p2 <- ggplot(pcoa_points, aes(x = PCoA1, y = PCoA2, color = ITS2.Letter, fill = 
   geom_point(size = 2, alpha = 0.8, aes(color = ITS2.Letter)) +
   stat_ellipse(
     geom = "polygon",
-    alpha = 0.15,
+    alpha = 0.3,
     level = 0.95,
     type = "t",
     colour = NA
@@ -533,6 +568,7 @@ p2
 
 ################################################################################
 
+# remove Mix
 # upset_input <- df %>%
 #   filter(!is.na(ITS2.Letter), ITS2.Letter != "No Seq") %>% 
 #   filter(ITS2.Letter != "Mix") %>%
@@ -544,6 +580,7 @@ p2
 #   as.data.frame()
 ######
 
+# keep Mix
 upset_input <- df %>%
   filter(!is.na(ITS2.Letter), ITS2.Letter != "No Seq") %>%
   select(ITS2.Letter, all_of(metabolite_cols)) %>%
@@ -553,15 +590,186 @@ upset_input <- df %>%
   pivot_wider(names_from = ITS2.Letter, values_from = present, values_fill = 0) %>%
   as.data.frame()
 
+target_order <- c("Mix", "Durusdinium", "Cladocopium", "Breviolum", "Symbiodinium")
 upset_data <- upset_input[, -1]
-upset(
+UpSetR::upset(
   upset_data,
-  sets = colnames(upset_data), # Uses your ITS2.Letter groups
-  main.bar.color = "steelblue",
-  sets.bar.color = its2_palette[colnames(upset_data)], # Match your existing palette
+  sets = target_order, # Uses your ITS2.Letter groups
+  keep.order = TRUE,
+  main.bar.color = "gray20",
+  sets.bar.color = its2_palette[target_order], # Match your existing palette
   order.by = "freq", 
   decreasing = TRUE,
   point.size = 3.5, 
   line.size = 1.5,
   text.scale = c(1.3, 1.3, 1, 1, 1.5, 1) # Adjust text sizes for labels
+)
+
+## ComplexUpset
+
+target_order <- c("Mix", "Durusdinium", "Cladocopium", "Breviolum", "Symbiodinium")
+names(its2_palette) <- its2_levels
+
+# remove global metabolites not present in A/b/c/d/mix
+upset_input_with_meta <- df %>%
+  filter(ITS2.Letter %in% target_order) %>%
+  select(ITS2.Letter, all_of(metabolite_cols)) %>%
+  pivot_longer(
+    cols = starts_with("x"), 
+    names_to = "metabolite", 
+    values_to = "abundance"
+  ) %>%
+  group_by(metabolite) %>%
+  filter(sum(abundance, na.rm = TRUE) > 0) %>% 
+  group_by(ITS2.Letter, metabolite) %>%
+  summarise(
+    present = as.numeric(any(abundance > 0, na.rm = TRUE)), 
+    .groups = "drop"
+  ) %>%
+  pivot_wider(names_from = ITS2.Letter, values_from = present, values_fill = 0) %>%
+  left_join(met_df %>% select(metabolite, compound_class), by = "metabolite") %>%
+  mutate(
+    compound_class = trimws(as.character(compound_class)),
+    display_class = if_else(
+      compound_class %in% names(final_palette), 
+      compound_class, 
+      "Other"
+    ),
+    display_class = factor(display_class, levels = c(target_classes, "Other"))
+  ) %>%
+  as.data.frame()
+
+upset_plot <- ComplexUpset::upset(
+  upset_input_with_meta,
+  target_order, 
+  name = "",
+  width_ratio = 0.05, 
+  
+  set_sizes = (
+    upset_set_size() + 
+      theme(
+        axis.line.x = element_blank(),
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.title.x = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.border = element_blank()
+      )
+  ),
+  
+  stripes = upset_stripes(
+    mapping = aes(color = group),
+    colors = its2_palette
+  ),
+  
+  annotations = list(
+    'Compound Class Breakdown' = (
+      ggplot(mapping = aes(fill = display_class)) +
+        geom_bar(stat = 'count', position = 'fill') + 
+        scale_y_continuous(labels = scales::percent_format(), name = "Proportion") +
+        scale_fill_manual(values = final_palette, name = "Compound Class") +
+        theme_pubr() +
+        theme(
+          axis.text.x = element_blank(),
+          axis.ticks.x = element_blank(),
+          axis.title.x = element_blank(),
+          # axis.title.y = element_blank(),
+          legend.position = "top",
+          legend.text = element_text(size = 10)
+        )
+    )
+  ),
+  
+  base_annotations = list(
+    'Intersection' = intersection_size(
+      counts = TRUE,
+      mapping = aes(fill = "gray20"),
+      text = list(size = 2.2, vjust = -0.5) 
+    ) + 
+      scale_fill_identity() +
+      theme_pubr() +
+      theme(
+        panel.grid = element_blank(), 
+        axis.text.y = element_text(size = 8),
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.title.x = element_blank()
+      )
+  ),
+  
+  sort_intersections = 'descending',
+  sort_sets = FALSE, 
+  themes = upset_default_themes(text = element_text(size = 14))
+)
+
+print(upset_plot)
+
+ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/upset_its2.jpg", 
+       upset_plot, width = 14, height = 10, dpi=300)
+
+################################################################################
+## combine plots
+
+### get shared legend for all plots from bar2
+# top row: bar2, bar4, and p2
+# bottom row: richness, entropy, and upset plot (make upset plot way bigger)
+#3
+
+shared_legend <- get_legend(
+  bar2 + 
+    theme(
+      legend.position = "top",
+      legend.direction = "horizontal",
+      legend.text = element_text(size = 18),        
+      legend.title = element_text(size = 18))
+)
+
+# Remove individual legends
+p_bar2 <- bar2 + theme(legend.position = "none")
+p_bar4 <- bar4 + theme(legend.position = "none")
+p_pcoa <- p2   + theme(legend.position = "none")
+p_rich <- richness + theme(legend.position = "none")
+p_ent  <- entropy  + theme(legend.position = "none")
+
+top_row <- plot_grid(
+  p_bar2, p_bar4, p_pcoa,
+  ncol = 3,
+  rel_widths = c(0.6, 0.8, 0.8),
+  labels = c("A", "B", "C"),
+  label_size = 18,
+  label_fontface = "bold"
+)
+
+bottom_row <- plot_grid(
+  p_rich, p_ent, upset_plot,
+  ncol = 3,
+  rel_widths = c(0.4, 0.4, 1.5),
+  labels = c("D", "E", "F"),
+  label_size = 18,
+  label_fontface = "bold"
+)
+
+main_plots <- plot_grid(
+  top_row, 
+  bottom_row, 
+  ncol = 1, 
+  rel_heights = c(0.8, 1)
+)
+
+final_figure <- plot_grid(
+  shared_legend, 
+  main_plots, 
+  ncol = 1, 
+  rel_heights = c(0.1, 1.9) # Adjust 0.1 to make legend area taller/shorter
+)
+
+# Display
+print(final_figure)
+ggsave(
+  "/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/ITS2combined.jpg", 
+  plot = final_figure, 
+  width = 18, 
+  height = 12, 
+  dpi = 300
 )
