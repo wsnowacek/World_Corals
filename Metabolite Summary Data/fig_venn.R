@@ -321,7 +321,7 @@ core_df <- met_df %>%
   filter(metabolite %in% core_metabolite_ids)
 
 #######################
-# venn by host_origin TBA
+# venn by host_origin 
 
 core_filtered <- core_df %>% 
   filter(refined_origin != "Unknown")
@@ -330,7 +330,6 @@ list_core <- get_venn_list(core_filtered)
 
 venn_fill <- c(cols_origin["Host"], cols_origin["Symbiont"])
 
-# 4. Create the plot
 p_core_venn <- ggvenn(
   list_core, 
   fill_color = venn_fill, 
