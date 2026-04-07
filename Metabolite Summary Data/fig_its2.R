@@ -21,7 +21,7 @@ library(here)
 # read data
 df <- read.csv(here("Cleaned data CSVs", "ITS2full.csv"))
 df <- df %>%
-  select(-X.1, -X, -X.Location...as.character.Location)
+  select(-X.1, -X, -X.Location...as.character.Location..)
 
 met_df <- read.csv(here("Cleaned data CSVs", "merged_met_plot_df.csv"))
 
