@@ -21,7 +21,7 @@ library(here)
 # read data
 df <- read.csv(here("Cleaned data CSVs", "ITS2full.csv"))
 df <- df %>%
-  select(-X.1)
+  select(-X.1, -X, -X.Location...as.character.Location)
 
 met_df <- read.csv(here("Cleaned data CSVs", "merged_met_plot_df.csv"))
 
@@ -457,9 +457,9 @@ permanova_result <- adonis2(
 print(permanova_result)
 # adonis2(formula = bray_curtis_4g ~ ITS2.Letter/location, data = meta2, permutations = 999, by = "margin")
 # Df SumOfSqs      R2      F Pr(>F)    
-# ITS2.Letter:location   6    8.086 0.20385 9.9613  0.001 ***
-#   Residual             210   28.412 0.71625                  
-# Total                218   39.668 1.00000                  
+# ITS2.Letter:location   9   10.096 0.18579 7.9258  0.001 ***
+#   Residual             282   39.914 0.73448                  
+# Total                295   54.343 1.00000                  
 # ---
 #   Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
@@ -541,7 +541,7 @@ p2 <- ggplot(pcoa_points, aes(x = PCoA1, y = PCoA2, color = ITS2.Letter, fill = 
   geom_point(size = 2, alpha = 0.8, aes(color = ITS2.Letter)) +
   stat_ellipse(
     geom = "polygon",
-    alpha = 0.3,
+    alpha = 0.15,
     level = 0.95,
     type = "t",
     colour = NA
@@ -567,13 +567,74 @@ p2 <- ggplot(pcoa_points, aes(x = PCoA1, y = PCoA2, color = ITS2.Letter, fill = 
 p2
 
 ################################################################################
+bleaching_permanova_result <- adonis2(
+  bray_curtis_4g ~ ITS2.Letter / bleaching,
+  data = meta2,
+  permutations = 999,
+  by = "margin"
+)
+print(bleaching_permanova_result)
+# adonis2(formula = bray_curtis_4g ~ ITS2.Letter/bleaching, data = meta2, permutations = 999, by = "margin")
+# Df SumOfSqs      R2      F Pr(>F)    
+# ITS2.Letter:bleaching   6    4.125 0.07591 4.2701  0.001 ***
+#   Residual              285   45.885 0.84436                  
+# Total                 295   54.343 1.00000                  
+# ---
+#   Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1              
+
+pcoa_result <- cmdscale(bray_curtis_4g, eig = TRUE, k = 2)
+pcoa_points <- as.data.frame(pcoa_result$points)
+colnames(pcoa_points) <- c("PCoA1", "PCoA2")
+pcoa_points <- bind_cols(pcoa_points, meta2)
+
+pos_eig <- pcoa_result$eig[pcoa_result$eig > 0]
+var_explained <- round(100 * pcoa_result$eig[1:2] / sum(pos_eig), 1)
+
+perm_p_val <- min(bleaching_permanova_result$`Pr(>F)`, na.rm = TRUE)
+perm_r2    <- round(sum(bleaching_permanova_result$R2[1]), 3)
+p_label    <- if(perm_p_val <= 0.001) "p < 0.001" else paste("p =", perm_p_val)
+stats_annotation_combined <- paste0("PERMANOVA: R² = ", perm_r2, ", ", p_label)
+
+p3 <- ggplot(pcoa_points, aes(x = PCoA1, y = PCoA2, color = ITS2.Letter, fill = ITS2.Letter)) +
+  geom_point(size = 2, alpha = 0.8, aes(color = ITS2.Letter, shape = bleaching)) +
+  stat_ellipse(
+    geom = "polygon",
+    alpha = 0.15,
+    level = 0.95,
+    type = "t",
+    colour = NA
+  ) +
+  annotate(
+    "text",
+    x = -Inf,  
+    y = -Inf, 
+    label = stats_annotation_combined,
+    hjust = -0.05,
+    vjust = -0.6,
+    size = 4) +
+  scale_color_manual(values = its2_palette, breaks = its2_levels) +
+  scale_fill_manual(values = its2_palette, breaks = its2_levels) +
+  scale_shape_manual(values = c("Bleached" = 12, "Non-Bleached" = 16)) + 
+  labs(
+    x = paste0("PCoA1: (", var_explained[1], "%)"),
+    y = paste0("PCoA2: (", var_explained[2], "%)"),
+    color = "Symbiont Genus",
+    fill = "Symbiont Genus",
+    shape = "Bleaching Status"
+  ) +
+  theme_pubr() +
+  theme(legend.position = "right")
+p3
+
+################################################################################
+## upset plots
 
 # remove Mix
 # upset_input <- df %>%
 #   filter(!is.na(ITS2.Letter), ITS2.Letter != "No Seq") %>% 
 #   filter(ITS2.Letter != "Mix") %>%
 #   select(ITS2.Letter, all_of(metabolite_cols)) %>%
-#   pivot_longer(cols = starts_with("x"), names_to = "metabolite", values_to = "abundance") %>%
+#   pivot_longer(cols = starts_with("x", ignore.case = FALSE), names_to = "metabolite", values_to = "abundance") %>%
 #   group_by(ITS2.Letter, metabolite) %>%
 #   summarise(present = as.numeric(any(abundance > 0, na.rm = TRUE)), .groups = "drop") %>%
 #   pivot_wider(names_from = ITS2.Letter, values_from = present, values_fill = 0) %>%
@@ -584,7 +645,7 @@ p2
 upset_input <- df %>%
   filter(!is.na(ITS2.Letter), ITS2.Letter != "No Seq") %>%
   select(ITS2.Letter, all_of(metabolite_cols)) %>%
-  pivot_longer(cols = starts_with("x"), names_to = "metabolite", values_to = "abundance") %>%
+  pivot_longer(cols = starts_with("x", ignore.case = FALSE), names_to = "metabolite", values_to = "abundance") %>%
   group_by(ITS2.Letter, metabolite) %>%
   summarise(present = as.numeric(any(abundance > 0, na.rm = TRUE)), .groups = "drop") %>%
   pivot_wider(names_from = ITS2.Letter, values_from = present, values_fill = 0) %>%
@@ -615,7 +676,7 @@ upset_input_with_meta <- df %>%
   filter(ITS2.Letter %in% target_order) %>%
   select(ITS2.Letter, all_of(metabolite_cols)) %>%
   pivot_longer(
-    cols = starts_with("x"), 
+    cols = starts_with("x", ignore.case = FALSE), 
     names_to = "metabolite", 
     values_to = "abundance"
   ) %>%
@@ -711,11 +772,6 @@ ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/upset_it
 ################################################################################
 ## combine plots
 
-### get shared legend for all plots from bar2
-# top row: bar2, bar4, and p2
-# bottom row: richness, entropy, and upset plot (make upset plot way bigger)
-#3
-
 shared_legend <- get_legend(
   bar2 + 
     theme(
@@ -761,7 +817,7 @@ final_figure <- plot_grid(
   shared_legend, 
   main_plots, 
   ncol = 1, 
-  rel_heights = c(0.1, 1.9) # Adjust 0.1 to make legend area taller/shorter
+  rel_heights = c(0.1, 1.9) 
 )
 
 # Display
@@ -773,3 +829,113 @@ ggsave(
   height = 12, 
   dpi = 300
 )
+
+################################################################################
+
+# save bar1, bar3, pcoa by location (p)
+
+bar3 <- bar3 + theme(legend.position = "none")
+bleach_its2 <- plot_grid(bar3, p3, labels = c ("A","B"), label_size = 18,ncol = 1)
+ggsave(
+  "/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/ITS2bleaching.jpg", 
+  plot = bleach_its2, 
+  width = 7, 
+  height = 8, 
+  dpi = 300
+)
+
+################################################################################
+
+## compound class analysis - volcano plots
+target_genera <- c("Symbiodinium", "Breviolum", "Cladocopium", "Durusdinium")
+genus_pairs <- combn(target_genera, 2, simplify = FALSE)
+
+pairwise_data <- df %>%
+  filter(ITS2.Letter %in% target_genera)
+
+## pairwise combinations A vs B, A vs C, A vs D, B vs C, B vs D, C vs D
+compute_pairwise_stats <- function(pair, data, met_metadata, palette) {
+  group_a <- pair[1]
+  group_b <- pair[2]
+  
+  comp_df <- data %>% filter(ITS2.Letter %in% pair)
+  
+  stats <- comp_df %>%
+    select(ITS2.Letter, starts_with("x", ignore.case = FALSE)) %>% 
+    pivot_longer(
+      cols = -ITS2.Letter,        
+      names_to = "metabolite", 
+      values_to = "abundance"
+    ) %>%
+    mutate(abundance = as.numeric(abundance)) %>%
+    group_by(metabolite) %>%
+    summarise(
+      mean_a = mean(abundance[ITS2.Letter == group_a], na.rm = TRUE),
+      mean_b = mean(abundance[ITS2.Letter == group_b], na.rm = TRUE),
+      p_raw  = wilcox.test(abundance ~ ITS2.Letter)$p.value,
+      .groups = "drop"
+    ) %>%
+    mutate(
+      p_adj = p.adjust(p_raw, method = "bonferroni"), 
+      log2FC = log2((mean_a + 0.01) / (mean_b + 0.01)), 
+      neg_log_p = -log10(p_adj),
+      comparison = paste(group_a, "vs", group_b)
+    ) %>%
+    inner_join(met_metadata %>% select(metabolite, compound_class), by = "metabolite") %>%
+    mutate(display_class = if_else(compound_class %in% names(palette), compound_class, "Other"))
+  
+  return(stats)
+}
+stats_list <- lapply(genus_pairs, function(p) {
+  compute_pairwise_stats(p, pairwise_data, met_df, final_palette)
+})
+
+volcano_list <- lapply(stats_list, function(df) {
+  ggplot(df, aes(x = log2FC, y = neg_log_p)) +
+    geom_vline(xintercept = c(-2, 2), linetype = "dashed", color = "grey80") +
+    geom_hline(yintercept = -log10(0.05), linetype = "dashed", color = "grey80") +
+    geom_point(aes(color = display_class), alpha = 0.6, size = 2) +
+    scale_color_manual(values = final_palette, name = "Compound Class") + 
+    labs(title = unique(df$comparison),
+         x = "log2 Fold Change", y = "-log10(adj. p)") +
+    xlim(-20, 20) +
+    ylim(0, 20) +
+    theme_pubr() +
+    theme(legend.position = "bottom", # Positioned for extraction
+          plot.title = element_text(size = 14, face = "bold", hjust = 0.5),
+          axis.title = element_text(size = 10))
+})
+
+legend_b <- get_legend(
+  volcano_list[[1]] + 
+    theme(legend.position = "bottom",
+          legend.title = element_text(size = 14),
+          legend.text = element_text(size = 12)) +
+    guides(color = guide_legend(nrow = 3, override.aes = list(size = 4))) # Makes legend "taller"
+)
+
+# Remove legends from the individual grid plots
+volcano_list_no_legend <- lapply(volcano_list, function(p) p + theme(legend.position = "none"))
+
+# Assemble 2x3 grid
+pairwise_volcano_grid <- plot_grid(
+  plotlist = volcano_list_no_legend,
+  ncol = 3,
+  nrow = 2,
+  labels = "AUTO",
+  label_size = 20
+)
+
+# Combine grid and the taller legend
+final_pairwise_plot <- plot_grid(
+  pairwise_volcano_grid,
+  legend_b,
+  ncol = 1,
+  rel_heights = c(1, 0.15) 
+)
+
+ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/its2_volcano.jpg", 
+       final_pairwise_plot, width = 18, height = 14, dpi = 300)
+
+
+# rarefaction curve
