@@ -15,6 +15,25 @@ library(here)
 
 df <- read.csv(here("Cleaned data CSVs", "qc_data.csv"))
 
+df <- df %>%
+  mutate(
+    bleaching = case_when(
+      bleaching == "B"  ~ "Bleached",
+      bleaching == "NB" ~ "Non-Bleached",
+      is.na(bleaching)  ~ "Not Applicable",
+      TRUE              ~ as.character(bleaching)
+    ),
+    bleaching = factor(bleaching, levels = c("Bleached", "Non-Bleached", "Not Applicable")),
+    
+    scleractinia = if_else(host_order == "Scleractinia", "1", "0"),
+    scleractinia = factor(scleractinia, levels = c("1", "0")),
+    location = factor(location),
+    symbiont.potential = factor(symbiont.potential),
+    host_order = fct_relevel(factor(host_order), "Scleractinia"),
+    host_family = factor(host_family),
+    host_phylum = factor(host_phylum)
+  )
+
 ## defining things
 met_df <- read.csv(here("Cleaned data CSVs", "merged_met_plot_df.csv"))
 met_df <- met_df %>%
@@ -55,7 +74,7 @@ provided_hex <- c(
 spec_colors <- setNames(provided_hex[seq_along(target_classes)], target_classes)
 
 final_palette <- c(spec_colors, "Other" = "gray30")
-class_order <- c(target_classes, "Other")
+ordered_levels <- c(target_classes, "Other")
 
 origin_shapes <- c("Host" = 16, "Symbiont" = 3, "Both" = 17, "Unknown" = 8)
 
@@ -72,6 +91,10 @@ met_df_scler_all <- met_df %>%
 # define 95 %ile df 
 met_df_scler_95 <- met_df %>%
   filter(scler_ubiquity >= 95)
+
+# define 90 %ile df 
+met_df_scler_90 <- met_df %>%
+  filter(scler_ubiquity >= 90)
 
 # define df of non scler
 met_df_nonscler <- met_df %>%
@@ -127,5 +150,429 @@ host_kbest_df <- feature_set_list[["Host_KBest"]] %>%
 
 ################################################################################
 
-## check for overlaps between dfs 
-## then look at ones found within glycero_df
+## check for overlaps between dfs
+list_of_metabolites_xg <- list(
+  # Scler_100 = met_df_scler_all$metabolite,
+  # Scler_95  = met_df_scler_95$metabolite,
+  Scler_90  = met_df_scler_90$metabolite,
+  # NonScler_95 = met_df_nonscler$metabolite,
+  XGBoost   = xgb_df$metabolite,
+  # RandomForest = rf_df$metabolite,
+  Core_Family = core_df$metabolite
+)
+
+common_metabolites_xg <- Reduce(intersect, list_of_metabolites_xg)
+
+super_core_table_xg <- met_df %>%
+  filter(metabolite %in% common_metabolites_xg) %>%
+  select(metabolite, compound_class, refined_origin, XGBoost_Importance, RandomForest_Importance,
+         scler_ubiquity, non_scler_ubiquity, total_ubiquity) %>%
+  mutate(ubiquity_diff = scler_ubiquity - non_scler_ubiquity) %>%
+  arrange(desc(XGBoost_Importance))
+
+###########################################
+
+list_of_metabolites_rf <- list(
+  # Scler_100 = met_df_scler_all$metabolite,
+  # Scler_95  = met_df_scler_95$metabolite,
+  Scler_90  = met_df_scler_90$metabolite,
+  # NonScler_95 = met_df_nonscler$metabolite,
+  # XGBoost   = xgb_df$metabolite,
+  RandomForest = rf_df$metabolite,
+  Core_Family = core_df$metabolite
+)
+
+common_metabolites_rf <- Reduce(intersect, list_of_metabolites_rf)
+
+# Create the summary table with metadata
+super_core_table_rf <- met_df %>%
+  filter(metabolite %in% common_metabolites_rf) %>%
+  select(metabolite, compound_class, refined_origin, XGBoost_Importance, RandomForest_Importance,
+         scler_ubiquity, non_scler_ubiquity, total_ubiquity) %>%
+  mutate(ubiquity_diff = scler_ubiquity - non_scler_ubiquity) %>%
+  arrange(desc(XGBoost_Importance))
+
+super_core_table <- rbind(super_core_table_rf, super_core_table_xg)
+super_core_table <- unique(super_core_table)
+
+class_counts <- super_core_table %>%
+  summarise(
+    DAG = sum(compound_class == "DAG"),
+    MADAG = sum(compound_class == "MADAG"),
+    TAG = sum(compound_class == "TAG"),
+    Ceramide            = sum(compound_class == "Ceramides"),
+    Unknown             = sum(compound_class == "Unknown")
+  )
+class_counts
+
+#########################################
+# TAG/DAG/MADAG of interest 
+tag_core <- super_core_table %>%
+  filter(compound_class == "TAG" | compound_class == "DAG" | compound_class == "MADAG")
+
+mean(tag_core$ubiquity_diff)
+# on average these compounds 70.3% more ubiquitous in Scleractinia than outgroups
+tag_core_vec <- tag_core$metabolite
+
+# ceramide of interest 
+ceramide_core <- super_core_table %>%
+  filter(compound_class == "Ceramides")
+
+mean(ceramide_core$ubiquity_diff)
+# on average these compounds 37.91% more ubiquitous in Scleractinia than outgroups
+ceramide_core_vec <- ceramide_core$metabolite
+
+################################################################################
+
+## ubq abundance 
+met_presence_long <- df %>%
+  pivot_longer(
+    cols = starts_with("x"),
+    names_to = "metabolite",
+    values_to = "value"
+  ) %>%
+  mutate(present = value > 0)
+
+ubiquity_overall <- met_presence_long %>%
+  group_by(metabolite) %>%
+  summarise(ubiquity_all = mean(present) * 100, .groups = "drop")
+
+ubiquity_corals <- met_presence_long %>%
+  filter(host_order == "Scleractinia") %>%
+  group_by(metabolite) %>%
+  summarise(ubiquity_coral = mean(present) * 100, .groups = "drop")
+
+met_summary <- ubiquity_overall %>%
+  left_join(ubiquity_corals, by = "metabolite") %>%
+  mutate(ubiquity_coral = ifelse(is.na(ubiquity_coral), 0, ubiquity_coral))
+
+coral_present <- met_presence_long %>%
+  filter(host_order == "Scleractinia", present) %>%
+  distinct(metabolite)
+
+noncoral_present <- met_presence_long %>%
+  filter(host_order != "Scleractinia", present) %>%
+  distinct(metabolite)
+
+coral_only <- setdiff(coral_present$metabolite, noncoral_present$metabolite)
+
+met_summary <- met_summary %>%
+  left_join(
+    met_presence_long %>%
+      group_by(metabolite) %>%
+      summarise(avg_abundance = mean(value, na.rm = TRUE), .groups = "drop"),
+    by = "metabolite"
+  ) %>%
+  mutate(category = ifelse(metabolite %in% coral_only, "Coral-only", "Other"))
+
+class_mapping <- met_df %>%
+  select(metabolite, compound_class) %>%
+  distinct()
+
+met_df$compound_class <- factor(met_df$compound_class, levels = ordered_levels)
+class_mapping <- met_df %>%
+  select(metabolite, compound_class, compound_class) %>%
+  distinct()
+
+met_plot_comparison <- met_df %>%
+  filter(compound_class %in% c("TAG", "DAG", "MADAG")) %>%
+  left_join(
+    met_summary %>% select(metabolite, avg_abundance), 
+    by = "metabolite"
+  )
+
+pa_scler_ubq <- ggplot(met_plot_comparison, aes(x = scler_ubiquity, y = avg_abundance)) +
+  geom_point(
+    aes(color = compound_class, shape = refined_origin),
+    size = 4, stroke = 1, alpha = 0.8
+  ) +
+  facet_wrap(~compound_class) +
+  scale_color_manual(values = final_palette, name = "Lipid Class") +
+  scale_shape_manual(values = origin_shapes, name = "Metabolite Origin") +
+  scale_y_continuous(labels = label_number(scale_cut = cut_short_scale())) + 
+  scale_x_continuous(limits = c(0, 100), breaks = seq(0, 100, 20)) +
+  labs(
+    x = "Scleractinian Ubiquity (%)",
+    y = "Average Abundance"
+  ) +
+  geom_text_repel(
+    data = . %>% filter(metabolite %in% tag_core_vec),
+    aes(label = metabolite),
+    box.padding = 0.5, 
+    point.padding = 0.3,
+    size = 3, 
+    max.overlaps = Inf,
+    fontface = "bold", 
+    color = "black",
+    segment.color = "grey30"
+  ) +
+  theme_pubr() +
+  theme(legend.position = "right")
+pa_scler_ubq
+
+ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/ubqtag.jpg", 
+       pa_scler_ubq, width=15, height=7, dpi=300)
+
+# pa_total_ubq <- ggplot(met_plot_comparison, aes(x = total_ubiquity, y = avg_abundance)) +
+#   geom_point(
+#     aes(color = compound_class, shape = refined_origin),
+#     size = 4, stroke = 1, alpha = 0.8
+#   ) +
+#   scale_color_manual(values = final_palette, name = "Lipid Class") +
+#   scale_shape_manual(values = origin_shapes, name = "Metabolite Origin") +
+#   scale_y_continuous(labels = label_number(scale_cut = cut_short_scale())) + 
+#   facet_wrap(~compound_class) +
+#   scale_x_continuous(limits = c(0, 100), breaks = seq(0, 100, 20)) +
+#   labs(
+#     x = "Total Ubiquity (%)",
+#     y = "Average Abundance"
+#   ) +
+#   theme_pubr() +
+#   theme(legend.position = "right")
+# pa_total_ubq
+
+met_plot_comparison_2 <- met_df %>%
+  filter(compound_class == "Ceramides") %>%
+  left_join(
+    met_summary %>% select(metabolite, avg_abundance), 
+    by = "metabolite"
+  )
+
+pb_scler_ubq <- ggplot(met_plot_comparison_2, aes(x = scler_ubiquity, y = avg_abundance)) +
+  geom_point(
+    aes(color = compound_class, shape = refined_origin),
+    size = 4, stroke = 1, alpha = 0.8
+  ) +
+  facet_wrap(~compound_class) +
+  scale_color_manual(values = final_palette) +
+  guides(color = "none") +
+  scale_shape_manual(values = origin_shapes, name = "Metabolite Origin") +
+  scale_y_continuous(labels = label_number(scale_cut = cut_short_scale())) + 
+  scale_x_continuous(limits = c(0, 100), breaks = seq(0, 100, 20)) +
+  labs(
+    x = "Scleractinian Ubiquity (%)",
+    y = "Average Abundance"
+  ) +
+  geom_text_repel(
+    data = . %>% filter(metabolite %in% ceramide_core_vec),
+    aes(label = metabolite),
+    box.padding = 0.5, 
+    point.padding = 0.3,
+    size = 3, 
+    max.overlaps = Inf,
+    fontface = "bold", 
+    color = "black",
+    segment.color = "grey30"
+  ) +
+  theme_pubr() +
+  theme(legend.position = "right")
+pb_scler_ubq
+
+ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/ubqtag.jpg", 
+       pa_scler_ubq, width=15, height=7, dpi=300)
+
+
+################################################################################
+
+# subvolcanoes with tag_core highlighted
+
+comm_long <- df %>%
+  pivot_longer(
+    cols = starts_with("x"), 
+    names_to  = "metabolite",
+    values_to = "abundance"
+  )
+
+comm_long <- comm_long %>%
+  mutate(abundance = as.numeric(as.character(abundance)))
+
+stats_data <- comm_long %>%
+  select(-scleractinia) %>%                    
+  left_join(df %>% select(sample, scleractinia), by = "sample") %>%
+  filter(!is.na(scleractinia)) %>%
+  mutate(group = if_else(as.character(scleractinia) == "1", "Scleractinia", "Other"))
+
+# compute L2FC and p-values per metabolite
+volcano_results <- stats_data %>%
+  group_by(metabolite) %>%
+  summarise(
+    mean_scler = mean(abundance[group == "Scleractinia"], na.rm = TRUE),
+    mean_other = mean(abundance[group == "Other"], na.rm = TRUE),
+    p_val_raw = wilcox.test(abundance ~ group)$p.value,
+    .groups = "drop"
+  ) %>%
+  mutate(
+    p_adj = p.adjust(p_val_raw, method = "bonferroni"),
+    log2FC = log2((mean_scler + 1) / (mean_other + 1)),
+    # Use adjusted p-value for the y-axis
+    neg_log_p_adj = -log10(p_adj)
+  )
+
+plot_data_volcano <- volcano_results %>%
+  inner_join(met_df %>% select(metabolite, refined_origin, compound_class, display_class), by = "metabolite")
+
+m <- nrow(volcano_results)   
+sig_threshold <- -log10(0.05 / m)
+
+################################################################################
+
+p_tag <- plot_data_volcano %>%
+  filter(compound_class == "TAG") %>%
+  ggplot(aes(x = log2FC, y = neg_log_p_adj)) +
+  geom_vline(xintercept = c(-2, 2), linetype = "dashed", color = "grey70") +
+  geom_hline(yintercept = sig_threshold, linetype = "dashed", color = "grey70") +
+  geom_point(aes(color = compound_class), size = 3, alpha = 0.8) +
+  geom_text_repel(
+    data = . %>% filter(metabolite %in% tag_core_vec),
+    aes(label = metabolite),
+    box.padding = 0.5, 
+    point.padding = 0.3,
+    size = 3, 
+    max.overlaps = Inf, # Ensures all core metabolites get a label
+    fontface = "bold", 
+    color = "black",
+    segment.color = "grey30"
+  ) +
+  xlim(-25,25) +
+  ylim(0,75) + 
+  scale_color_manual(values = final_palette) +
+  labs(title = "TAG", x = "log2 Fold Change", y = "-log10(adj. p-value)") +
+  theme_pubr() +
+  theme(legend.position = "none", plot.title = element_text(size = 18, face = "bold"))
+
+p_dag <- plot_data_volcano %>%
+  filter(compound_class == "DAG") %>%
+  ggplot(aes(x = log2FC, y = neg_log_p_adj)) +
+  geom_vline(xintercept = c(-2, 2), linetype = "dashed", color = "grey70") +
+  geom_hline(yintercept = sig_threshold, linetype = "dashed", color = "grey70") +
+  geom_point(aes(color = compound_class), size = 3, alpha = 0.8) +
+  geom_text_repel(
+    data = . %>% filter(metabolite %in% tag_core_vec),
+    aes(label = metabolite),
+    box.padding = 0.5, 
+    point.padding = 0.3,
+    size = 3, 
+    max.overlaps = Inf,
+    fontface = "bold", 
+    color = "black",
+    segment.color = "grey30"
+  ) +
+  xlim(-25,25) +
+  ylim(0,75) + 
+  scale_color_manual(values = final_palette) +
+  labs(title = "DAG", x = "log2 Fold Change", y = "-log10(adj. p-value)") +
+  theme_pubr() +
+  theme(legend.position = "none", plot.title = element_text(size = 18, face = "bold"))
+
+p_madag <- plot_data_volcano %>%
+  filter(compound_class == "MADAG") %>%
+  ggplot(aes(x = log2FC, y = neg_log_p_adj)) +
+  geom_vline(xintercept = c(-2, 2), linetype = "dashed", color = "grey70") +
+  geom_hline(yintercept = sig_threshold, linetype = "dashed", color = "grey70") +
+  geom_point(aes(color = compound_class), size = 3, alpha = 0.8) +
+  geom_text_repel(
+    data = . %>% filter(metabolite %in% tag_core_vec),
+    aes(label = metabolite),
+    box.padding = 0.5, 
+    point.padding = 0.3,
+    size = 3, 
+    max.overlaps = Inf,
+    fontface = "bold", 
+    color = "black",
+    segment.color = "grey30"
+  ) +
+  xlim(-25,25) +
+  ylim(0,75) + 
+  scale_color_manual(values = final_palette) +
+  labs(title = "MADAG", x = "log2 Fold Change", y = "-log10(adj. p-value)") +
+  theme_pubr() +
+  theme(legend.position = "none", plot.title = element_text(size = 18, face = "bold"))
+
+subcano <- plot_grid(p_tag, p_dag, p_madag, ncol = 3)
+
+ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/subcano.jpg", 
+       subcano, width=14, height=7, dpi=300)
+
+
+p_ceramide <- plot_data_volcano %>%
+  filter(compound_class == "Ceramides") %>%
+  ggplot(aes(x = log2FC, y = neg_log_p_adj)) +
+  geom_vline(xintercept = c(-2, 2), linetype = "dashed", color = "grey70") +
+  geom_hline(yintercept = sig_threshold, linetype = "dashed", color = "grey70") +
+  geom_point(aes(color = compound_class), size = 3, alpha = 0.8) +
+  geom_text_repel(
+    data = . %>% filter(metabolite %in% ceramide_core_vec),
+    aes(label = metabolite),
+    box.padding = 0.5, 
+    point.padding = 0.3,
+    size = 3, 
+    max.overlaps = Inf,
+    fontface = "bold", 
+    color = "black",
+    segment.color = "grey30"
+  ) +
+  xlim(-25,25) +
+  ylim(0,75) + 
+  scale_color_manual(values = final_palette) +
+  labs(title = "Ceramides", x = "log2 Fold Change", y = "-log10(adj. p-value)") +
+  theme_pubr() +
+  theme(legend.position = "none", plot.title = element_text(size = 18, face = "bold"))
+p_ceramide
+
+## important ceramide identified by perm importance
+p_ceramide <- plot_data_volcano %>%
+  filter(compound_class == "Ceramides") %>%
+  ggplot(aes(x = log2FC, y = neg_log_p_adj)) +
+  geom_vline(xintercept = c(-2, 2), linetype = "dashed", color = "grey70") +
+  geom_hline(yintercept = sig_threshold, linetype = "dashed", color = "grey70") +
+  geom_point(aes(color = compound_class), size = 3, alpha = 0.8) +
+  geom_text_repel(
+    data = . %>% filter(metabolite == "x31046_620_59826_13_466"),
+    aes(label = metabolite),
+    box.padding = 0.5, 
+    point.padding = 0.3,
+    size = 3, 
+    max.overlaps = Inf,
+    fontface = "bold", 
+    color = "black",
+    segment.color = "grey30"
+  ) +
+  xlim(-25,25) +
+  ylim(0,75) + 
+  scale_color_manual(values = final_palette) +
+  labs(title = "Ceramides", x = "log2 Fold Change", y = "-log10(adj. p-value)") +
+  theme_pubr() +
+  theme(legend.position = "none", plot.title = element_text(size = 18, face = "bold"))
+p_ceramide
+
+
+################################################################################
+
+# glycerolipid df lookup
+glycero_df_core <- glycero_df %>%
+  filter(glycero_df$metabolite %in% tag_core_vec)
+
+glycero_df_core %>%
+  group_by(metabolite) %>%
+  group_walk(~ {
+    # Print the metabolite ID as a header for clarity
+    cat("\n", paste(rep("-", 30), collapse = ""), "\n")
+    cat("Metabolite:", .y$metabolite, "\n")
+    cat(paste(rep("-", 30), collapse = ""), "\n")
+    
+    # Select the target columns and print the sub-table
+    sub_table <- .x %>%
+      select(fatty_acid, compound_name, molecular_formula)
+    
+    # Use print() or knitr::kable() for a nice format
+    print(as.data.frame(sub_table))
+  })
+
+glycero_df_summary <- glycero_df_core %>%
+  group_by(metabolite) %>%
+  summarise(
+    FA_Composition = paste(fatty_acid, collapse = " | "),
+    Compound_Names = paste(unique(compound_name), collapse = " | "),
+    Formulas       = paste(unique(molecular_formula), collapse = " | "),
+    .groups = "drop"
+  )
