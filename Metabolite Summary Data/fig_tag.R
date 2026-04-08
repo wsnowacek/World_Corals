@@ -560,11 +560,9 @@ glycero_df_core %>%
     cat("Metabolite:", .y$metabolite, "\n")
     cat(paste(rep("-", 30), collapse = ""), "\n")
     
-    # Select the target columns and print the sub-table
     sub_table <- .x %>%
       select(fatty_acid, compound_name, molecular_formula)
     
-    # Use print() or knitr::kable() for a nice format
     print(as.data.frame(sub_table))
   })
 
@@ -576,3 +574,59 @@ glycero_df_summary <- glycero_df_core %>%
     Formulas       = paste(unique(molecular_formula), collapse = " | "),
     .groups = "drop"
   )
+
+################################################################################
+
+## join log2FC from plot_data_volcano onto met_df
+
+## then plot log2FC on X, scler_ubiquity on Y and facet by compound_class
+
+met_df_combined <- met_df %>%
+  left_join(
+    plot_data_volcano %>% select(metabolite, log2FC), 
+    by = "metabolite"
+  ) %>%
+  # Filter out metabolites that didn't have a calculated Log2FC if necessary
+  filter(!is.na(log2FC))
+
+met_df_combined$display_class <- factor(
+  met_df_combined$display_class, 
+  levels = intersect(ordered_levels, unique(met_df_combined$display_class))
+)
+
+p_ubq_vs_fc <- ggplot(met_df_combined, aes(x = log2FC, y = scler_ubiquity)) +
+  # Add reference lines for significance/biological thresholds
+  geom_vline(xintercept = c(-2, 2), linetype = "dashed", color = "grey70") +
+  geom_hline(yintercept = 80, linetype = "dotted", color = "grey70") +
+  
+  # Main plot points
+  geom_point(
+    aes(color = display_class), 
+    alpha = 0.6, 
+    size = 2.5
+  ) +
+  
+  # Faceting by compound class
+  facet_wrap(~display_class, ncol = 4) +
+  
+  # Scales and Labels
+  scale_color_manual(values = final_palette) +
+  scale_x_continuous(limits = c(-25, 25)) +
+  scale_y_continuous(limits = c(0, 100), breaks = seq(0, 100, 20)) +
+  
+  labs(
+    x = "log2 Fold Change",
+    y = "Scleractinian Ubiquity (%)"
+  ) +
+  
+  theme_pubr() +
+  theme(
+    legend.position = "none",
+    strip.text = element_text(face = "bold", size = 12),
+    axis.title = element_text(size = 14)
+  )
+
+# Display
+print(p_ubq_vs_fc)
+ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/ubqVolcano.jpg", 
+       p_ubq_vs_fc, width=16, height=10, dpi=300)
