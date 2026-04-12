@@ -222,6 +222,7 @@ mean(ceramide_core$ubiquity_diff)
 # on average these compounds 37.91% more ubiquitous in Scleractinia than outgroups
 ceramide_core_vec <- ceramide_core$metabolite
 
+
 ################################################################################
 
 ## ubq abundance 
@@ -545,40 +546,9 @@ p_ceramide <- plot_data_volcano %>%
   theme(legend.position = "none", plot.title = element_text(size = 18, face = "bold"))
 p_ceramide
 
-
-################################################################################
-
-# glycerolipid df lookup
-glycero_df_core <- glycero_df %>%
-  filter(glycero_df$metabolite %in% tag_core_vec)
-
-glycero_df_core %>%
-  group_by(metabolite) %>%
-  group_walk(~ {
-    # Print the metabolite ID as a header for clarity
-    cat("\n", paste(rep("-", 30), collapse = ""), "\n")
-    cat("Metabolite:", .y$metabolite, "\n")
-    cat(paste(rep("-", 30), collapse = ""), "\n")
-    
-    sub_table <- .x %>%
-      select(fatty_acid, compound_name, molecular_formula)
-    
-    print(as.data.frame(sub_table))
-  })
-
-glycero_df_summary <- glycero_df_core %>%
-  group_by(metabolite) %>%
-  summarise(
-    FA_Composition = paste(fatty_acid, collapse = " | "),
-    Compound_Names = paste(unique(compound_name), collapse = " | "),
-    Formulas       = paste(unique(molecular_formula), collapse = " | "),
-    .groups = "drop"
-  )
-
 ################################################################################
 
 ## join log2FC from plot_data_volcano onto met_df
-
 ## then plot log2FC on X, scler_ubiquity on Y and facet by compound_class
 
 met_df_combined <- met_df %>%
@@ -586,7 +556,6 @@ met_df_combined <- met_df %>%
     plot_data_volcano %>% select(metabolite, log2FC), 
     by = "metabolite"
   ) %>%
-  # Filter out metabolites that didn't have a calculated Log2FC if necessary
   filter(!is.na(log2FC))
 
 met_df_combined$display_class <- factor(
@@ -630,3 +599,121 @@ p_ubq_vs_fc <- ggplot(met_df_combined, aes(x = log2FC, y = scler_ubiquity)) +
 print(p_ubq_vs_fc)
 ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/ubqVolcano.jpg", 
        p_ubq_vs_fc, width=16, height=10, dpi=300)
+
+
+
+################################################################################
+
+# glycerolipid df lookup
+glycero_df_core <- glycero_df %>%
+  filter(glycero_df$metabolite %in% tag_core_vec)
+
+glycero_df_core %>%
+  group_by(metabolite) %>%
+  group_walk(~ {
+    # Print the metabolite ID as a header for clarity
+    cat("\n", paste(rep("-", 30), collapse = ""), "\n")
+    cat("Metabolite:", .y$metabolite, "\n")
+    cat(paste(rep("-", 30), collapse = ""), "\n")
+    
+    sub_table <- .x %>%
+      select(fatty_acid, compound_name, molecular_formula)
+    
+    print(as.data.frame(sub_table))
+  })
+
+glycero_df_summary <- glycero_df_core %>%
+  group_by(metabolite) %>%
+  summarise(
+    FA_Composition = paste(fatty_acid, collapse = " | "),
+    Compound_Names = paste(unique(compound_name), collapse = " | "),
+    Formulas       = paste(unique(molecular_formula), collapse = " | "),
+    .groups = "drop"
+  )
+
+################################################################################
+# fisher's exact tests to compare fatty acid chain lengths
+
+test_df <- glycero_df %>%
+  mutate(is_core = if_else(metabolite %in% tag_core_vec, "Core", "Non-Core"))
+
+# extract FA chain lengths
+extract_lengths <- function(x) {
+  unique(as.numeric(unlist(str_extract_all(x, "\\d+(?=:)"))))
+}
+
+# create a long-format dataframe where every metabolite-FA combo is a row
+fa_analysis <- test_df %>%
+  mutate(lengths = map(fatty_acid, extract_lengths)) %>%
+  unnest(lengths) %>%
+  filter(lengths %in% c(12, 14, 16, 18, 20, 22, 24, 26, 28)) %>%
+  select(metabolite, is_core, lengths) %>%
+  distinct()
+
+target_lengths <- c(12, 14, 16, 18, 20, 22, 24, 26, 28)
+
+fisher_results <- map_df(target_lengths, function(len) {
+  
+  # Create contingency table
+  tab <- matrix(c(
+    sum(fa_analysis$is_core == "Core" & fa_analysis$lengths == len),
+    sum(fa_analysis$is_core == "Non-Core" & fa_analysis$lengths == len),
+    length(unique(test_df$metabolite[test_df$is_core == "Core"])) - 
+      sum(fa_analysis$is_core == "Core" & fa_analysis$lengths == len),
+    length(unique(test_df$metabolite[test_df$is_core == "Non-Core"])) - 
+      sum(fa_analysis$is_core == "Non-Core" & fa_analysis$lengths == len)
+  ), nrow = 2, byrow = TRUE)
+  
+  test <- fisher.test(tab)
+  tibble(
+    FA_Length = as.character(len),
+    p_value = test$p.value,
+    odds_ratio = test$estimate,
+    conf_low = test$conf.int[1],
+    conf_high = test$conf.int[2]
+  )
+})
+
+fisher_results <- fisher_results %>%
+  mutate(p_adj = p.adjust(p_value, method = "BH")) %>%
+  arrange(p_value)
+print(fisher_results)
+
+#########################################
+# General function to generate contingency table and run Fisher's test
+test_fa_length <- function(target_length, core_vec, full_df) {
+  
+  all_metabolites <- unique(full_df$metabolite)
+  relevant_core <- intersect(core_vec, all_metabolites)
+  relevant_non_core <- setdiff(all_metabolites, relevant_core)
+  
+  has_target <- full_df %>%
+    mutate(lengths = map(fatty_acid, extract_lengths)) %>%
+    unnest(lengths) %>%
+    filter(lengths == target_length) %>%
+    pull(metabolite) %>%
+    unique()
+  
+  tab <- matrix(c(
+    sum(relevant_core %in% has_target),      # Core with FA
+    sum(relevant_non_core %in% has_target),  # Non-Core with FA
+    sum(!(relevant_core %in% has_target)),   # Core without FA
+    sum(!(relevant_non_core %in% has_target)) # Non-Core without FA
+  ), nrow = 2, byrow = TRUE)
+  
+  rownames(tab) <- c(paste0("C", target_length, "_Present"), 
+                     paste0("C", target_length, "_Absent"))
+  colnames(tab) <- c("Core", "Non-Core")
+  
+  cat("\n--- Contingency Table for FA Length", target_length, "---\n")
+  print(tab)
+  
+  res <- fisher.test(tab)
+  cat("\nFisher's Exact Test p-value:", res$p.value, "\n")
+  cat("Odds Ratio:", res$estimate, "\n")
+  cat("--------------------------------------------\n")
+  
+  return(res)
+}
+test_fa_length(22, tag_core_vec, glycero_df)
+

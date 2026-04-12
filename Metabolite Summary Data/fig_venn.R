@@ -54,6 +54,9 @@ cols_symbiont  <- c("#D84D16FF", "#FFF800FF", "#8FDA04FF")
 cols_phylum <- c("#24492EFF", "#015B58FF", "#2C6184FF", "#59629BFF", "#89689DFF", "#BA7999FF", "#E69B99FF")
 cols_sclero    <- c("1" = "#DE7862FF", "0" = "#D8AF39FF")
 
+cols_origin <- c("Host" = "#97B9CBFF", "Symbiont" = "#9057C6FF",
+                 "Both" = "#FFE1BDFF", "Unknown" = "#8DC657FF")
+
 ################################################################################
 
 ### for custom compound_class
@@ -208,7 +211,6 @@ p_family_richness <- ggbarplot(
 print(p_family_richness)
 
 # jaccard similarity index correlation plot by family 
-
 family_pa_matrix <- scler_df %>%
   pivot_longer(cols = starts_with("x"), names_to = "metabolite", values_to = "val") %>%
   group_by(host_family, metabolite) %>%
@@ -221,30 +223,41 @@ jaccard_dist <- vegdist(family_pa_matrix, method = "jaccard", binary = TRUE)
 jaccard_sim_matrix <- as.matrix(1 - jaccard_dist)
 
 plot_matrix <- jaccard_sim_matrix
-diag(plot_matrix) <- 0  # Setting to NA or 0 removes the text/color 
+diag(plot_matrix) <- 0 
 
-# 2. Define a Red Color Palette
-# Using a gradient from a very light pink/white to a deep coral red
 red_palette <- colorRampPalette(c("#FFF5F0", "#FEE0D2", "#FC9272", "#FB6A4A", "#DE2D26", "#A50F15"))(100)
 
-# 3. Create the Heatmap
+family_counts <- scler_df %>%
+  count(host_family) %>%
+  mutate(label = paste0(host_family, " (n=", n, ")"))
+
+family_label_map <- setNames(family_counts$label, family_counts$host_family)
+new_names <- family_label_map[rownames(jaccard_sim_matrix)]
+rownames(plot_matrix) <- new_names
+colnames(plot_matrix) <- new_names
+
+jaccard_dist_mat <- as.matrix(jaccard_dist)
+rownames(jaccard_dist_mat) <- new_names
+colnames(jaccard_dist_mat) <- new_names
+jaccard_dist_renamed <- as.dist(jaccard_dist_mat)
+
 p_jaccard <- pheatmap(
   plot_matrix,
-  clustering_distance_rows = jaccard_dist, 
-  clustering_distance_cols = jaccard_dist,
+  clustering_distance_rows = jaccard_dist_renamed, 
+  clustering_distance_cols = jaccard_dist_renamed,
   clustering_method = "ward.D2",
   color = red_palette,
   display_numbers = TRUE,
   number_format = "%.2f",
-  number_color = "white",     
-  fontsize_number = 10,       
-  fontsize_row = 14,        
+  number_color = "white",      
+  fontsize_number = 10,        
+  fontsize_row = 14,         
   fontsize_col = 14,
-  na_col = "white",            
+  na_col = "white",             
   border_color = "white",
   filename = "/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/family_jaccard_heatmap.png",
-  width = 12,                  # Inches
-  height = 10                  # Inches
+  width = 14,             
+  height = 10                 
 )
 
 ################################################################################
@@ -304,6 +317,16 @@ ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/flower_p
 
 ################################################################################
 
+# define helper function
+get_venn_list <- function(data) {
+  list(
+    Host = data %>% filter(refined_origin %in% c("Host", "Both")) %>% pull(metabolite),
+    Symbiont = data %>% filter(refined_origin %in% c("Symbiont", "Both")) %>% pull(metabolite)
+  )
+}
+
+########################
+
 group_summary_core <- df_scler %>%
   pivot_longer(cols = starts_with("x"), names_to = "metabolite", values_to = "val") %>%
   group_by(host_family, metabolite) %>%
@@ -349,13 +372,6 @@ print(p_core_venn)
 
 met_df_filtered <- met_df %>%
   filter(refined_origin != "Unknown")
-
-get_venn_list <- function(data) {
-  list(
-    Host = data %>% filter(refined_origin %in% c("Host", "Both")) %>% pull(metabolite),
-    Symbiont = data %>% filter(refined_origin %in% c("Symbiont", "Both")) %>% pull(metabolite)
-  )
-}
 
 list_all <- get_venn_list(met_df_filtered)
 
@@ -923,10 +939,29 @@ upset_data <- df %>%
     values_fill = 0
   )
 
-# Keep only membership columns
+####################
+# with labels of n=
+phylum_sample_counts <- df %>%
+  filter(scleractinia == 0, !is.na(host_phylum)) %>%
+  count(host_phylum) %>%
+  mutate(label = paste0(host_phylum, " (n=", n, ")"))
+
+name_map <- setNames(phylum_sample_counts$label, phylum_sample_counts$host_phylum)
+
 upset_mat <- upset_data %>%
   select(-metabolite) %>%
   as.data.frame()
+
+old_names <- colnames(upset_mat)
+new_names <- name_map[old_names]
+
+new_names[is.na(new_names)] <- old_names[is.na(new_names)]
+
+colnames(upset_mat) <- new_names
+
+set_cols <- cols_phylum[old_names]
+names(set_cols) <- new_names
+set_cols[is.na(set_cols)] <- "grey25"
 
 png(
   filename = "/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/upset_phylum.jpg",
@@ -936,13 +971,9 @@ png(
   res = 300
 )
 
-set_cols <- cols_phylum[colnames(upset_mat)]
-set_cols[is.na(set_cols)] <- "grey25"
-
-upset(
+UpSetR::upset(
   upset_mat,
-  nsets = ncol(upset_mat),
-  sets = colnames(upset_mat),
+  sets = new_names,        
   keep.order = TRUE,
   order.by = "freq",
   main.bar.color = "grey25",
@@ -950,5 +981,4 @@ upset(
   mb.ratio = c(0.7, 0.3),
   text.scale = c(2, 1.8, 1.5, 1.5, 1.5, 1.5)
 )
-
 dev.off()

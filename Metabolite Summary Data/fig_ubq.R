@@ -456,7 +456,7 @@ p2
 top_labels <- met_plot_df %>%
   mutate(dist = sqrt(XGBoost_Importance^2 + RandomForest_Importance^2)) %>%
   arrange(desc(dist)) %>%
-  slice_head(n = 10) %>%
+  slice_head(n = 20) %>%
   pull(metabolite)
 
 origin_shapes <- c("Host" = 16, "Symbiont" = 3, "Both" = 17, "Unknown" = 8)
@@ -494,7 +494,7 @@ p3 <- ggscatter(
   font.y = c(16, "bold"),
   repel = FALSE,  
   add = "reg.line",
-  add.params = list(color = "gray80", fill = "lightgray", linetype = "dashed", linewidth = 0.8),
+  add.params = list(color = "steelblue4", fill = "lightgray", linetype = "dashed", linewidth = 0.8),
   cor.coeff = TRUE, 
   cor.method = "pearson",
   xlab = "XGBoost Feature Importance", 
@@ -502,7 +502,7 @@ p3 <- ggscatter(
 ) +
   geom_text_repel(
     data = met_plot_df %>% filter(metabolite %in% top_labels),
-    aes(label = metabolite, color = display_class),
+    aes(label = coraldb_compound_name, color = display_class),
     size = 3,
     fontface = "italic",
     force = 20,            

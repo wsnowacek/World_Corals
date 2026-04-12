@@ -237,7 +237,7 @@ bar3 <- ggplot(bar3_df, aes(x = bleaching_label, y = prop, fill = ITS2.Letter, a
   scale_fill_manual(values = its2_palette, breaks = its2_levels) +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
   scale_alpha_manual(
-    values = c("Bleached" = 0.6, "Non-Bleached" = 1)  # adjust names to match your data exactly
+    values = c("Bleached" = 1, "Non-Bleached" = 1)  # adjust names to match your data exactly
   ) +
   labs(
     y = "Proportion of Samples",
@@ -724,23 +724,23 @@ upset_plot <- ComplexUpset::upset(
     colors = its2_palette
   ),
   
-  annotations = list(
-    'Compound Class Breakdown' = (
-      ggplot(mapping = aes(fill = display_class)) +
-        geom_bar(stat = 'count', position = 'fill') + 
-        scale_y_continuous(labels = scales::percent_format(), name = "Proportion") +
-        scale_fill_manual(values = final_palette, name = "Compound Class") +
-        theme_pubr() +
-        theme(
-          axis.text.x = element_blank(),
-          axis.ticks.x = element_blank(),
-          axis.title.x = element_blank(),
-          # axis.title.y = element_blank(),
-          legend.position = "top",
-          legend.text = element_text(size = 10)
-        )
-    )
-  ),
+  # annotations = list(
+  #   'Compound Class Breakdown' = (
+  #     ggplot(mapping = aes(fill = display_class)) +
+  #       geom_bar(stat = 'count', position = 'fill') + 
+  #       scale_y_continuous(labels = scales::percent_format(), name = "Proportion") +
+  #       scale_fill_manual(values = final_palette, name = "Compound Class") +
+  #       theme_pubr() +
+  #       theme(
+  #         axis.text.x = element_blank(),
+  #         axis.ticks.x = element_blank(),
+  #         axis.title.x = element_blank(),
+  #         # axis.title.y = element_blank(),
+  #         legend.position = "top",
+  #         legend.text = element_text(size = 10)
+  #       )
+  #   )
+  # ),
   
   base_annotations = list(
     'Intersection' = intersection_size(
@@ -886,8 +886,12 @@ compute_pairwise_stats <- function(pair, data, met_metadata, palette) {
   
   return(stats)
 }
+
+met_df_known <- met_df %>%
+  filter(met_df$compound_class != "Unknown")
+  
 stats_list <- lapply(genus_pairs, function(p) {
-  compute_pairwise_stats(p, pairwise_data, met_df, final_palette)
+  compute_pairwise_stats(p, pairwise_data, met_df_known, final_palette)
 })
 
 volcano_list <- lapply(stats_list, function(df) {
@@ -898,7 +902,7 @@ volcano_list <- lapply(stats_list, function(df) {
     scale_color_manual(values = final_palette, name = "Compound Class") + 
     labs(title = unique(df$comparison),
          x = "log2 Fold Change", y = "-log10(adj. p)") +
-    xlim(-20, 20) +
+    xlim(-10, 10) +
     ylim(0, 20) +
     theme_pubr() +
     theme(legend.position = "bottom", # Positioned for extraction
@@ -936,6 +940,3 @@ final_pairwise_plot <- plot_grid(
 
 ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/its2_volcano.jpg", 
        final_pairwise_plot, width = 18, height = 14, dpi = 300)
-
-
-# rarefaction curve
