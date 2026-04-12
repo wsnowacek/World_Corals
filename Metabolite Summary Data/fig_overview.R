@@ -112,6 +112,8 @@ met_plot_df$display_class <- factor(met_plot_df$display_class, levels = ordered_
 ##################################################
 
 origin_shapes <- c("Host" = 16, "Symbiont" = 3, "Both" = 17, "Unknown" = 8)
+cols_origin <- c("Host" = "#97B9CBFF", "Symbiont" = "#9057C6FF", 
+                 "Both" = "#FFE1BDFF", "Unknown" = "#8DC657FF")
 
 ################################################################################
 
@@ -242,6 +244,52 @@ kable(class_counts, col.names = c("Compound Class", "Count"))
 #   |Vitamin D3 and derivatives             |     1|
 #   |ceramide                               |     1|
 #   |oxidized PC(diacyl)                    |     1|
+
+# plot bars per compound class
+plot_data <- met_plot_df %>%
+  filter(compound_class != "Unknown") %>%
+  group_by(display_class) %>%
+  mutate(class_count = n()) %>%
+  ungroup() %>%
+  mutate(axis_label = paste0(display_class, " (n = ", class_count, ")"))
+label_levels <- plot_data %>%
+  select(display_class, axis_label) %>%
+  distinct() %>%
+  arrange(display_class) %>%
+  pull(axis_label)
+
+plot_data$axis_label <- factor(plot_data$axis_label, levels = label_levels)
+plot_data <- plot_data %>%
+  mutate(refined_origin = factor(refined_origin, 
+                                 levels = c("Host", "Symbiont", "Both", "Unknown")))
+
+ordered_classes <- levels(plot_data$display_class)
+ordered_classes <- ordered_classes[ordered_classes %in% plot_data$display_class]
+axis_colors <- final_palette[ordered_classes]
+
+compound_bar_plot <- ggplot(plot_data, aes(x = axis_label, fill = refined_origin)) +
+  geom_bar(position = "stack", width = 0.7) +
+  scale_fill_manual(values = cols_origin) +
+  coord_flip() +
+  labs(
+    x = "Compound Class",
+    y = "Number of Metabolites",
+    fill = "Metabolite Origin"
+  ) +
+  theme_pubr() +
+  theme(
+    axis.text.y = element_text(color = axis_colors, face = "bold"),
+    panel.grid.minor = element_blank(),
+    axis.label.x = element_text(size = 14),
+    legend.position = "bottom"
+  )
+
+print(compound_bar_plot)
+ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/compound_barplot.jpg",
+       compound_bar_plot,
+       width = 10, height = 12, dpi = 300)
+
+
 
 #########################
 # host only metabolites

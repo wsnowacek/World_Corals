@@ -89,7 +89,40 @@ perm_r2    <- round(scleractinia_permanova_result$R2[1], 3)
 p_label <- if(perm_p_val == 0.001) "p < 0.001" else paste("p =", perm_p_val)
 stats_annotation <- paste0("PERMANOVA: R² = ", perm_r2, ", ", p_label)
 
-p <- ggplot(pcoa_points, aes(x = PCoA1, y = PCoA2, color = scleractinia, fill = scleractinia)) +
+# p <- ggplot(pcoa_points, aes(x = PCoA1, y = PCoA2, color = scleractinia, fill = scleractinia)) +
+#   geom_point(size = 3, alpha = 0.8) +
+#   stat_ellipse(
+#     geom = "polygon",
+#     alpha = 0.15,
+#     level = 0.95,
+#     type = "t",
+#     colour = NA
+#   ) +
+#   annotate(
+#     "text",
+#     x = -Inf,  
+#     y = -Inf, 
+#     label = stats_annotation,
+#     hjust = -0.05,
+#     vjust = -0.6,
+#     size = 4) +
+#   scale_color_manual(values = cols_sclero, labels = c("1" = "Scleractinia", "0" = "Other")) +
+#   scale_fill_manual(values = cols_sclero, labels = c("1" = "Scleractinia", "0" = "Other")) +
+#   labs(
+#     x = paste0("PCoA1: (", var_explained[1], "%)"),
+#     y = paste0("PCoA2: (", var_explained[2], "%)"),
+#     color = "Order",
+#     fill = "Order"
+#   ) +
+#   theme_cowplot(font_size = 18) +
+#   theme(legend.position = "right")
+# ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/pcoa_scler.jpg", p, width = 10, height = 8, dpi=300)
+
+shapes_location <- c(16, 17, 15, 18) 
+p <- ggplot(pcoa_points, aes(x = PCoA1, y = PCoA2, 
+                             color = scleractinia, 
+                             fill = scleractinia, 
+                             shape = location)) + # Map shape to location
   geom_point(size = 3, alpha = 0.8) +
   stat_ellipse(
     geom = "polygon",
@@ -108,14 +141,19 @@ p <- ggplot(pcoa_points, aes(x = PCoA1, y = PCoA2, color = scleractinia, fill = 
     size = 4) +
   scale_color_manual(values = cols_sclero, labels = c("1" = "Scleractinia", "0" = "Other")) +
   scale_fill_manual(values = cols_sclero, labels = c("1" = "Scleractinia", "0" = "Other")) +
+  # 2. Add the manual shape scale
+  scale_shape_manual(values = shapes_location) + 
   labs(
     x = paste0("PCoA1: (", var_explained[1], "%)"),
     y = paste0("PCoA2: (", var_explained[2], "%)"),
     color = "Order",
-    fill = "Order"
+    fill = "Order",
+    shape = "Location" # Add legend title for shapes
   ) +
   theme_cowplot(font_size = 18) +
   theme(legend.position = "right")
+
+# Save the plot
 ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/pcoa_scler.jpg", p, width = 10, height = 8, dpi=300)
 
 ################################################################################
@@ -945,7 +983,7 @@ p_entropy_clean  <- p_entropy + clean_theme
 p_richness_clean  <- p_richness + clean_theme
 
 row1 <- plot_grid(
-  legend_sclero, p, p2,
+  legend_sclero, p, p_dendro,
   ncol = 3,
   rel_widths = c(0.4, 1, 1.2), # Legend is narrow, plots are equal
   labels = c("", "A", "B"),
@@ -953,9 +991,9 @@ row1 <- plot_grid(
 )
 
 row2 <- plot_grid(
-  p_richness_clean,p_entropy_clean,p_ubiquity_clean,p_abundance_clean,p_dendro,
+  p_richness_clean,p_entropy_clean,p_ubiquity_clean,p_abundance_clean,
   nrow = 1,
-  rel_widths = c(0.6, 0.6, 0.6, 0.6, 1.5), # Give Dendro more space
+  rel_widths = c(0.6, 0.6, 0.6, 0.6), # Give Dendro more space
   align = 'h', axis = 'tb',
   labels = c("C", "D", "E", "F", "G"),
   label_size = 24

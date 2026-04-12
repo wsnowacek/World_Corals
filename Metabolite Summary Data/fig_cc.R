@@ -131,8 +131,10 @@ p
 
 df <- df %>%
   mutate(location = fct_na_value_to_level(location, level = "Curaçao"))
+scler_df <- df %>%
+  filter(df$scleractinia == 1)
 
-loc_list <- split(df$sample, df$location)
+loc_list <- split(scler_df$sample, scler_df$location)
 
 plot_data_locs <- lapply(names(loc_list), function(loc) {
   comm_sub <- comm_matrix[rownames(comm_matrix) %in% loc_list[[loc]], ]
@@ -147,7 +149,7 @@ plot_data_locs <- lapply(names(loc_list), function(loc) {
 
 combined_acc_loc <- bind_rows(plot_data_locs)
 
-loc_counts <- df %>%
+loc_counts <- scler_df %>%
   group_by(location) %>%
   summarise(n = n()) %>%
   mutate(label_full = paste0(location, " (n = ", n, ")"))
@@ -541,6 +543,6 @@ final_plot <- plot_grid(
   rel_heights = c(1, 1) 
 )
 ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/fig3_ITS2.jpg", 
-       final_plot, width=14,height=10,dpi=300)
+       final_plot, width=14,height=10,dpi=300) 
 
 ################################################################################
