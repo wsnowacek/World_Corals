@@ -18,6 +18,8 @@ library(ggvenn)
 library(ggrepel)
 library(ggforce)
 library(ComplexUpset)
+library(grid)
+library(patchwork)
 library(UpSetR)
 library(here)
 
@@ -241,7 +243,7 @@ rownames(jaccard_dist_mat) <- new_names
 colnames(jaccard_dist_mat) <- new_names
 jaccard_dist_renamed <- as.dist(jaccard_dist_mat)
 
-p_jaccard <- pheatmap(
+p2_heatmap <- pheatmap(
   plot_matrix,
   clustering_distance_rows = jaccard_dist_renamed, 
   clustering_distance_cols = jaccard_dist_renamed,
@@ -250,15 +252,15 @@ p_jaccard <- pheatmap(
   display_numbers = TRUE,
   number_format = "%.2f",
   number_color = "white",      
-  fontsize_number = 10,        
-  fontsize_row = 14,         
-  fontsize_col = 14,
-  na_col = "white",             
+  fontsize_number = 7,        
+  fontsize_row = 10,          
+  fontsize_col = 10,
+  na_col = "white",               
   border_color = "white",
-  filename = "/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/family_jaccard_heatmap.png",
-  width = 14,             
-  height = 10                 
+  silent = TRUE
 )
+
+heatmap_grob <- grid::grid.grabExpr(grid::grid.draw(p2_heatmap$gtable))
 
 ################################################################################
 
@@ -512,6 +514,31 @@ final_layout <- plot_grid(
 )
 ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/ecological_core.jpg", final_layout, width=20,height=16,dpi=300)
 
+
+############ Full multipanel figure
+heatmap_panel <- wrap_elements(full = heatmap_grob)
+row1 <- p_family_richness + heatmap_panel + plot_layout(widths = c(1, 1.3))
+row2 <- p_flower_family + p_core_venn + plot_layout(widths = c(1.5, 0.5))
+row3 <- p_volcano2
+
+final_multipanel <- (row1 / row2 / row3) + 
+  plot_layout(heights = c(1.2, 0.8, 0.8)) + # Adjust row height ratios
+  plot_annotation(
+    tag_levels = 'A',
+    theme = theme(
+      plot.title = element_text(size = 22, face = "bold"),
+      plot.tag = element_text(size = 30, face = "bold") # Consistent 30pt tags
+    )
+  )
+
+ggsave(
+  filename = "/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/fig4.pdf",
+  plot = final_multipanel,
+  width = 20,
+  height = 24, 
+  dpi = 300,
+  bg = "white"
+)
 
 ################################################################################
 

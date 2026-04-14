@@ -1007,7 +1007,7 @@ final_plot <- plot_grid(
 )
 
 print(final_plot)
-ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/fig2.jpg", final_plot, width = 18, height = 12, dpi = 300)
+ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/fig2.pdf", final_plot, width = 18, height = 12, dpi = 300)
 
 
 ################################################################################

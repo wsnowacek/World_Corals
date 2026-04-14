@@ -9,7 +9,6 @@ library(readxl)
 library(data.table)
 library(vegan)
 library(scales)
-library(UpSetR)
 library(ComplexUpset)
 library(UpSetR)
 library(rstatix)
@@ -289,7 +288,8 @@ richness_df <- df %>%
   mutate(ITS2.Letter = factor(ITS2.Letter, levels = its2_levels)) |> 
   filter(
     !is.na(ITS2.Letter),
-    ITS2.Letter != "No Seq"
+    ITS2.Letter != "No Seq",
+    ITS2.Letter != "Mix"
   ) %>%
   select(sample_id, ITS2.Letter, all_of(metabolite_cols)) %>%
   rowwise() %>%
@@ -300,7 +300,7 @@ kruskal_test_res <- richness_df %>%
   kruskal_test(MetabolomicRichness ~ ITS2.Letter)
 # .y.                     n statistic    df         p method        
 # * <chr>               <int>     <dbl> <int>     <dbl> <chr>         
-#   1 MetabolomicRichness   296      26.4     4 0.0000258 Kruskal-Wallis
+# 1 MetabolomicRichness   254      25.8     3 0.0000103 Kruskal-Wallis
 
 stat.test <- richness_df %>%
   dunn_test(MetabolomicRichness ~ ITS2.Letter, p.adjust.method = "BH") %>%
@@ -313,14 +313,12 @@ stat.test <- stat.test %>%
   mutate(y.position = seq(from = max_y * 1.1, 
                           by = max_y * 0.05, 
                           length.out = n_comparisons))
-# .y.                 group1          group2      n1    n2 statistic       p   p.adj p.adj.signif y.position
-# <chr>               <chr>           <chr>    <int> <int>     <dbl>   <dbl>   <dbl> <chr>             <dbl>
-#   1 MetabolomicRichness Symbiodinium Breviol…    35    50      3.62 2.92e-4 1.46e-3 **                9589.
-# 2 MetabolomicRichness Symbiodinium Durusdi…    35    43      2.60 9.20e-3 1.84e-2 *                10025.
-# 3 MetabolomicRichness Breviolum       Cladoco…    50   126     -4.27 1.94e-5 1.94e-4 ***              10460.
-# 4 MetabolomicRichness Breviolum       Mix         50    42     -3.30 9.70e-4 3.23e-3 **               10896.
-# 5 MetabolomicRichness Cladocopium     Durusdi…   126    43      2.88 3.98e-3 9.96e-3 **               11332.
-# 6 MetabolomicRichness Durusdinium     Mix         43    42     -2.24 2.53e-2 4.22e-2 *                11768.
+# .y.                 group1       group2         n1    n2 statistic         p     p.adj p.adj.signif y.position
+# <chr>               <chr>        <chr>       <int> <int>     <dbl>     <dbl>     <dbl> <chr>             <dbl>
+#   1 MetabolomicRichness Symbiodinium Breviolum      35    50      3.67 0.000245  0.000734  ***               9589.
+# 2 MetabolomicRichness Symbiodinium Durusdinium    35    43      2.64 0.00836   0.0125    *                10025.
+# 3 MetabolomicRichness Breviolum    Cladocopium    50   126     -4.33 0.0000146 0.0000878 ****             10460.
+# 4 MetabolomicRichness Cladocopium  Durusdinium   126    43      2.92 0.00345   0.00690   **               10896.
 
 ## % plot
 richness <- ggplot(richness_df, aes(x = ITS2.Letter, y = MetabolomicRichness, fill = ITS2.Letter)) +
@@ -355,7 +353,8 @@ entropy_df <- df %>%
   mutate(ITS2.Letter = factor(ITS2.Letter, levels = its2_levels)) |>
   filter(
     !is.na(ITS2.Letter),
-    ITS2.Letter != "No Seq"
+    ITS2.Letter != "No Seq",
+    ITS2.Letter != "Mix"
   ) |> 
   select(sample_id, ITS2.Letter, all_of(metabolite_cols)) %>%
   rowwise() %>%
@@ -365,7 +364,7 @@ entropy_df <- df %>%
 entropy_df$ITS2.Letter <- droplevels(entropy_df$ITS2.Letter)
 kruskal_entropy <- entropy_df %>%
   kruskal_test(MetabolicEntropy ~ ITS2.Letter)
-# 1 MetabolicEntropy   296      10.1     4 0.0386 Kruskal-Wallis
+# 1 MetabolicEntropy   254      7.94     3 0.0472 Kruskal-Wallis
 
 stat.test_entropy <- entropy_df %>%
   dunn_test(MetabolicEntropy ~ ITS2.Letter, p.adjust.method = "BH") %>%
@@ -383,8 +382,7 @@ stat.test_entropy <- stat.test_entropy %>%
                           length.out = n_comp_ent))
 # .y.              group1      group2         n1    n2 statistic       p  p.adj p.adj.signif y.position
 # <chr>            <chr>       <chr>       <int> <int>     <dbl>   <dbl>  <dbl> <chr>             <dbl>
-#   1 MetabolicEntropy Breviolum   Durusdinium    50    43      2.73 0.00642 0.0370 *                  7.15
-# 2 MetabolicEntropy Durusdinium Mix            43    42     -2.68 0.00740 0.0370 *                  7.62
+#   1 MetabolicEntropy Breviolum Durusdinium    50    43      2.81 0.00492 0.0295 *                  7.15
 
 entropy <- ggplot(entropy_df, aes(x = ITS2.Letter, y = MetabolicEntropy, fill = ITS2.Letter)) +
   geom_boxplot(
@@ -421,7 +419,7 @@ entropy <- ggplot(entropy_df, aes(x = ITS2.Letter, y = MetabolicEntropy, fill = 
 
 ## pcoas
 ## filter to remove "mix" samples
-keep_genera <- c("Symbiodinium", "Breviolum", "Cladocopium", "Durusdinium", "Mix")
+keep_genera <- c("Symbiodinium", "Breviolum", "Cladocopium", "Durusdinium")
 
 # Filter and ensure numeric data is clean
 corals_4g <- df %>%
@@ -457,9 +455,9 @@ permanova_result <- adonis2(
 print(permanova_result)
 # adonis2(formula = bray_curtis_4g ~ ITS2.Letter/location, data = meta2, permutations = 999, by = "margin")
 # Df SumOfSqs      R2      F Pr(>F)    
-# ITS2.Letter:location   9   10.096 0.18579 7.9258  0.001 ***
-#   Residual             282   39.914 0.73448                  
-# Total                295   54.343 1.00000                  
+# ITS2.Letter:location   7    8.632 0.18661 8.9371  0.001 ***
+#   Residual             243   33.528 0.72484                  
+# Total                253   46.256 1.00000                  
 # ---
 #   Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
@@ -517,10 +515,10 @@ its2_permanova_result <- adonis2(
 )
 print(its2_permanova_result)
 # adonis2(formula = bray_curtis_4g ~ ITS2.Letter, data = meta2, permutations = 999, by = "margin")
-# Df SumOfSqs     R2      F Pr(>F)    
-# ITS2.Letter   2    3.169 0.0799 9.3779  0.001 ***
-#   Residual    216   36.499 0.9201                  
-# Total       218   39.668 1.0000                  
+# Df SumOfSqs      R2      F Pr(>F)    
+# ITS2.Letter   3    4.096 0.08855 8.0961  0.001 ***
+#   Residual    250   42.160 0.91145                  
+# Total       253   46.256 1.00000                  
 # ---
 #   Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
@@ -576,11 +574,11 @@ bleaching_permanova_result <- adonis2(
 print(bleaching_permanova_result)
 # adonis2(formula = bray_curtis_4g ~ ITS2.Letter/bleaching, data = meta2, permutations = 999, by = "margin")
 # Df SumOfSqs      R2      F Pr(>F)    
-# ITS2.Letter:bleaching   6    4.125 0.07591 4.2701  0.001 ***
-#   Residual              285   45.885 0.84436                  
-# Total                 295   54.343 1.00000                  
+# ITS2.Letter:bleaching   5    3.551 0.07677 4.5071  0.001 ***
+#   Residual              245   38.609 0.83467                  
+# Total                 253   46.256 1.00000                  
 # ---
-#   Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1              
+#   Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1             
 
 pcoa_result <- cmdscale(bray_curtis_4g, eig = TRUE, k = 2)
 pcoa_points <- as.data.frame(pcoa_result$points)
@@ -643,7 +641,7 @@ p3
 
 # keep Mix
 upset_input <- df %>%
-  filter(!is.na(ITS2.Letter), ITS2.Letter != "No Seq") %>%
+  filter(!is.na(ITS2.Letter), ITS2.Letter != "No Seq", ITS2.Letter != "Mix") %>%
   select(ITS2.Letter, all_of(metabolite_cols)) %>%
   pivot_longer(cols = starts_with("x", ignore.case = FALSE), names_to = "metabolite", values_to = "abundance") %>%
   group_by(ITS2.Letter, metabolite) %>%
@@ -651,7 +649,7 @@ upset_input <- df %>%
   pivot_wider(names_from = ITS2.Letter, values_from = present, values_fill = 0) %>%
   as.data.frame()
 
-target_order <- c("Mix", "Durusdinium", "Cladocopium", "Breviolum", "Symbiodinium")
+target_order <- c("Durusdinium", "Cladocopium", "Breviolum", "Symbiodinium")
 upset_data <- upset_input[, -1]
 UpSetR::upset(
   upset_data,
@@ -668,7 +666,7 @@ UpSetR::upset(
 
 ## ComplexUpset
 
-target_order <- c("Mix", "Durusdinium", "Cladocopium", "Breviolum", "Symbiodinium")
+target_order <- c("Durusdinium", "Cladocopium", "Breviolum", "Symbiodinium")
 names(its2_palette) <- its2_levels
 
 # remove global metabolites not present in A/b/c/d/mix
@@ -823,7 +821,7 @@ final_figure <- plot_grid(
 # Display
 print(final_figure)
 ggsave(
-  "/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/ITS2combined.jpg", 
+  "/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/ITS2combined.pdf", 
   plot = final_figure, 
   width = 18, 
   height = 12, 

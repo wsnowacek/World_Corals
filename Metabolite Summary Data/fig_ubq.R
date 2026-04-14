@@ -938,10 +938,10 @@ true_final_figure <- plot_grid(
   row_de,
   row_fg,
   ncol = 1,
-  rel_heights = c(0.4, 1, 1, 1.2, 1, 1) # Adjust heights based on content density
+  rel_heights = c(0.4, 1, 1, 1.2, 1, 1) 
 )
 
-ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/fig5_new.png", 
+ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/fig5_new.pdf", 
        true_final_figure, width = 18, height = 24, dpi = 600, bg = "white")
 
 ################################################################################
