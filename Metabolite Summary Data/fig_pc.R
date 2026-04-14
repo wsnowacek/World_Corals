@@ -156,6 +156,7 @@ p <- ggplot(pcoa_points, aes(x = PCoA1, y = PCoA2,
 # Save the plot
 ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/pcoa_scler.jpg", p, width = 10, height = 8, dpi=300)
 
+
 ################################################################################
 #Location + bleaching status PERMANOVA
 
@@ -164,7 +165,6 @@ keep_rows <- complete.cases(permanova_numeric_data2) &
   !is.na(meta2$location) & 
   !is.na(meta2$bleaching)
 
-# 2. Synchronize the metadata and numeric data
 meta_clean <- meta2[keep_rows, ]
 numeric_clean <- permanova_numeric_data2[keep_rows, ]
 
@@ -182,8 +182,8 @@ print(locB_permanova_result)
 # ---
 #   Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
-perm_p_val <- locB_permanova_result$`Pr(>F)`[1]
-perm_r2    <- round(locB_permanova_result$R2[1], 3)
+perm_p_val <- max(locB_permanova_result$`Pr(>F)`[1:2])
+perm_r2    <- round(sum(locB_permanova_result$R2[1:2]), 3)
 p_label <- if(perm_p_val == 0.001) "p < 0.001" else paste("p =", perm_p_val)
 stats_annotation <- paste0("PERMANOVA: R² = ", perm_r2, ", ", p_label)
 
@@ -244,16 +244,17 @@ locS_permanova_result <- adonis2(
 print(locS_permanova_result)          
 # adonis2(formula = bray_curtis_locS ~ location/symbiont.potential, data = meta_symb, permutations = 999)
 # Df SumOfSqs      R2      F Pr(>F)    
-# Model      5   46.735  53.259  0.001 ***
-#   Residual 525   92.139 0.66347                  
-# Total    530  138.874 1.00000                  
+# location                      3   38.067 0.27411 72.301  0.001 ***
+#   location:symbiont.potential   2    8.668 0.06242 24.695  0.001 ***
+#   Residual                    525   92.139 0.66347                  
+# Total                       530  138.874 1.00000                  
 # ---
 #   Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
 
 # global model stats
-perm_p_val <- locS_permanova_result$`Pr(>F)`[1]
-perm_r2    <- round(locS_permanova_result$R2[1], 3)
+perm_p_val <- max(locS_permanova_result$`Pr(>F)`[1:2])
+perm_r2    <- round(sum(locS_permanova_result$R2[1:2]), 3)
 p_label    <- if(perm_p_val <= 0.001) "p < 0.001" else paste("p =", perm_p_val)
 stats_annotation <- paste0("PERMANOVA: R² = ", perm_r2, ", ", p_label)
 
@@ -373,8 +374,8 @@ bleach_sym_permanova <- adonis2(
 # Total    529  138.543 1.0000                  
 # ---
 
-perm_p_val <- bleach_sym_permanova$`Pr(>F)`[1]
-perm_r2    <- round(bleach_sym_permanova$R2[1], 3)
+perm_p_val <- max(bleach_sym_permanova$`Pr(>F)`[1:2])
+perm_r2    <- round(sum(bleach_sym_permanova$R2[1:2]), 3)
 p_label    <- if(perm_p_val <= 0.001) "p < 0.001" else paste("p =", perm_p_val)
 stats_annotation <- paste0("PERMANOVA: R² = ", perm_r2, ", ", p_label)
 
@@ -411,9 +412,9 @@ ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/pcoa_bsy
 
 ################################################################################
 pcoa_supp <- plot_grid(
+  p2 + theme(legend.position="right"),
   p3 + theme(legend.position = "right"), 
   p_bleach_sym + theme(legend.position = "right"), 
-  p2 + theme(legend.position="right"),
   labels = c("A", "B", "C"), 
   label_size = 20,
   ncol = 1,              
@@ -1012,12 +1013,12 @@ ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/fig2.pdf
 
 ################################################################################
 ################################################################################
-
-df_clean <- df %>% 
-  filter(!is.na(location), complete.cases(select(., starts_with("x"))))
+# 
+# df_clean <- df %>% 
+#   filter(!is.na(location), complete.cases(select(., starts_with("x"))))
 
 # 2. Filter specifically for Curaçao and non-NA scleractinia
-df_cur <- df_clean %>% 
+df_cur <- df %>% 
   filter(location == "Curaçao", !is.na(scleractinia))
 
 num_cur  <- df_cur %>% select(starts_with("x"))
@@ -1025,12 +1026,12 @@ meta_cur <- df_cur # contains your 'scleractinia' column
 
 bc_cur <- vegdist(num_cur, method = "bray")
 perm_cur <- adonis2(bc_cur ~ scleractinia, data = meta_cur, permutations = 999)
-# 
+
 # adonis2(formula = bc_cur ~ scleractinia, data = meta_cur, permutations = 999)
 # Df SumOfSqs      R2      F Pr(>F)    
-# Model      1   11.620 0.16534 48.333  0.001 ***
-#   Residual 244   58.660 0.83466                  
-# Total    245   70.279 1.00000                  
+# scleractinia   1   12.442 0.16235 50.779  0.001 ***
+#   Residual     262   64.195 0.83765                  
+# Total        263   76.637 1.00000                  
 # ---
 #   Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
@@ -1074,3 +1075,36 @@ p_cur <- ggplot(df_cur, aes(x = V1, y = V2)) +
   theme_cowplot()
 p_cur
 ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/pcoa_cur_scler.jpg", p_cur, width = 8, height = 6, dpi = 300)
+
+
+################################### permanova outputs
+
+tidy_permanova <- function(model_output, model_name) {
+  model_output %>%
+    as.data.frame() %>%
+    tibble::rownames_to_column("Term") %>%
+    # Filter out the housekeeping rows
+    filter(!Term %in% c("Residual", "Total")) %>%
+    mutate(Model = model_name) %>%
+    select(Model, Term, Df, SumOfSqs, R2, F, `Pr(>F)`)
+}
+
+table_sclero <- tidy_permanova(scleractinia_permanova_result, "Scleractinia")
+table_locB   <- tidy_permanova(locB_permanova_result, "Location x Bleaching")
+table_locS   <- tidy_permanova(locS_permanova_result, "Location x Symbiont")
+table_bSym <-  tidy_permanova(bleach_sym_permanova, "Bleaching x Symbiont")
+# table_loc <- tidy_permanova(location_permanova_result, "Location")
+# table_b <- tidy_permanova(bleaching_permanova_result, "Bleaching")
+table_sym <-  tidy_permanova(symbiont_permanova_result, "Symbiont")
+
+# Combine into one master table
+full_stats_table <- bind_rows(table_sclero, table_locB, table_locS, 
+                              table_bSym, table_sym)
+
+full_stats_table <- full_stats_table %>%
+  mutate(
+    across(c(SumOfSqs, R2, F), ~ round(., 3)),
+    `Pr(>F)` = ifelse(`Pr(>F)` <= 0.001, "< 0.001", as.character(`Pr(>F)`))
+  )
+
+print(full_stats_table)

@@ -624,6 +624,33 @@ p3 <- ggplot(pcoa_points, aes(x = PCoA1, y = PCoA2, color = ITS2.Letter, fill = 
   theme(legend.position = "right")
 p3
 
+
+################################### permanova outputs
+
+tidy_permanova <- function(model_output, model_name) {
+  model_output %>%
+    as.data.frame() %>%
+    tibble::rownames_to_column("Term") %>%
+    filter(!Term %in% c("Residual", "Total")) %>%
+    mutate(Model = model_name) %>%
+    select(Model, Term, Df, SumOfSqs, R2, F, `Pr(>F)`)
+}
+
+table_its2 <- tidy_permanova(its2_permanova_result, "ITS2 Letter")
+table_its2loc   <- tidy_permanova(permanova_result, "ITS2 Letter x Location")
+table_its2b <-  tidy_permanova(bleaching_permanova_result, "ITS2 Letter x Bleaching")
+
+# Combine into one master table
+full_stats_table <- bind_rows(table_its2, table_its2loc, table_its2b)
+
+full_stats_table <- full_stats_table %>%
+  mutate(
+    across(c(SumOfSqs, R2, F), ~ round(., 3)),
+    `Pr(>F)` = ifelse(`Pr(>F)` <= 0.001, "< 0.001", as.character(`Pr(>F)`))
+  )
+
+print(full_stats_table)
+
 ################################################################################
 ## upset plots
 
