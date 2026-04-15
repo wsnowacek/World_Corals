@@ -152,6 +152,64 @@ host_kbest_df <- feature_set_list[["Host_KBest"]] %>%
 
 ################################################################################
 
+# generate contingency table for different compound classes
+
+fisher <- function(target_df, background_df, class_col = "compound_class") {
+  all_classes <- unique(background_df[[class_col]])
+  
+  results <- lapply(all_classes, function(current_class) {
+    in_target_is_class <- sum(target_df[[class_col]] == current_class, na.rm = TRUE)
+    in_target_not_class <- nrow(target_df) - in_target_is_class
+    remainder_df <- background_df %>% filter(!(metabolite %in% target_df$metabolite))
+    in_rem_is_class <- sum(remainder_df[[class_col]] == current_class, na.rm = TRUE)
+    in_rem_not_class <- nrow(remainder_df) - in_rem_is_class
+    contingency_matrix <- matrix(c(in_target_is_class, in_target_not_class, 
+                                   in_rem_is_class, in_rem_not_class), 
+                                 nrow = 2, byrow = TRUE)
+    test <- fisher.test(contingency_matrix)
+    data.frame(
+      compound_class = current_class,
+      count_in_target = in_target_is_class,
+      count_in_total = in_rem_is_class,
+      not_in_target = in_target_not_class,
+      not_in_total = in_rem_not_class,
+      odds_ratio = test$estimate,
+      p_value = test$p.value,
+      stringsAsFactors = FALSE
+    )
+  })
+  
+  bind_rows(results) %>%
+    mutate(p_adj = p.adjust(p_value, method = "fdr")) %>%
+    arrange(p_value)
+}
+
+enrichment_results <- list(
+  xgb   = fisher(xgb_df, met_df),
+  rf    = fisher(rf_df, met_df),
+  core  = fisher(core_df, met_df),
+  scl90 = fisher(met_df_scler_90, met_df)
+)
+
+significant_xgb <- enrichment_results$xgb %>% 
+  filter(p_value < 0.05, odds_ratio > 1)
+significant_xgb$dataset <- "xgboost"
+significant_rf <- enrichment_results$rf %>% 
+  filter(p_value < 0.05, odds_ratio > 1)
+significant_rf$dataset <- "rf"
+
+significant_core <- enrichment_results$core %>% 
+  filter(p_value < 0.05, odds_ratio > 1)
+significant_core$dataset <- "host_family"
+
+significant_scler90 <- enrichment_results$scl90 %>% 
+  filter(p_value < 0.05, odds_ratio > 1)
+significant_scler90$dataset <- "scler_90"
+
+
+
+################################################################################
+
 ## check for overlaps between dfs
 list_of_metabolites_xg <- list(
   # Scler_100 = met_df_scler_all$metabolite,
@@ -208,6 +266,15 @@ class_counts <- super_core_table %>%
 class_counts
 
 # write.csv(super_core_table, here("Cleaned data CSVs", "core_df.csv"))
+
+significant_supercore <- fisher(super_core_table, met_df )%>% 
+  filter(p_value < 0.05, odds_ratio > 1)
+significant_supercore$dataset <- "supercore"
+
+# combined dataset of compound classes enriched in Scleractinia across different comparisons
+fishers_csv <- rbind(significant_core, significant_rf, significant_xgb, 
+                     significant_scler90, significant_supercore)
+# write.csv(fishers_csv,"Metabolite Summary Data/fishers_results.csv")
 
 #########################################
 # TAG/DAG/MADAG of interest 
@@ -572,13 +639,22 @@ glycero_df_core %>%
   })
 
 glycero_df_summary <- glycero_df_core %>%
+  left_join(
+    met_df %>% select(metabolite, scler_ubiquity, non_scler_ubiquity), 
+    by = "metabolite"
+  ) %>%
   group_by(metabolite) %>%
   summarise(
     FA_Composition = paste(fatty_acid, collapse = " | "),
     Compound_Names = paste(unique(compound_name), collapse = " | "),
     Formulas       = paste(unique(molecular_formula), collapse = " | "),
+      Scleractinian_Ubiquity     = paste(unique(scler_ubiquity), collapse = " | "),
+    Non_Scleractinian_Ubiquity = paste(unique(non_scler_ubiquity), collapse = " | "),
     .groups = "drop"
   )
+
+print(glycero_df_summary)
+# write.csv(glycero_df_summary,"Metabolite Summary Data/glycero_summary.csv")
 
 ################################################################################
 # fisher's exact tests to compare fatty acid chain lengths
@@ -629,7 +705,7 @@ fisher_results <- fisher_results %>%
 print(fisher_results)
 
 #########################################
-# General function to generate contingency table and run Fisher's test
+# General function to generate contingency table and run Fisher's test for Fatty acids
 test_fa_length <- function(target_length, core_vec, full_df) {
   
   all_metabolites <- unique(full_df$metabolite)

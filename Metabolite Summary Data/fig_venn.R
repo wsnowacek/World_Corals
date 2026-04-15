@@ -346,6 +346,42 @@ core_metabolite_ids <- group_summary_core %>%
 core_df <- met_df %>%
   filter(metabolite %in% core_metabolite_ids)
 
+###fisher test for core df
+fisher <- function(target_df, background_df, class_col = "compound_class") {
+  all_classes <- unique(background_df[[class_col]])
+  
+  results <- lapply(all_classes, function(current_class) {
+    in_target_is_class <- sum(target_df[[class_col]] == current_class, na.rm = TRUE)
+    in_target_not_class <- nrow(target_df) - in_target_is_class
+    remainder_df <- background_df %>% filter(!(metabolite %in% target_df$metabolite))
+    in_rem_is_class <- sum(remainder_df[[class_col]] == current_class, na.rm = TRUE)
+    in_rem_not_class <- nrow(remainder_df) - in_rem_is_class
+    contingency_matrix <- matrix(c(in_target_is_class, in_target_not_class, 
+                                   in_rem_is_class, in_rem_not_class), 
+                                 nrow = 2, byrow = TRUE)
+    test <- fisher.test(contingency_matrix)
+    data.frame(
+      compound_class = current_class,
+      count_in_target = in_target_is_class,
+      count_in_total = in_rem_is_class,
+      not_in_target = in_target_not_class,
+      not_in_total = in_rem_not_class,
+      odds_ratio = test$estimate,
+      p_value = test$p.value,
+      stringsAsFactors = FALSE
+    )
+  })
+  
+  bind_rows(results) %>%
+    mutate(p_adj = p.adjust(p_value, method = "fdr")) %>%
+    arrange(p_value)
+}
+
+core_fisher <- fisher(core_df, met_df) %>% 
+  filter(p_value < 0.05, odds_ratio > 1)
+
+
+
 #######################
 # venn by host_origin 
 

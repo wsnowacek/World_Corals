@@ -378,37 +378,6 @@ pb <- ggplot(met_summary_classed_scler, aes(x = ubiquity_all, y = avg_abundance)
 pb
 
 #################################################################################
-# 
-# feature_importance_comparison_all <- read.csv("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/machine_learning/all_mets/featureimportanceallmets.csv")
-# 
-# feature_importance_comparison_all <- feature_importance_comparison_all %>%
-#   dplyr::rename(metabolite = Feature)
-# merged_df_all <- feature_importance_comparison_all %>%
-#   inner_join(met_df, by = "metabolite")
-# 
-# importance_scores <- merged_df_all %>%
-#   select(metabolite, XGBoost_Importance, RandomForest_Importance)
-# 
-# met_plot_df <- met_plot_df %>%
-#   left_join(importance_scores, by = "metabolite") %>%
-#   mutate(
-#     XGBoost_Importance = replace_na(XGBoost_Importance, 0),
-#     RandomForest_Importance = replace_na(RandomForest_Importance, 0)
-#   )
-# 
-# ordered_levels <- c(target_classes, "Other")
-# met_plot_df$display_class <- factor(met_plot_df$display_class, levels = ordered_levels)
-
-## change # of metabolites to plot here
-# xgb_plot_data <- met_plot_df %>%
-#   arrange(desc(XGBoost_Importance)) %>%
-#   slice_head(n = 60) %>%
-#   mutate(metabolite = fct_reorder(metabolite, XGBoost_Importance, .desc = TRUE))
-# 
-# rf_plot_data <- met_plot_df %>%
-#   arrange(desc(RandomForest_Importance)) %>%
-#   slice_head(n = 120) %>%
-#   mutate(metabolite = fct_reorder(metabolite, RandomForest_Importance, .desc = TRUE))
 
 xgb_plot_data <- met_plot_df %>%
   filter(XGBoost_Importance > 0) %>%
@@ -432,7 +401,6 @@ xgb_origin_summary <- xgb_plot_data %>%
   count(refined_origin, name = "n") %>%
   mutate(percentage = round(n / sum(n) * 100, 1))
 
-# 2. Summary for Random Forest (267 metabolites with importance > 0.001)
 rf_origin_summary <- rf_plot_data %>%
   count(refined_origin, name = "n") %>%
   mutate(percentage = round(n / sum(n) * 100, 1))
