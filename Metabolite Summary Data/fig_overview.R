@@ -120,6 +120,13 @@ sum(!is.na(df$host_order)) #542
 sum(!is.na(df$host_family)) #542
 sum(!is.na(df$host_species)) #479
 
+sum(met_df$refined_origin == "Unknown") ##7789
+sum(met_df$refined_origin != "Unknown") ##8579
+
+sum(met_df$refined_origin == "Host") ##3623
+sum(met_df$refined_origin == "Both") ##1977
+sum(met_df$refined_origin == "Symbiont") ##2979
+
 classification_table <- df %>%
   group_by(host_phylum, host_class, host_order, host_family, host_genus, host_species) %>%
   tally(name = "sample_count") %>%
@@ -165,6 +172,9 @@ taxa_summary <- out_df %>%
     values_to = "Unique Count"
   )
 print(taxa_summary)
+
+## number of metabolites = 16368
+
 
 ################################################################################
 
