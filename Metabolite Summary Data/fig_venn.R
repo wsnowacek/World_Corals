@@ -480,9 +480,27 @@ plot_data_volcano <- volcano_results %>%
 classes <- levels(droplevels(plot_data_volcano$display_class))
 class_colors <- final_palette[classes]
 
-###########################################################
-
 sig_threshold <- -log10(0.05)
+
+## summary statistics
+dems <- plot_data_volcano %>%
+  filter(p_adj < 0.05 & log2FC > 2)
+class_counts <- dems %>%
+  count(compound_class, sort = TRUE)
+class_counts
+
+total_class_counts <- plot_data_volcano %>%
+  count(compound_class, name = "total_in_dataset")
+
+class_representation <- total_class_counts %>%
+  left_join(class_counts, by = "compound_class") %>%
+  rename(count_in_dems = n) %>%
+  mutate(count_in_dems = replace_na(count_in_dems, 0)) %>%
+  mutate(percent_is_dem = (count_in_dems / total_in_dataset) * 100) %>%
+  arrange(desc(percent_is_dem))
+class_representation
+
+###########################################################
 
 # build plot
 p_volcano2 <- ggplot(plot_data_volcano, aes(x = log2FC, y = neg_log_p_adj)) +

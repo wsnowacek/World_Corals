@@ -186,10 +186,17 @@ fisher <- function(target_df, background_df, class_col = "compound_class") {
 
 enrichment_results <- list(
   xgb   = fisher(xgb_df, met_df),
+  xgb_origin = fisher(xgb_df, met_df, "refined_origin"),
   rf    = fisher(rf_df, met_df),
+  rf_origin = fisher(rf_df, met_df, "refined_origin"),
   core  = fisher(core_df, met_df),
   scl90 = fisher(met_df_scler_90, met_df)
 )
+
+significant_xgb_origin <- enrichment_results$xgb_origin %>% 
+  filter(p_value < 0.05, odds_ratio > 1)
+significant_rf_origin <- enrichment_results$rf_origin %>% 
+  filter(p_value < 0.05, odds_ratio > 1)
 
 significant_xgb <- enrichment_results$xgb %>% 
   filter(p_value < 0.05, odds_ratio > 1)
@@ -205,7 +212,6 @@ significant_core$dataset <- "host_family"
 significant_scler90 <- enrichment_results$scl90 %>% 
   filter(p_value < 0.05, odds_ratio > 1)
 significant_scler90$dataset <- "scler_90"
-
 
 
 ################################################################################

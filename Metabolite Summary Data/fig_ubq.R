@@ -744,6 +744,7 @@ class_colors <- final_palette[classes]
 m <- nrow(volcano_results)   
 sig_threshold <- -log10(0.05 / m)
 
+## plot
 make_volcano <- function(df, title = NULL) {
   ggplot(df, aes(x = log2FC, y = neg_log_p_adj)) +
     geom_vline(xintercept = c(-2, 2), linetype = "dashed", color = "grey70") +
@@ -780,6 +781,44 @@ plot_data_xgb <- plot_data_volcano %>%
 
 plot_data_rf <- plot_data_volcano %>%
   filter(metabolite %in% met_summary_rf$metabolite)
+
+overlap_count <- length(intersect(plot_data_xgb$metabolite, plot_data_rf$metabolite)) #31
+
+##### summmary stats xgb
+dems <- plot_data_xgb %>%
+  filter(p_adj < 0.05 & log2FC > 2)
+class_counts <- dems %>%
+  count(compound_class, sort = TRUE)
+class_counts
+
+total_class_counts <- plot_data_xgb %>%
+  count(compound_class, name = "total_in_dataset")
+
+class_representation <- total_class_counts %>%
+  left_join(class_counts, by = "compound_class") %>%
+  rename(count_in_dems = n) %>%
+  mutate(count_in_dems = replace_na(count_in_dems, 0)) %>%
+  mutate(percent_is_dem = (count_in_dems / total_in_dataset) * 100) %>%
+  arrange(desc(percent_is_dem))
+class_representation
+
+##### summmary stats rf
+dems <- plot_data_rf %>%
+  filter(p_adj < 0.05 & log2FC > 2)
+class_counts <- dems %>%
+  count(compound_class, sort = TRUE)
+class_counts
+
+total_class_counts <- plot_data_rf %>%
+  count(compound_class, name = "total_in_dataset")
+
+class_representation <- total_class_counts %>%
+  left_join(class_counts, by = "compound_class") %>%
+  rename(count_in_dems = n) %>%
+  mutate(count_in_dems = replace_na(count_in_dems, 0)) %>%
+  mutate(percent_is_dem = (count_in_dems / total_in_dataset) * 100) %>%
+  arrange(desc(percent_is_dem))
+class_representation
 
 p_volcano_xgb <- make_volcano(plot_data_xgb)
 p_volcano_rf  <- make_volcano(plot_data_rf)
