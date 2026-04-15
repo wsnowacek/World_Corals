@@ -13,6 +13,7 @@ library(tibble)
 library(stringr)
 library(RColorBrewer)
 library(ggrepel)
+library(gt)
 library(here)
 
 # read in data
@@ -45,7 +46,7 @@ df <- df %>%
     scleractinia = factor(scleractinia, levels = c("1", "0")),
     location = factor(location),
     symbiont.potential = factor(symbiont.potential),
-    host_order = fct_relevel(factor(host_order), "Scleractinia"),
+    # host_order = fct_relevel(factor(host_order), "Scleractinia"),
     host_family = factor(host_family),
     host_phylum = factor(host_phylum)
   )
@@ -108,12 +109,62 @@ met_plot_df <- process_importance_data(met_df)
 ordered_levels <- c(target_classes, "Other")
 met_plot_df$display_class <- factor(met_plot_df$display_class, levels = ordered_levels)
 
-
-##################################################
-
 origin_shapes <- c("Host" = 16, "Symbiont" = 3, "Both" = 17, "Unknown" = 8)
 cols_origin <- c("Host" = "#97B9CBFF", "Symbiont" = "#9057C6FF", 
                  "Both" = "#FFE1BDFF", "Unknown" = "#8DC657FF")
+
+##################################################
+
+# summary stats
+sum(!is.na(df$host_order)) #542
+sum(!is.na(df$host_family)) #542
+sum(!is.na(df$host_species)) #479
+
+classification_table <- df %>%
+  group_by(host_phylum, host_class, host_order, host_family, host_genus, host_species) %>%
+  tally(name = "sample_count") %>%
+  ungroup()
+write.csv(classification_table, "misc/class_table.csv")
+
+## produces a nested classification table
+nested_gt_table <- classification_table %>%
+  gt(groupname_col = "host_phylum") %>% # Groups by Phylum first
+  tab_header(
+    title = "Taxonomic Classification of Study Species",
+    subtitle = "Hierarchical breakdown from Phylum to Species"
+  ) %>%
+  cols_label(
+    host_class = "Class",
+    host_order = "Order",
+    host_family = "Family",
+    host_genus = "Genus",
+    host_species = "Species",
+    sample_count = "N"
+  ) %>%
+  tab_options(
+    row_group.font.weight = "bold",
+    column_labels.font.weight = "bold"
+  )
+nested_gt_table
+
+scler_df <- df %>% filter(df$scleractinia == 1, na.rm = TRUE)
+out_df <- df %>% filter(df$scleractinia == 0, na.rm = TRUE)
+  
+taxa_summary <- out_df %>%
+  summarise(
+    Phyla = n_distinct(host_phylum, na.rm = TRUE),
+    Classes = n_distinct(host_class, na.rm = TRUE),
+    Orders = n_distinct(host_order, na.rm = TRUE),
+    Families = n_distinct(host_family, na.rm = TRUE),
+    Genera = n_distinct(host_genus, na.rm = TRUE),
+    Species = n_distinct(host_species, na.rm = TRUE)
+  ) %>%
+  pivot_longer(
+    cols = everything(), 
+    names_to = "Taxonomic Level", 
+    values_to = "Unique Count"
+  )
+print(taxa_summary)
 
 ################################################################################
 

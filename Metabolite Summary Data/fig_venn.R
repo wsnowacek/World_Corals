@@ -59,6 +59,7 @@ cols_sclero    <- c("1" = "#DE7862FF", "0" = "#D8AF39FF")
 cols_origin <- c("Host" = "#97B9CBFF", "Symbiont" = "#9057C6FF",
                  "Both" = "#FFE1BDFF", "Unknown" = "#8DC657FF")
 
+
 ################################################################################
 
 ### for custom compound_class
