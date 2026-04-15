@@ -15,6 +15,8 @@ library(here)
 
 df <- read.csv(here("Cleaned data CSVs", "qc_data.csv"))
 
+## round all numeric columns to 3 decimal points
+
 df <- df %>%
   mutate(
     bleaching = case_when(
@@ -205,7 +207,7 @@ class_counts <- super_core_table %>%
   )
 class_counts
 
-write.csv(super_core_table, here("Cleaned data CSVs", "core_df.csv"))
+# write.csv(super_core_table, here("Cleaned data CSVs", "core_df.csv"))
 
 #########################################
 # TAG/DAG/MADAG of interest 
