@@ -4,7 +4,6 @@ library(readxl)
 library(data.table)
 library(vegan)
 library(scales)
-# library(ggraph)
 library(cowplot)
 library(ggdendro)
 library(ggridges)
@@ -984,7 +983,7 @@ p_richness_clean  <- p_richness + clean_theme
 row1 <- plot_grid(
   legend_sclero, p, p_dendro,
   ncol = 3,
-  rel_widths = c(0.4, 1, 1.2), # Legend is narrow, plots are equal
+  rel_widths = c(0.4, 1, 1.4), 
   labels = c("", "A", "B"),
   label_size = 24
 )
@@ -992,7 +991,7 @@ row1 <- plot_grid(
 row2 <- plot_grid(
   p_richness_clean,p_entropy_clean,p_ubiquity_clean,p_abundance_clean,
   nrow = 1,
-  rel_widths = c(0.6, 0.6, 0.6, 0.6), # Give Dendro more space
+  rel_widths = c(0.6, 0.6, 0.6, 0.6), 
   align = 'h', axis = 'tb',
   labels = c("C", "D", "E", "F", "G"),
   label_size = 24
@@ -1002,7 +1001,7 @@ final_plot <- plot_grid(
   row1, 
   row2, 
   ncol = 1, 
-  rel_heights = c(1, 1) 
+  rel_heights = c(1.4, 1) 
 )
 
 print(final_plot)

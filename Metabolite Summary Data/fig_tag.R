@@ -205,6 +205,8 @@ class_counts <- super_core_table %>%
   )
 class_counts
 
+write.csv(super_core_table, here("Cleaned data CSVs", "core_df.csv"))
+
 #########################################
 # TAG/DAG/MADAG of interest 
 tag_core <- super_core_table %>%
