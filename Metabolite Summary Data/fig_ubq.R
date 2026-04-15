@@ -535,7 +535,7 @@ p3 <- ggscatter(
     )
   )
 p3
-ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/p3alone.jpg", p3, width = 12, height = 8, dpi = 300)
+ggsave(here("misc", "figs", "p3alone.jpg"), p3, width = 12, height = 8, dpi = 300)
 
 #################################################################################
 
@@ -839,7 +839,7 @@ p_combined <- plot_grid(
   rel_heights = c(0.15, 1)
 )
 ggsave(
-  "/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/volcano_ml.jpg",
+  here("misc", "figs", "volcano_ml.jpg"),
   p_combined,
   width = 16,
   height = 9,
@@ -896,7 +896,7 @@ row_ab_ubqabundance <- plot_grid(unified_legend,row_ab_ubqabundance,
                                  ncol=1,
                                  rel_heights=c(0.3,1))
 ggsave(
-  "/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/fig2_ubqabundance.jpg",
+  here("misc", "figs", "fig2_ubqabundance.jpg"),
   row_ab_ubqabundance,
   width = 16,
   height = 9,
@@ -938,7 +938,7 @@ row_cde <- plot_grid(
   unified_legend, row_c,
   nrow = 2, rel_heights = c(0.4,1))
 
-ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/fig5cde_ppt.jpg", 
+ggsave(here("misc", "figs", "fig5cde_ppt.jpg"), 
        row_cde, width = 18, height = 8, dpi = 300)
 
 true_final_figure <- plot_grid(
@@ -951,7 +951,7 @@ true_final_figure <- plot_grid(
   rel_heights = c(0.4, 1, 1, 1.2, 1, 1) 
 )
 
-ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/fig5_new.pdf", 
+ggsave(here("misc", "figs", "fig5_new.pdf"), 
        true_final_figure, width = 18, height = 24, dpi = 600, bg = "white")
 
 ################################################################################
@@ -1044,5 +1044,5 @@ ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/fig5_new
 # #   unified_legend, row_hi,
 # #   nrow = 2, rel_heights = c(0.4,1))
 # 
-# ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/fig5_hi.jpg", 
+# ggsave(here("misc", "figs, "fig5_hi.jpg"), 
 #        row_hi, width = 14, height = 6, dpi = 300, bg = "white")

@@ -311,7 +311,7 @@ pa_scler_ubq <- ggplot(met_plot_comparison, aes(x = scler_ubiquity, y = avg_abun
   theme(legend.position = "right")
 pa_scler_ubq
 
-ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/ubqtag.jpg", 
+ggsave(here("misc", "figs", "ubqtag.jpg"), 
        pa_scler_ubq, width=15, height=7, dpi=300)
 
 # pa_total_ubq <- ggplot(met_plot_comparison, aes(x = total_ubiquity, y = avg_abundance)) +
@@ -369,7 +369,7 @@ pb_scler_ubq <- ggplot(met_plot_comparison_2, aes(x = scler_ubiquity, y = avg_ab
   theme(legend.position = "right")
 pb_scler_ubq
 
-ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/ubqtag.jpg", 
+ggsave(here("misc", "figs", "ubqtag.jpg"), 
        pa_scler_ubq, width=15, height=7, dpi=300)
 
 
@@ -491,7 +491,7 @@ p_madag <- plot_data_volcano %>%
 
 subcano <- plot_grid(p_tag, p_dag, p_madag, ncol = 3)
 
-ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/subcano.jpg", 
+ggsave(here("misc", "figs", "subcano.jpg"), 
        subcano, width=14, height=7, dpi=300)
 
 

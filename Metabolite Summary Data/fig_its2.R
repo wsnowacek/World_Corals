@@ -791,7 +791,7 @@ upset_plot <- ComplexUpset::upset(
 
 print(upset_plot)
 
-ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/upset_its2.jpg", 
+ggsave(here("misc", "figs", "upset_its2.jpg"), 
        upset_plot, width = 14, height = 10, dpi=300)
 
 ################################################################################
@@ -848,7 +848,7 @@ final_figure <- plot_grid(
 # Display
 print(final_figure)
 ggsave(
-  "/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/ITS2combined.pdf", 
+  here("misc", "figs", "ITS2combined.pdf"), 
   plot = final_figure, 
   width = 18, 
   height = 12, 
@@ -862,7 +862,7 @@ ggsave(
 bar3 <- bar3 + theme(legend.position = "none")
 bleach_its2 <- plot_grid(bar3, p3, labels = c ("A","B"), label_size = 18,ncol = 1)
 ggsave(
-  "/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/ITS2bleaching.jpg", 
+  here("misc", "figs", "ITS2bleaching.jpg"), 
   plot = bleach_its2, 
   width = 7, 
   height = 8, 
@@ -963,5 +963,5 @@ final_pairwise_plot <- plot_grid(
   rel_heights = c(1, 0.15) 
 )
 
-ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/its2_volcano.jpg", 
+ggsave(here("misc", "figs", "its2_volcano.jpg"), 
        final_pairwise_plot, width = 18, height = 14, dpi = 300)

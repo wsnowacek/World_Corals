@@ -160,7 +160,7 @@ draw_flower <- function(data, group_var) {
 
 df_scler <- df %>% filter(host_order == "Scleractinia", !is.na(host_family))
 p_flower_family <- draw_flower(df_scler, "host_family")
-ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/flower_plot_family.jpg", 
+ggsave(here("misc", "figs", "flower_plot_family.jpg"), 
        p_flower_family, width = 10, height = 8, dpi = 300)
 
 ################################################################################
@@ -314,7 +314,7 @@ draw_flower <- function(data, group_var) {
 }
 df_scler <- df %>% filter(host_order == "Scleractinia", !is.na(host_family))
 p_flower_family <- draw_flower(df_scler, "host_family")
-ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/flower_plot_family_unique.jpg", 
+ggsave(here("misc", "figs", "flower_plot_family_unique.jpg"), 
        p_flower_family, width = 13, height = 9, dpi = 300)
 
 
@@ -367,8 +367,6 @@ p_core_venn <- ggvenn(
   theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 16))
 
 print(p_core_venn)
-# ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/venn_core_origin.jpg", 
-#        p_core_venn, width = 6, height = 5, dpi = 300)
 
 ################################################################################
 ## categories for venns
@@ -484,7 +482,7 @@ p_volcano2 <- ggplot(plot_data_volcano, aes(x = log2FC, y = neg_log_p_adj)) +
     axis.title = element_text(size = 20),
     plot.title = element_text(face = "bold", hjust = 0.5)
   )
-ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/volcano_core.jpg", p_volcano2, width=14,height=10,dpi=300)
+ggsave(here("misc", "figs", "volcano_core.jpg"), p_volcano2, width=14,height=10,dpi=300)
 
 ################################################################################
 
@@ -513,7 +511,7 @@ final_layout <- plot_grid(
   label_size = 30,
   rel_heights = c(0.8, 1)
 )
-ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/ecological_core.jpg", final_layout, width=20,height=16,dpi=300)
+ggsave(here("misc", "figs", "ecological_core.jpg"), final_layout, width=20,height=16,dpi=300)
 
 
 ############ Full multipanel figure
@@ -533,7 +531,7 @@ final_multipanel <- (row1 / row2 / row3) +
   )
 
 ggsave(
-  filename = "/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/fig4.pdf",
+  filename = here("misc", "figs", "fig4.pdf"),
   plot = final_multipanel,
   width = 20,
   height = 24, 
@@ -655,12 +653,12 @@ make_volcano <- function(selected_df, outpath = NULL) {
 
 p_volcano_scler_all <- make_volcano(
   met_df_scler_all,
-  "/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/volcano_scler_all.jpg"
+  here("misc", "figs", "volcano_scler_all.jpg")
 )
 
 p_volcano_non_scler_all <- make_volcano(
   met_df_non_scler_all,
-  "/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/volcano_non_scler_all.jpg"
+  here("misc", "figs", "volcano_non_scler_all.jpg")
 )
 
 volcano_ubiquitous <- plot_grid(
@@ -671,7 +669,7 @@ volcano_ubiquitous <- plot_grid(
   label_size = 18,
   rel_heights = c(1, 1)
 )
-ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/volcano_ubq.jpg", volcano_ubiquitous, width=12,height=14,dpi=300)
+ggsave(here("misc", "figs", "volcano_ubq.jpg"), volcano_ubiquitous, width=12,height=14,dpi=300)
 
 #######################
 
@@ -787,7 +785,7 @@ combined_ubiquity_plot <- plot_grid(
 )
 
 ggsave(
-  "/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/combined_ubiquity_plots.jpg", 
+  here("misc", "figs", "combined_ubiquity_plots.jpg"), 
   combined_ubiquity_plot, 
   width = 16, 
   height = 8, 
@@ -815,13 +813,6 @@ p_core <- make_ubiquity_plot(
   x_label = "Scleractinia Ubiquity (Core Metabolites)"
 ) 
 
-# ggsave(
-#   "/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/ecological_core_ubiquity.jpg", 
-#   p_core, 
-#   width = 12, 
-#   height = 8, 
-#   dpi = 300
-# )
 
 ################################################################################
 
@@ -860,7 +851,7 @@ ps <- ggplot(met_df_scatter, aes(x = scler_ubiquity, y = non_scler_ubiquity)) +
     legend.position = "right"
   )
 ggsave(
-  "/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/ubqplot.jpg",
+  here("misc", "figs", "ubqplot.jpg"),
   ps,
   width = 12,
   height = 8,
@@ -904,7 +895,7 @@ venn_bleach <- draw_venn_comparison(data = df_bleach,
                                     custom_palette = cols_bleaching)
 
 ggsave(
-  "/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/venntest.jpg",
+  here("misc", "figs", "venntest.jpg"),
   venn_bleach,
   width = 12,
   height = 8,
@@ -926,7 +917,7 @@ venn_sym <- plot_grid(
 )
 
 ggsave(
-  "/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/vennsym.jpg",
+  here("misc", "figs", "vennsym.jpg"),
   venn_sym,
   width = 8,
   height = 12,
@@ -938,7 +929,7 @@ df_loc <- df %>% filter(!is.na(location)) %>% filter(scleractinia == 1)
 venn_loc <- draw_venn_comparison(df_loc, "location", cols_location)
 
 ggsave(
-  "/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/vennloc.jpg",
+  here("misc", "figs", "vennloc.jpg"),
   venn_loc,
   width = 12,
   height = 8,

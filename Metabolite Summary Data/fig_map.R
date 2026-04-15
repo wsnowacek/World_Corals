@@ -223,6 +223,6 @@ final_map <- p_main +
   inset_element(p_sl_inset,  left = 0.70, bottom = 0.25, right = 1, top = 0.65)
 final_map
 
-ggsave("/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/map.pdf", plot = final_map,
+ggsave(here("misc", "figs", "map.pdf"), plot = final_map,
        width = 14, height = 10, dpi = 300, bg = "white")
 
