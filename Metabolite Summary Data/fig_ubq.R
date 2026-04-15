@@ -428,6 +428,16 @@ rf_plot_data <- met_plot_df %>%
 # rf_plot_df$display_class  <- factor(rf_plot_df$display_class,  levels = ordered_levels)
 # plot_df_all$display_class <- factor(plot_df_all$display_class, levels = ordered_levels)
 
+xgb_origin_summary <- xgb_plot_data %>%
+  count(refined_origin, name = "n") %>%
+  mutate(percentage = round(n / sum(n) * 100, 1))
+
+# 2. Summary for Random Forest (267 metabolites with importance > 0.001)
+rf_origin_summary <- rf_plot_data %>%
+  count(refined_origin, name = "n") %>%
+  mutate(percentage = round(n / sum(n) * 100, 1))
+
+
 #################### make feature importance plots ###########################
 p1 <- ggbarplot(xgb_plot_data, x = "metabolite", y = "XGBoost_Importance",
                 fill = "display_class", color = "transparent",
