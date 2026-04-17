@@ -244,24 +244,43 @@ rownames(jaccard_dist_mat) <- new_names
 colnames(jaccard_dist_mat) <- new_names
 jaccard_dist_renamed <- as.dist(jaccard_dist_mat)
 
-p2_heatmap <- pheatmap(
-  plot_matrix,
-  clustering_distance_rows = jaccard_dist_renamed, 
-  clustering_distance_cols = jaccard_dist_renamed,
-  clustering_method = "ward.D2",
-  color = red_palette,
-  display_numbers = TRUE,
-  number_format = "%.2f",
-  number_color = "white",      
-  fontsize_number = 7,        
-  fontsize_row = 10,          
-  fontsize_col = 10,
-  na_col = "white",               
-  border_color = "white",
-  silent = TRUE
+mask_matrix <- plot_matrix
+mask_matrix[upper.tri(mask_matrix)] <- NA
+
+diag(plot_matrix) <- 1
+
+pdf(
+  file = here("misc", "figs", "family_jaccard_corrplot.pdf"),
+  width = 12, 
+  height = 10
 )
 
-heatmap_grob <- grid::grid.grabExpr(grid::grid.draw(p2_heatmap$gtable))
+par(mar = c(2, 2, 4, 2)) 
+
+corrplot(
+  plot_matrix, 
+  method = "color",           
+  type = "lower",             
+  order = "hclust",           
+  hclust.method = "ward.D2",  
+  addCoef.col = "white",      
+  number.cex = 0.9,          
+  tl.col = "black",           
+  tl.cex = 1.2,     
+  tl.srt = 45,                
+  col = red_palette,          
+  # cl.lim = c(0, 1),           
+  # cl.cex = 1.1,     
+  na.label = " ",
+  diag = FALSE        
+)
+dev.off()
+
+draw_corrplot <- function() {
+  corrplot(plot_matrix, method="color", type="lower", order="hclust", 
+           hclust.method="ward.D2", addCoef.col="white", col=red_palette)
+}
+heatmap_grob <- grid::grid.grabExpr(draw_corrplot())
 
 ################################################################################
 
@@ -570,7 +589,7 @@ ggsave(here("misc", "figs", "ecological_core.jpg"), final_layout, width=20,heigh
 
 ############ Full multipanel figure
 heatmap_panel <- wrap_elements(full = heatmap_grob)
-row1 <- p_family_richness + heatmap_panel + plot_layout(widths = c(1, 1.3))
+row1 <- p_family_richness
 row2 <- p_flower_family + p_core_venn + plot_layout(widths = c(1.5, 0.5))
 row3 <- p_volcano2
 
@@ -587,7 +606,7 @@ final_multipanel <- (row1 / row2 / row3) +
 ggsave(
   filename = here("misc", "figs", "fig4.pdf"),
   plot = final_multipanel,
-  width = 20,
+  width = 16,
   height = 24, 
   dpi = 300,
   bg = "white"
