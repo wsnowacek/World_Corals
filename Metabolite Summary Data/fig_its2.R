@@ -154,6 +154,13 @@ its2_levels <- c(
   "Mix"
 )
 
+### check no seq samples
+na_breakdown <- df %>%
+  filter(ITS2.Letter == "No Seq") %>%
+  count(location, bleaching, name = "count") %>%
+  mutate(percentage = round(count / sum(count) * 100, 1))
+print(na_breakdown)
+
 ################################################################################
 
 its2_barplot <- df %>%
