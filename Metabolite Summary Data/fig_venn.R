@@ -291,7 +291,7 @@ scler_df <- scler_df %>%
 
 p_sampling_depth <- ggplot(scler_df, aes(x = max_intensity, y = richness, color = host_family)) +
   geom_point(alpha = 0.6, size = 3) +
-  geom_smooth(method = "lm", color = "gray60", linetype = "dashed", se = TRUE) +
+  # geom_smooth(method = "lm", color = "gray60", linetype = "dashed", se = TRUE) +
   scale_color_manual(values = family_palette) +
   # scale_x_log10(labels = scales::label_scientific()) + 
   labs(
@@ -304,7 +304,7 @@ p_sampling_depth <- ggplot(scler_df, aes(x = max_intensity, y = richness, color 
     legend.position = "right")
 p_sampling_depth
 ggsave(here("misc", "figs", "richness_abundance.jpg"), 
-       p_sampling_depth, width = 13, height = 9, dpi = 300)
+       p_sampling_depth, width = 8, height = 6, dpi = 300)
 
 
 ################################################################################
