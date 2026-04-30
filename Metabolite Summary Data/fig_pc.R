@@ -975,25 +975,25 @@ clean_theme <- theme(
 
 p <- p + theme(legend.position = "none")
 # p_dendro_clean    <- p_dendro + clean_theme
-p_abundance_clean <- p_abundance + clean_theme
+# p_abundance_clean <- p_abundance + clean_theme
 p_ubiquity_clean  <- p_ubiquity + clean_theme
 p_entropy_clean  <- p_entropy + clean_theme
 p_richness_clean  <- p_richness + clean_theme
 
 row1 <- plot_grid(
-  legend_sclero, p, p_dendro,
-  ncol = 3,
-  rel_widths = c(0.4, 1, 1.4), 
-  labels = c("", "A", "B"),
+  p, p_dendro,
+  ncol = 2,
+  rel_widths = c(1, 1.2), 
+  labels = c("A", "B"),
   label_size = 24
 )
 
 row2 <- plot_grid(
-  p_richness_clean,p_entropy_clean,p_ubiquity_clean,p_abundance_clean,
+  p_richness_clean,p_entropy_clean,p_ubiquity_clean,
   nrow = 1,
   rel_widths = c(0.6, 0.6, 0.6, 0.6), 
   align = 'h', axis = 'tb',
-  labels = c("C", "D", "E", "F", "G"),
+  labels = c("C", "D", "E"),
   label_size = 24
 )
 
@@ -1003,9 +1003,15 @@ final_plot <- plot_grid(
   ncol = 1, 
   rel_heights = c(1.4, 1) 
 )
+final_plot_legend <- plot_grid(
+  legend_sclero,
+  final_plot,
+  ncol = 2, 
+  rel_widths = c(0.15, 1) 
+)
 
 print(final_plot)
-ggsave(here("misc", "figs", "fig2.pdf"), final_plot, width = 18, height = 12, dpi = 300)
+ggsave(here("misc", "figs", "fig2.pdf"), final_plot_legend, width = 18, height = 12, dpi = 300)
 
 
 ################################################################################

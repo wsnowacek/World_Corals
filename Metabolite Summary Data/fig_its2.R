@@ -511,7 +511,8 @@ p <- ggplot(pcoa_points, aes(x = PCoA1, y = PCoA2, color = ITS2.Letter, fill = I
   theme_pubr() +
   theme(legend.position = "right")
 p
-
+ggsave(here("misc", "figs", "its2_permanova_location.pdf"), 
+       p, width = 7, height = 6, dpi = 300)
 ################################################################################
 
 its2_permanova_result <- adonis2(
@@ -798,7 +799,7 @@ upset_plot <- ComplexUpset::upset(
 
 print(upset_plot)
 
-ggsave(here("misc", "figs", "upset_its2.jpg"), 
+ggsave(here("misc", "figs", "upset_its2.pdf"), 
        upset_plot, width = 14, height = 10, dpi=300)
 
 ################################################################################
@@ -869,7 +870,7 @@ ggsave(
 bar3 <- bar3 + theme(legend.position = "none")
 bleach_its2 <- plot_grid(bar3, p3, labels = c ("A","B"), label_size = 18,ncol = 1)
 ggsave(
-  here("misc", "figs", "ITS2bleaching.jpg"), 
+  here("misc", "figs", "ITS2bleaching.pdf"), 
   plot = bleach_its2, 
   width = 7, 
   height = 8, 
@@ -970,5 +971,5 @@ final_pairwise_plot <- plot_grid(
   rel_heights = c(1, 0.15) 
 )
 
-ggsave(here("misc", "figs", "its2_volcano.jpg"), 
+ggsave(here("misc", "figs", "its2_volcano.pdf"), 
        final_pairwise_plot, width = 18, height = 14, dpi = 300)

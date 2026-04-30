@@ -282,6 +282,31 @@ draw_corrplot <- function() {
 }
 heatmap_grob <- grid::grid.grabExpr(draw_corrplot())
 
+
+### scatterplot
+scler_df <- scler_df %>%
+  rowwise() %>%
+  mutate(max_intensity = max(c_across(starts_with("x")), na.rm = TRUE)) %>%
+  ungroup()
+
+p_sampling_depth <- ggplot(scler_df, aes(x = max_intensity, y = richness, color = host_family)) +
+  geom_point(alpha = 0.6, size = 3) +
+  geom_smooth(method = "lm", color = "gray60", linetype = "dashed", se = TRUE) +
+  scale_color_manual(values = family_palette) +
+  # scale_x_log10(labels = scales::label_scientific()) + 
+  labs(
+    x = "Abundance",
+    y = "Richness",
+    color = "Host Family"
+  ) +
+  theme_pubr(base_size = 14) +
+  theme(
+    legend.position = "right")
+p_sampling_depth
+ggsave(here("misc", "figs", "richness_abundance.jpg"), 
+       p_sampling_depth, width = 13, height = 9, dpi = 300)
+
+
 ################################################################################
 
 ## flower plot modified to show number of unique metabolites in each family
@@ -599,7 +624,7 @@ final_multipanel <- (row1 / row2 / row3) +
     tag_levels = 'A',
     theme = theme(
       plot.title = element_text(size = 22, face = "bold"),
-      plot.tag = element_text(size = 30, face = "bold") # Consistent 30pt tags
+      plot.tag = element_text(size = 30, face = "bold") 
     )
   )
 
