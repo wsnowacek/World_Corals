@@ -333,7 +333,14 @@ draw_flower <- function(data, group_var) {
       unique_n = sum(metabolite %in% unique_mets),
       .groups = "drop"
     ) %>%
-    mutate(label = paste0(!!sym(group_var), "\nTotal: ", total_n, "\nUnique: ", unique_n))
+    mutate(
+      # Calculate proportion
+      prop_unique = unique_n / total_n,
+      # Update label to show the proportion as requested
+      label = paste0(!!sym(group_var), 
+                     "\nTotal: ", total_n, 
+                     "\nUnique: ", sprintf("%.2f%%", 100 * prop_unique))
+      )
   
   n_petals <- nrow(petal_data)
   angle <- seq(0, 2 * pi, length.out = n_petals + 1)[1:n_petals]
@@ -356,6 +363,7 @@ draw_flower <- function(data, group_var) {
     theme_void() +
     coord_cartesian(xlim = c(-7, 7), ylim = c(-5, 5)) 
 }
+
 df_scler <- df %>% filter(host_order == "Scleractinia", !is.na(host_family))
 p_flower_family <- draw_flower(df_scler, "host_family")
 ggsave(here("misc", "figs", "flower_plot_family_unique.jpg"), 
@@ -613,27 +621,34 @@ ggsave(here("misc", "figs", "ecological_core.jpg"), final_layout, width=20,heigh
 
 
 ############ Full multipanel figure
-heatmap_panel <- wrap_elements(full = heatmap_grob)
 row1 <- p_family_richness
-row2 <- p_flower_family + p_core_venn + plot_layout(widths = c(1.5, 0.5))
+row2 <- plot_grid(
+  p_flower_family, 
+  p_core_venn, 
+  ncol = 2, 
+  rel_widths = c(1.5, 0.7),
+  labels = c("B", "C"), 
+  label_size = 30,
+  label_fontface = "bold"
+)
 row3 <- p_volcano2
+final_multipanel <- plot_grid(
+  row1, 
+  row2, 
+  row3, 
+  ncol = 1,
+  rel_heights = c(0.8, 0.8, 0.8),
+  labels = c("A", "", "D"),  
+  label_size = 30,
+  label_fontface = "bold"
+)
 
-final_multipanel <- (row1 / row2 / row3) + 
-  plot_layout(heights = c(1.2, 0.8, 0.8)) + # Adjust row height ratios
-  plot_annotation(
-    tag_levels = 'A',
-    theme = theme(
-      plot.title = element_text(size = 22, face = "bold"),
-      plot.tag = element_text(size = 30, face = "bold") 
-    )
-  )
-
-ggsave(
+save_plot(
   filename = here("misc", "figs", "fig4.pdf"),
   plot = final_multipanel,
-  width = 16,
-  height = 24, 
-  dpi = 300,
+  base_width = 16,
+  base_height = 20,
+  device = "pdf",
   bg = "white"
 )
 
@@ -648,6 +663,14 @@ met_df_total_all <- met_df %>%
 # 5 unknown, 2 primary amides, 1 simple phenolic acid, 1 glycerophoshocholine, 1 TQ/THQ
 
 #######################
+met_df_scler_total <- met_df %>%
+  filter(scler_ubiquity != 0)
+# 15527
+
+met_df_nonscler_total <- met_df %>%
+  filter(non_scler_ubiquity != 0)
+# 14263
+
 met_df_scler_all <- met_df %>%
   filter(scler_ubiquity >= 95)
 # 494 scler 95% ubq
@@ -655,6 +678,9 @@ met_df_scler_all <- met_df %>%
 met_df_non_scler_all <- met_df %>%
   filter(non_scler_ubiquity >= 95)
 # 284 non-scler 95% ubq
+
+round(2581*100/15527,2)
+round(425*100/14263,2)
 
 # 59 scler 100% ubiquity and 146 non-scler 100% ubiquity
 

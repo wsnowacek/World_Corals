@@ -850,19 +850,19 @@ mat_family[] <- lapply(mat_family, as.numeric)
 mat_family <- mat_family %>% mutate_all(~ifelse(is.na(.), 0, .))
 
 bray_curtis_family <- vegdist(sqrt(mat_family), method = 'bray')
-cluster.average <- hclust(bray_curtis_family, method = 'ward.D') 
+cluster.average <- hclust(bray_curtis_family, method = 'ward.D2') 
 #method = average uses upgma
 
 dend_data <- dendro_data(cluster.average, type = "rectangle")
 
 branch_palette <- c(
-  "Ochrophyta"         = "#32CD32", # Lime Green
-  "Chlorophyta"        = "#00CED1", # Dark Turquoise
-  "Cnidaria"           = "#304530", # Gold 
-  "Chordata"           = "#9370DB", # Medium Purple
-  "Porifera"           = "#ec93ed", # Hot Pink,
-  # "Rhodophyta"         = "#b89d4d", # Gold
-  "Scleractinia_Color" = "#DE7862FF", # Kept your specific Scleractinia color
+  "Ochrophyta"         = "#32CD32", 
+  "Chlorophyta"        = "#00CED1",
+  "Cnidaria"           = "#304530",
+  "Chordata"           = "#9370DB", 
+  "Porifera"           = "#ec93ed", 
+  # "Rhodophyta"         = "#b89d4d", 
+  "Scleractinia_Color" = "#DE7862FF", # Scleractinia
   "grey40"             = "grey40"   # Internal nodes
 )
 
@@ -886,14 +886,113 @@ leaf_metadata <- df %>%
   mutate(label_with_n = paste0(host_family, " (n=", n, ")")) %>%
   ungroup()
 
+optimize_hclust_by_phylum <- function(hc, group_lookup, max_iter = 100) {
+  
+  n <- length(hc$labels)
+  
+  get_order_groups <- function(hc) {
+    labs <- hc$labels[hc$order]
+    group_lookup[labs]
+  }
+  
+  score_order <- function(hc) {
+    labs <- hc$labels[hc$order]
+    groups <- group_lookup[labs]
+    
+    phylum_order <- c(
+      "Scleractinia_Color",
+      "Cnidaria",
+      "Porifera",
+      "Chordata",
+      "Chlorophyta",
+      "Ochrophyta"
+    )
+    
+    ranks <- match(groups, phylum_order)
+    r <- rle(groups)
+    block_counts <- table(r$values)
+    split_penalty <- sum((block_counts - 1)^2, na.rm = TRUE)
+    inversion_penalty <- sum(diff(ranks) < 0, na.rm = TRUE)
+    
+    singleton_penalty <- 0
+    for (g in unique(groups)) {
+      if (sum(groups == g, na.rm = TRUE) == 1) {
+        pos <- which(groups == g)
+        singleton_penalty <- singleton_penalty + min(pos - 1, length(groups) - pos)
+      }
+    }
+    
+    split_penalty * 10000 +
+      inversion_penalty * 100 +
+      singleton_penalty
+  }
+  
+  recompute_order <- function(hc) {
+    n <- length(hc$labels)
+    
+    get_node_order <- function(node) {
+      if (node < 0) {
+        return(-node)
+      }
+      
+      left <- hc$merge[node, 1]
+      right <- hc$merge[node, 2]
+      
+      c(get_node_order(left), get_node_order(right))
+    }
+    
+    hc$order <- get_node_order(n - 1)
+    hc
+  }
+  
+  hc <- recompute_order(hc)
+  
+  for (iter in seq_len(max_iter)) {
+    improved <- FALSE
+    
+    for (node in seq_len(nrow(hc$merge))) {
+      current_score <- score_order(hc)
+      
+      trial <- hc
+      trial$merge[node, ] <- rev(trial$merge[node, ])
+      trial <- recompute_order(trial)
+      
+      trial_score <- score_order(trial)
+      
+      if (trial_score <= current_score) {
+        hc <- trial
+        improved <- TRUE
+      }
+    }
+    
+    if (!improved) break
+  }
+  
+  hc
+}
+
+leaf_metadata <- leaf_metadata %>%
+  mutate(
+    phylum_group = if_else(is_scler, "Scleractinia_Color", phylum)
+  )
+
+group_lookup <- setNames(
+  leaf_metadata$phylum_group,
+  leaf_metadata$host_family
+)
+
+cluster.average <- hclust(bray_curtis_family, method = "average")
+
+cluster.average <- optimize_hclust_by_phylum(
+  cluster.average,
+  group_lookup,
+  max_iter = 10
+)
+
 dend <- as.dendrogram(cluster.average)
-
-target_metadata <- leaf_metadata %>%
-  arrange(desc(is_scler), phylum, host_family)
-target_order <- target_metadata$host_family
-
-dend <- dendextend::rotate(dend, target_order)
 dend_data <- dendro_data(dend, type = "rectangle")
+
+#######
 
 dend_segments <- dend_data$segments %>%
   left_join(dend_data$labels %>% select(x, label), by = "x") %>% 
@@ -948,9 +1047,6 @@ p_dendro <- ggplot() +
   ))
 print(p_dendro)
 ggsave(here("misc", "figs", "dendro.jpg"), p_dendro, width=10, height=8, dpi = 600)
-# current_order <- labels(dend)
-# print(current_order)
-# dend <- click_rotate(dend)
 
 ################################################################################
 # combine plots with cowplot
@@ -983,7 +1079,7 @@ p_richness_clean  <- p_richness + clean_theme
 row1 <- plot_grid(
   p, p_dendro,
   ncol = 2,
-  rel_widths = c(1, 1.2), 
+  rel_widths = c(1, 1.4), 
   labels = c("A", "B"),
   label_size = 24
 )
