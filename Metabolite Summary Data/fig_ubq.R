@@ -876,8 +876,8 @@ legend_dummy <- ggplot(met_plot_df, aes(x = XGBoost_Importance, y = RandomForest
     legend.position = "top",
     legend.direction = "horizontal",
     legend.box = "vertical",
-    legend.text = element_text(size = 12, lineheight = 0.8), # lineheight handles wrapped text
-    legend.title = element_text(size = 14, face = "bold"),
+    legend.text = element_text(size = 16, lineheight = 0.8), # lineheight handles wrapped text
+    legend.title = element_text(size = 16, face = "bold"),
     legend.key.height = unit(0.8, "cm"), # Increase height to fit wrapped text
     legend.spacing.x = unit(0.2, "cm")
   ) +
@@ -923,43 +923,43 @@ row_c <- plot_grid(
   label_size = 18, ncol = 1
 )
 
-row_de <- plot_grid(
-  ubqabundance_xgb + theme(legend.position = "none"), 
-  ubqabundance_rf + theme(legend.position = "none"), 
-  labels = c("D", "E"), label_size = 18, ncol = 2
-)
+# row_de <- plot_grid(
+#   ubqabundance_xgb + theme(legend.position = "none"), 
+#   ubqabundance_rf + theme(legend.position = "none"), 
+#   labels = c("D", "E"), label_size = 18, ncol = 2
+# )
 
 row_fg <- plot_grid(
   p_xgb_ubiq_scatter + theme(legend.position = "none") + labs(subtitle = "XGBoost"), 
   p_rf_ubiq_scatter 
   + theme(legend.position = "none")
   + labs(subtitle = "Random Forest"), 
-  labels = c("F", "G"),
+  labels = c("D", "E"),
   label_size = 18, ncol = 2
 )
 
-row_cde <- plot_grid(
-  row_c, row_de,
-  nrow = 2)
-row_cde <- plot_grid(
-  unified_legend, row_c,
-  nrow = 2, rel_heights = c(0.4,1))
-
-ggsave(here("misc", "figs", "fig5cde_ppt.jpg"), 
-       row_cde, width = 18, height = 8, dpi = 300)
+# row_cde <- plot_grid(
+#   row_c, row_de,
+#   nrow = 2)
+# row_cde <- plot_grid(
+#   unified_legend, row_c,
+#   nrow = 2, rel_heights = c(0.4,1))
+# 
+# ggsave(here("misc", "figs", "fig5cde_ppt.jpg"), 
+#        row_cde, width = 18, height = 8, dpi = 300)
 
 true_final_figure <- plot_grid(
   unified_legend,
   row_ab,
   row_c,
-  row_de,
+  # row_de,
   row_fg,
   ncol = 1,
-  rel_heights = c(0.4, 1, 1, 1.2, 1, 1) 
+  rel_heights = c(0.6, 1, 1, 1.2, 1) 
 )
 
 ggsave(here("misc", "figs", "fig5_new.pdf"), 
-       true_final_figure, width = 18, height = 24, dpi = 600, bg = "white")
+       true_final_figure, width = 15, height = 15, dpi = 600, bg = "white")
 
 ################################################################################
 
