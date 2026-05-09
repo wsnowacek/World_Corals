@@ -282,6 +282,8 @@ fishers_csv <- rbind(significant_core, significant_rf, significant_xgb,
                      significant_scler90, significant_supercore)
 # write.csv(fishers_csv,"Metabolite Summary Data/fishers_results.csv")
 
+
+
 #########################################
 # TAG/DAG/MADAG of interest 
 tag_core <- super_core_table %>%
@@ -747,4 +749,27 @@ test_fa_length <- function(target_length, core_vec, full_df) {
   return(res)
 }
 test_fa_length(22, tag_core_vec, glycero_df)
+
+######################################################
+
+# make df for nina
+met_metrics <- met_df %>%
+  select(
+    metabolite, 
+    XGBoost_Importance, 
+    RandomForest_Importance, 
+    scler_ubiquity, 
+    non_scler_ubiquity, 
+    total_ubiquity
+  )
+
+glycero_df_enriched <- glycero_df %>%
+  left_join(met_metrics, by = "metabolite") %>%
+  mutate(
+    is_super_core = metabolite %in% super_core_table$metabolite,
+    ubiquity_diff = scler_ubiquity - non_scler_ubiquity
+  )
+write.csv(glycero_df_enriched, here("Cleaned data CSVs", "glycero_df_Nina.csv"))
+
+
 
