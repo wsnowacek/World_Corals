@@ -215,7 +215,7 @@ p_sl_inset  <- plot_inset("Sri Lanka (n=138)",      c(80.5,  82.0),   c(7.5,  9.
 p_nc_inset  <- plot_inset("North Carolina (n=81)",  c(-77.5, -75.5),  c(34.5, 35.5))
 p_cur_inset <- plot_inset("Curaçao (n=272)",        c(-69.15,-68.80), c(12.05,12.35))
 
-##################### make final map and save
+##################### make final map for Figure 1 and save
 final_map <- p_main +
   inset_element(p_hi_inset,  left = 0.05, bottom = 0.10, right = 0.35, top = 0.45) +
   inset_element(p_nc_inset, left = 0.45, bottom = 0.60, right = 0.68, top = 0.92) +

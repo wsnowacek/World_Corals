@@ -102,6 +102,8 @@ volcano_results <- stats_data %>%
 ########################################
 # just refined origin color
 
+# Figure S3A
+
 plot_data_volcano <- volcano_results %>%
   inner_join(met_df %>% select(metabolite, refined_origin), by = "metabolite")
 
@@ -109,7 +111,6 @@ m <- nrow(volcano_results)
 sig_threshold <- -log10(0.05 / m)
 
 p_volcano <- ggplot(plot_data_volcano, aes(x = log2FC, y = neg_log_p_adj, color = refined_origin)) +
-  # Vertical lines for 2-fold change
   geom_vline(xintercept = c(-2, 2), linetype = "dashed", color = "grey70") +
   geom_hline(yintercept = sig_threshold, linetype = "dashed", color = "grey70", linewidth = 0.8) +
   geom_point(alpha = 0.6, size = 2.5) +
@@ -132,63 +133,8 @@ p_volcano <- ggplot(plot_data_volcano, aes(x = log2FC, y = neg_log_p_adj, color 
     axis.text = element_text(size = 14)
   )
 print(p_volcano)
-ggsave(here("misc", "figs", "volcano_origin.jpg"), p_volcano, width=15,height=12,dpi=300)
-## 110 rows outside
-
-################################################################################
-
-### for ClassyFire compound_superclass
-# target_classes <- trimws(c(
-#   "Glycerophospholipids", 
-#   "Sphingolipids", 
-#   "Oligopeptides", 
-#   "Glycerolipids", 
-#   "Triacylglycerols", 
-#   "Steroids", 
-#   "Carotenoids (C40)", 
-#   "Fatty esters", 
-#   "Diacylglyceryl-carboxyhydroxymethylcholines", 
-#   "Triterpenoids", 
-#   "Fatty amides", 
-#   "Phosphatidylglycerocholines", 
-#   "Monogalactosyldiacylglycerol", 
-#   "Phosphatidylglyceroethanolamines", 
-#   "Monoalkyldiacylglycerols", 
-#   "Meroterpenoids",
-#   "Unknown"
-# ))
-# 
-# provided_hex <- c(
-#   "#BEAED4", "#FDC086", "#FFFF99", "#386CB0", "#F0027F", "#BF5B17", "#1B9E77",
-#   "#D95F02", "#7570B3", "#984EA3", "#66A61E", "#E6AB02", "#666666", "#A6CEE3", "#B2DF8A",
-#   "#FB9A99", "#CBD5E8")
-# # "#E5D8BD" "#FDDAEC"
-# spec_colors <- setNames(provided_hex, target_classes)
-# 
-# final_palette <- c(spec_colors, "Other" = "gray60")
-# origin_shapes <- c("Host" = 16, "Symbiont" = 3, "Both" = 17, "Unknown" = 8)
-# 
-# plot_data_volcano <- volcano_results %>%
-#   inner_join(
-#     met_df %>% select(metabolite, display_class, refined_origin),
-#     by = "metabolite"
-#   ) %>%
-#   mutate(
-#     # coerce to character
-#     display_class = as.character(display_class),
-#     refined_origin = as.character(refined_origin),
-#     display_class = if_else(
-#       is.na(display_class) | !(display_class %in% names(final_palette)),
-#       "Other",
-#       display_class
-#     ),
-#     refined_origin = if_else(is.na(refined_origin), "Unknown", refined_origin)
-#   )
-# 
-# classes <- sort(unique(plot_data_volcano$display_class))
-# class_colors <- final_palette[classes]
-# class_order <- c(target_classes, "Other")
-
+ggsave(here("misc", "figs", "volcano_origin.jpg"), p_volcano,width=15,height=12,dpi=300)
+## 110 rows outside plot
 
 ################################################################################
 
@@ -260,7 +206,7 @@ class_colors <- final_palette[classes]
 
 sig_threshold <- -log10(0.05)
 
-# build plot
+# build plot for Figure S3B
 p_volcano2 <- ggplot(plot_data_volcano, aes(x = log2FC, y = neg_log_p_adj)) +
   geom_vline(xintercept = c(-2, 2), linetype = "dashed", color = "grey70") +
   geom_hline(yintercept = sig_threshold, linetype = "dashed", color = "grey70", linewidth = 0.8) +
@@ -300,124 +246,124 @@ ggsave(here("misc", "figs", "volcano.jpg"), p_volcano2, width=14,height=10,dpi=3
 combined_volcano <- plot_grid(p_volcano, p_volcano2, ncol = 1, labels = c("A", "B"), label_size = 24, align = "hv")
 ggsave(here("misc", "figs", "combined_volcano.jpg"), combined_volcano, width=14,height=20,dpi=300)
 
-
-################################################################################
-## subvolcanos 
-
-# for compound superclass: display_class "Glycerolipids" "Sphingolipids" "Triacylglycerols"
-# for compound class: "TAG" "DAG" "MADAG"
-
-p_tag <- plot_data_volcano %>%
-  filter(display_class == "TAG") %>%
-  ggplot(aes(x = log2FC, y = neg_log_p_adj)) +
-  geom_vline(xintercept = c(-2, 2), linetype = "dashed", color = "grey70") +
-  geom_hline(yintercept = sig_threshold, linetype = "dashed", color = "grey70") +
-  geom_point(aes(color = display_class), size = 3, alpha = 0.8) +
-  xlim(-25,25) +
-  ylim(0,75) + 
-  # Label specific metabolite
-  # geom_text_repel(
-  #   data = . %>% filter(metabolite == "x23838_655_56593_11_538"),
-  #   aes(label = metabolite),
-  #   box.padding = 1, point.padding = 0.5,
-  #   size = 4, fontface = "bold", color = "black",
-  #   segment.color = "grey30"
-  # ) 
-  scale_color_manual(values = class_colors) +
-  labs(title = "TAG", x = "log2 Fold Change", y = "-log10(adj. p-value)") +
-  theme_pubr() +
-  theme(legend.position = "none", plot.title = element_text(size = 18, face = "bold"))
-
-p_dag <- plot_data_volcano %>%
-  filter(display_class == "DAG") %>%
-  ggplot(aes(x = log2FC, y = neg_log_p_adj)) +
-  geom_vline(xintercept = c(-2, 2), linetype = "dashed", color = "grey70") +
-  geom_hline(yintercept = sig_threshold, linetype = "dashed", color = "grey70") +
-  geom_point(aes(color = display_class), size = 3, alpha = 0.8) +
-  xlim(-25,25) +
-  ylim(0,75) + 
-  # Label specific metabolite
-  # geom_text_repel(
-  #   data = . %>% filter(metabolite == "x39055_948_80202_15_826"),
-  #   aes(label = metabolite),
-  #   box.padding = 1, point.padding = 0.5,
-  #   size = 4, fontface = "bold", color = "black",
-  #   segment.color = "grey30"
-  # ) 
-  scale_color_manual(values = class_colors) +
-  labs(title = "DAG", x = "log2 Fold Change", y = "-log10(adj. p-value)") +
-  theme_pubr() +
-  theme(legend.position = "none", plot.title = element_text(size = 18, face = "bold"))
-
-p_madag <- plot_data_volcano %>%
-  filter(display_class == "MADAG") %>%
-  ggplot(aes(x = log2FC, y = neg_log_p_adj)) +
-  geom_vline(xintercept = c(-2, 2), linetype = "dashed", color = "grey70") +
-  geom_hline(yintercept = sig_threshold, linetype = "dashed", color = "grey70") +
-  geom_point(aes(color = display_class), size = 3, alpha = 0.8) +
-  xlim(-25,25) +
-  ylim(0,75) + 
-  # # Label specific metabolite
-  # geom_text_repel(
-  #   data = . %>% filter(metabolite == "x15256_518_49365_7_407"),
-  #   aes(label = metabolite),
-  #   box.padding = 1, point.padding = 0.5,
-  #   size = 4, fontface = "bold", color = "black",
-  #   segment.color = "grey30"
-  # ) 
-  scale_color_manual(values = class_colors) +
-  labs(title = "MADAG", x = "log2 Fold Change", y = "-log10(adj. p-value)") +
-  theme_pubr() +
-  theme(legend.position = "none", plot.title = element_text(size = 18, face = "bold"))
-
-subcano <- plot_grid(p_tag, p_dag, p_madag, ncol = 3)
-ggsave(here("misc", "figs", "subcano.jpg"), subcano, width=14, height=7, dpi=300)
-
-################################################################################
-
-# for compound class: "TQ/THQ" "Neutral GSL" "Ceramide"
-
-TAG <- plot_data_volcano %>%
-  filter(display_class == "TQ/THQs") %>%
-  ggplot(aes(x = log2FC, y = neg_log_p_adj)) +
-  geom_vline(xintercept = c(-2, 2), linetype = "dashed", color = "grey70") +
-  geom_hline(yintercept = sig_threshold, linetype = "dashed", color = "grey70") +
-  geom_point(aes(color = display_class), size = 3, alpha = 0.8) +
-  xlim(-25,25) +
-  ylim(0,75) + 
-  scale_color_manual(values = class_colors) +
-  labs(title = "TQ/THQs", x = "log2 Fold Change", y = "-log10(adj. p-value)") +
-  theme_pubr() +
-  theme(legend.position = "none", plot.title = element_text(size = 18, face = "bold"))
-
-DAG <- plot_data_volcano %>%
-  filter(display_class == "Neutral GSL") %>%
-  ggplot(aes(x = log2FC, y = neg_log_p_adj)) +
-  geom_vline(xintercept = c(-2, 2), linetype = "dashed", color = "grey70") +
-  geom_hline(yintercept = sig_threshold, linetype = "dashed", color = "grey70") +
-  geom_point(aes(color = display_class), size = 3, alpha = 0.8) +
-  xlim(-25,25) +
-  ylim(0,75) + 
-  scale_color_manual(values = class_colors) +
-  labs(title = "Neutral GSL", x = "log2 Fold Change", y = "-log10(adj. p-value)") +
-  theme_pubr() +
-  theme(legend.position = "none", plot.title = element_text(size = 18, face = "bold"))
-
-MADAG <- plot_data_volcano %>%
-  filter(display_class == "Ceramides") %>%
-  ggplot(aes(x = log2FC, y = neg_log_p_adj)) +
-  geom_vline(xintercept = c(-2, 2), linetype = "dashed", color = "grey70") +
-  geom_hline(yintercept = sig_threshold, linetype = "dashed", color = "grey70") +
-  geom_point(aes(color = display_class), size = 3, alpha = 0.8) +
-  xlim(-25,25) +
-  ylim(0,75) + 
-  scale_color_manual(values = class_colors) +
-  labs(title = "Ceramides", x = "log2 Fold Change", y = "-log10(adj. p-value)") +
-  theme_pubr() +
-  theme(legend.position = "none", plot.title = element_text(size = 18, face = "bold"))
-MADAG
-
-subcano2 <- plot_grid(TAG, DAG, MADAG, ncol = 3)
-ggsave(here("misc", "figs", "subcano2.jpg"), subcano2, width=14, height=7, dpi=300)
-
+# 
+# ################################################################################
+# ## subvolcanos NOT included in current analysis
+# 
+# # for compound superclass: display_class "Glycerolipids" "Sphingolipids" "Triacylglycerols"
+# # for compound class: "TAG" "DAG" "MADAG"
+# 
+# p_tag <- plot_data_volcano %>%
+#   filter(display_class == "TAG") %>%
+#   ggplot(aes(x = log2FC, y = neg_log_p_adj)) +
+#   geom_vline(xintercept = c(-2, 2), linetype = "dashed", color = "grey70") +
+#   geom_hline(yintercept = sig_threshold, linetype = "dashed", color = "grey70") +
+#   geom_point(aes(color = display_class), size = 3, alpha = 0.8) +
+#   xlim(-25,25) +
+#   ylim(0,75) + 
+#   # Label specific metabolite
+#   # geom_text_repel(
+#   #   data = . %>% filter(metabolite == "x23838_655_56593_11_538"),
+#   #   aes(label = metabolite),
+#   #   box.padding = 1, point.padding = 0.5,
+#   #   size = 4, fontface = "bold", color = "black",
+#   #   segment.color = "grey30"
+#   # ) 
+#   scale_color_manual(values = class_colors) +
+#   labs(title = "TAG", x = "log2 Fold Change", y = "-log10(adj. p-value)") +
+#   theme_pubr() +
+#   theme(legend.position = "none", plot.title = element_text(size = 18, face = "bold"))
+# 
+# p_dag <- plot_data_volcano %>%
+#   filter(display_class == "DAG") %>%
+#   ggplot(aes(x = log2FC, y = neg_log_p_adj)) +
+#   geom_vline(xintercept = c(-2, 2), linetype = "dashed", color = "grey70") +
+#   geom_hline(yintercept = sig_threshold, linetype = "dashed", color = "grey70") +
+#   geom_point(aes(color = display_class), size = 3, alpha = 0.8) +
+#   xlim(-25,25) +
+#   ylim(0,75) + 
+#   # Label specific metabolite
+#   # geom_text_repel(
+#   #   data = . %>% filter(metabolite == "x39055_948_80202_15_826"),
+#   #   aes(label = metabolite),
+#   #   box.padding = 1, point.padding = 0.5,
+#   #   size = 4, fontface = "bold", color = "black",
+#   #   segment.color = "grey30"
+#   # ) 
+#   scale_color_manual(values = class_colors) +
+#   labs(title = "DAG", x = "log2 Fold Change", y = "-log10(adj. p-value)") +
+#   theme_pubr() +
+#   theme(legend.position = "none", plot.title = element_text(size = 18, face = "bold"))
+# 
+# p_madag <- plot_data_volcano %>%
+#   filter(display_class == "MADAG") %>%
+#   ggplot(aes(x = log2FC, y = neg_log_p_adj)) +
+#   geom_vline(xintercept = c(-2, 2), linetype = "dashed", color = "grey70") +
+#   geom_hline(yintercept = sig_threshold, linetype = "dashed", color = "grey70") +
+#   geom_point(aes(color = display_class), size = 3, alpha = 0.8) +
+#   xlim(-25,25) +
+#   ylim(0,75) + 
+#   # # Label specific metabolite
+#   # geom_text_repel(
+#   #   data = . %>% filter(metabolite == "x15256_518_49365_7_407"),
+#   #   aes(label = metabolite),
+#   #   box.padding = 1, point.padding = 0.5,
+#   #   size = 4, fontface = "bold", color = "black",
+#   #   segment.color = "grey30"
+#   # ) 
+#   scale_color_manual(values = class_colors) +
+#   labs(title = "MADAG", x = "log2 Fold Change", y = "-log10(adj. p-value)") +
+#   theme_pubr() +
+#   theme(legend.position = "none", plot.title = element_text(size = 18, face = "bold"))
+# 
+# subcano <- plot_grid(p_tag, p_dag, p_madag, ncol = 3)
+# ggsave(here("misc", "figs", "subcano.jpg"), subcano, width=14, height=7, dpi=300)
+# 
+# ################################################################################
+# 
+# # for compound class: "TQ/THQ" "Neutral GSL" "Ceramide"
+# 
+# TAG <- plot_data_volcano %>%
+#   filter(display_class == "TQ/THQs") %>%
+#   ggplot(aes(x = log2FC, y = neg_log_p_adj)) +
+#   geom_vline(xintercept = c(-2, 2), linetype = "dashed", color = "grey70") +
+#   geom_hline(yintercept = sig_threshold, linetype = "dashed", color = "grey70") +
+#   geom_point(aes(color = display_class), size = 3, alpha = 0.8) +
+#   xlim(-25,25) +
+#   ylim(0,75) + 
+#   scale_color_manual(values = class_colors) +
+#   labs(title = "TQ/THQs", x = "log2 Fold Change", y = "-log10(adj. p-value)") +
+#   theme_pubr() +
+#   theme(legend.position = "none", plot.title = element_text(size = 18, face = "bold"))
+# 
+# DAG <- plot_data_volcano %>%
+#   filter(display_class == "Neutral GSL") %>%
+#   ggplot(aes(x = log2FC, y = neg_log_p_adj)) +
+#   geom_vline(xintercept = c(-2, 2), linetype = "dashed", color = "grey70") +
+#   geom_hline(yintercept = sig_threshold, linetype = "dashed", color = "grey70") +
+#   geom_point(aes(color = display_class), size = 3, alpha = 0.8) +
+#   xlim(-25,25) +
+#   ylim(0,75) + 
+#   scale_color_manual(values = class_colors) +
+#   labs(title = "Neutral GSL", x = "log2 Fold Change", y = "-log10(adj. p-value)") +
+#   theme_pubr() +
+#   theme(legend.position = "none", plot.title = element_text(size = 18, face = "bold"))
+# 
+# MADAG <- plot_data_volcano %>%
+#   filter(display_class == "Ceramides") %>%
+#   ggplot(aes(x = log2FC, y = neg_log_p_adj)) +
+#   geom_vline(xintercept = c(-2, 2), linetype = "dashed", color = "grey70") +
+#   geom_hline(yintercept = sig_threshold, linetype = "dashed", color = "grey70") +
+#   geom_point(aes(color = display_class), size = 3, alpha = 0.8) +
+#   xlim(-25,25) +
+#   ylim(0,75) + 
+#   scale_color_manual(values = class_colors) +
+#   labs(title = "Ceramides", x = "log2 Fold Change", y = "-log10(adj. p-value)") +
+#   theme_pubr() +
+#   theme(legend.position = "none", plot.title = element_text(size = 18, face = "bold"))
+# MADAG
+# 
+# subcano2 <- plot_grid(TAG, DAG, MADAG, ncol = 3)
+# ggsave(here("misc", "figs", "subcano2.jpg"), subcano2, width=14, height=7, dpi=300)
+# 
 

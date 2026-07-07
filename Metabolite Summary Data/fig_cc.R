@@ -14,16 +14,7 @@ library(here)
 df <- read.csv(here("Cleaned data CSVs", "qc_data.csv"))
 met_df <- read.csv(here("Cleaned data CSVs", "merged_met_plot_df.csv"))
 
-## Collectors Curves
-
-## plot on top of each other
-# a) Scler vs non Scler
-# b) by location
-# c) by bleaching status
-# d) by symbiont potential
-# e) total, by metabolic origin
-# f) total, by metabolic superclass?
-
+## Collectors Curves - figure S2
 
 cols_bleaching <- c(
   "Bleached" = "#FF847CFF", 
@@ -316,100 +307,8 @@ p4 <- ggplot(combined_acc_sym, aes(x = percent_samples, y = richness,
 
 print(p4)
 
-################################################################################
-# Refined_origin path plot
-
-## the next step is to use met_df which includes all the columns in comm_matrix
-## met_df has a column called refined_origin which contains information about metabolic origin
-## refined_origin has values "Host", "Symbiont" "Both" and "Unknown"as a factor in that order
-## # of metabolites of each refined_origin
-
-# cols_origin <- c("Host" = "#97B9CBFF", "Symbiont" = "#9057C6FF", 
-#                  "Both" = "#FFE1BDFF", "Unknown" = "#8DC657FF")
-# # 
-# 
-# met_df$refined_origin <- factor(met_df$refined_origin, 
-#                                 levels = c("Host", "Symbiont", "Both", "Unknown"))
-# 
-# origin_counts <- met_df %>%
-#   count(refined_origin, .drop = FALSE)
-# 
-# # compute the accumulation order using 'random' method
-# acc_total <- specaccum(comm_matrix, method = "random", permutations = 30)
-# 
-# # extract the order of metabolite appearance
-# # calculate richness per origin at each step of the accumulated samples.
-# calc_stacked_acc <- function(comm, origins) {
-#   n_samples <- nrow(comm)
-#   # Randomize sample order
-#   sample_order <- sample(1:n_samples)
-#   
-#   accumulated_data <- lapply(1:n_samples, function(i) {
-#     # Subset to the first 'i' samples
-#     sub_comm <- comm[sample_order[1:i], , drop = FALSE]
-#     # Find which metabolites are present (colSum > 0)
-#     present_mets <- colnames(sub_comm)[colSums(sub_comm) > 0]
-#     # Count origins of present metabolites
-#     data.frame(samples = i) %>%
-#       bind_cols(
-#         met_df %>%
-#           filter(metabolite %in% present_mets) %>%
-#           group_by(refined_origin) %>%
-#           tally() %>%
-#           pivot_wider(names_from = refined_origin, values_from = n, values_fill = 0)
-#       )
-#   })
-#   bind_rows(accumulated_data)
-# }
-# 
-# plot_data_stacked <- calc_stacked_acc(comm_matrix, met_df$refined_origin)
-# plot_data_long <- plot_data_stacked %>%
-#   pivot_longer(cols = -samples, names_to = "Origin", values_to = "Richness") %>%
-#   mutate(
-#     Origin = factor(Origin, levels = c("Host", "Symbiont", "Both", "Unknown")),
-#     percent_samples = (samples / max(samples)) * 100
-#   )
-# 
-# present_metabolites <- df %>% 
-#   select(starts_with("x")) %>% 
-#   colnames()
-# 
-# met_df_filtered <- met_df %>%
-#   filter(met_df$metabolite %in% present_metabolites)
-# 
-# origin_counts <- met_df_filtered %>%
-#   count(refined_origin, .drop = FALSE)
-# 
-# # print(origin_counts)
-# 
-# origin_labels <- origin_counts %>%
-#   mutate(label_full = paste0(refined_origin, " (", n, " mets)" )) %>%
-#   { setNames(.$label_full, .$refined_origin) }
-# 
-# p5 <- ggplot(plot_data_long, aes(x = percent_samples, y = Richness, fill = Origin)) +
-#   geom_area(alpha = 0.7, color = "black", linewidth = 0.3) +
-#   scale_fill_manual(
-#     values = cols_origin, 
-#     labels = origin_labels
-#   ) +
-#   
-#   scale_x_continuous(expand = c(0, 0), breaks = seq(0, 100, 25)) +
-#   scale_y_continuous(expand = c(0, 0)) +
-#   labs(
-#     x = "Percentage of Total Samples",
-#     y = "Metabolite Richness",
-#     fill = "Metabolic Origin"
-#   ) +
-#   theme_pubr() +
-#   theme(
-#     axis.title = element_text(),
-#     legend.position = "right",
-#     legend.title = element_text()
-#   )
-# p5
 
 ################################################################################
-
 
 ##  plot saturation of different symbiont genera
 its2_df <- read.csv(here("Cleaned data CSVs", "ITS2Full.csv")) 
@@ -545,4 +444,90 @@ final_plot <- plot_grid(
 ggsave(here("misc", "figs", "fig3_ITS2.jpg"), 
        final_plot, width=14,height=10,dpi=300) 
 
+
 ################################################################################
+# Refined_origin path plot - unused
+
+# cols_origin <- c("Host" = "#97B9CBFF", "Symbiont" = "#9057C6FF", 
+#                  "Both" = "#FFE1BDFF", "Unknown" = "#8DC657FF")
+# # 
+# 
+# met_df$refined_origin <- factor(met_df$refined_origin, 
+#                                 levels = c("Host", "Symbiont", "Both", "Unknown"))
+# 
+# origin_counts <- met_df %>%
+#   count(refined_origin, .drop = FALSE)
+# 
+# # compute the accumulation order using 'random' method
+# acc_total <- specaccum(comm_matrix, method = "random", permutations = 30)
+# 
+# # extract the order of metabolite appearance
+# # calculate richness per origin at each step of the accumulated samples.
+# calc_stacked_acc <- function(comm, origins) {
+#   n_samples <- nrow(comm)
+#   # Randomize sample order
+#   sample_order <- sample(1:n_samples)
+#   
+#   accumulated_data <- lapply(1:n_samples, function(i) {
+#     # Subset to the first 'i' samples
+#     sub_comm <- comm[sample_order[1:i], , drop = FALSE]
+#     # Find which metabolites are present (colSum > 0)
+#     present_mets <- colnames(sub_comm)[colSums(sub_comm) > 0]
+#     # Count origins of present metabolites
+#     data.frame(samples = i) %>%
+#       bind_cols(
+#         met_df %>%
+#           filter(metabolite %in% present_mets) %>%
+#           group_by(refined_origin) %>%
+#           tally() %>%
+#           pivot_wider(names_from = refined_origin, values_from = n, values_fill = 0)
+#       )
+#   })
+#   bind_rows(accumulated_data)
+# }
+# 
+# plot_data_stacked <- calc_stacked_acc(comm_matrix, met_df$refined_origin)
+# plot_data_long <- plot_data_stacked %>%
+#   pivot_longer(cols = -samples, names_to = "Origin", values_to = "Richness") %>%
+#   mutate(
+#     Origin = factor(Origin, levels = c("Host", "Symbiont", "Both", "Unknown")),
+#     percent_samples = (samples / max(samples)) * 100
+#   )
+# 
+# present_metabolites <- df %>% 
+#   select(starts_with("x")) %>% 
+#   colnames()
+# 
+# met_df_filtered <- met_df %>%
+#   filter(met_df$metabolite %in% present_metabolites)
+# 
+# origin_counts <- met_df_filtered %>%
+#   count(refined_origin, .drop = FALSE)
+# 
+# # print(origin_counts)
+# 
+# origin_labels <- origin_counts %>%
+#   mutate(label_full = paste0(refined_origin, " (", n, " mets)" )) %>%
+#   { setNames(.$label_full, .$refined_origin) }
+# 
+# p5 <- ggplot(plot_data_long, aes(x = percent_samples, y = Richness, fill = Origin)) +
+#   geom_area(alpha = 0.7, color = "black", linewidth = 0.3) +
+#   scale_fill_manual(
+#     values = cols_origin, 
+#     labels = origin_labels
+#   ) +
+#   
+#   scale_x_continuous(expand = c(0, 0), breaks = seq(0, 100, 25)) +
+#   scale_y_continuous(expand = c(0, 0)) +
+#   labs(
+#     x = "Percentage of Total Samples",
+#     y = "Metabolite Richness",
+#     fill = "Metabolic Origin"
+#   ) +
+#   theme_pubr() +
+#   theme(
+#     axis.title = element_text(),
+#     legend.position = "right",
+#     legend.title = element_text()
+#   )
+# p5

@@ -56,54 +56,6 @@ cols_symbiont  <- c("#D84D16FF", "#FFF800FF", "#8FDA04FF")
 cols_phylum <- c("#24492EFF", "#015B58FF", "#2C6184FF", "#59629BFF", "#89689DFF", "#BA7999FF", "#E69B99FF")
 cols_sclero    <- c("1" = "#DE7862FF", "0" = "#D8AF39FF")
 
-
-##################################################
-# for Compound Class - ClassyFire annotation
-
-# target_classes <- trimws(c(
-#   "Glycerophospholipids", 
-#   "Sphingolipids", 
-#   "Oligopeptides", 
-#   "Glycerolipids", 
-#   "Triacylglycerols", 
-#   "Steroids", 
-#   "Carotenoids (C40)", 
-#   "Fatty esters", 
-#   "Diacylglyceryl-carboxyhydroxymethylcholines", 
-#   "Triterpenoids", 
-#   "Fatty amides", 
-#   "Phosphatidylglycerocholines", 
-#   "Monogalactosyldiacylglycerol", 
-#   "Phosphatidylglyceroethanolamines", 
-#   "Monoalkyldiacylglycerols", 
-#   "Meroterpenoids",
-#   "Unknown"
-# ))
-# 
-# provided_hex <- c(
-#   "#BEAED4", "#FDC086", "#FFFF99", "#386CB0", "#F0027F", "#BF5B17", "#1B9E77",
-# "#D95F02", "#7570B3", "#984EA3", "#66A61E", "#E6AB02", "#666666", "#A6CEE3", "#B2DF8A",
-# "#FB9A99", "#CBD5E8")
-# # "#E5D8BD" "#FDDAEC"
-# spec_colors <- setNames(provided_hex, target_classes)
-# 
-# final_palette <- c(spec_colors, "Other" = "gray60")
-# ordered_levels <- c(target_classes, "Other")
-# 
-# process_importance_data <- function(df) {
-#   df %>%
-#     mutate(compound_superclass = trimws(as.character(compound_superclass))) %>%
-#     mutate(display_class = if_else(compound_superclass %in% names(final_palette), 
-#                                    compound_superclass, 
-#                                    "Other")) %>%
-#     mutate(display_class = fct_relevel(factor(display_class), "Other", after = Inf)) 
-# }
-# 
-# met_plot_df <- process_importance_data(met_df)
-# 
-# ordered_levels <- c(target_classes, "Other")
-# met_plot_df$display_class <- factor(met_plot_df$display_class, levels = ordered_levels)
-
 ##################################################
 
 # for compound class - custom spectral library
@@ -193,6 +145,9 @@ sum(met_plot_df$non_scler_ubiquity == 0, na.rm = TRUE)
 
 
 #################################################################################
+
+# for figure S4
+
 met_presence_long <- df %>%
   pivot_longer(
     cols = starts_with("x"),
@@ -260,6 +215,7 @@ met_summary_classed$refined_origin <- factor(
   levels = c("Host", "Symbiont", "Both", "Unknown")
 )
 
+### Figure S4A
 pa <- ggplot(met_summary_classed, aes(x = ubiquity_all, y = avg_abundance)) +
   geom_point(
     aes(color = display_class, shape = refined_origin),
@@ -291,19 +247,14 @@ pa <- ggplot(met_summary_classed, aes(x = ubiquity_all, y = avg_abundance)) +
     legend.text       = element_text(size = 9),
     plot.title        = element_text(hjust = 0.5, face = "bold", size = 16)
   )
-
 pa
 
 #################################################################################
 
-## remake this plot using only Scleractinian samples (e.g. df$scleractinia ==1) 
-## and host-only metabolites (e.g. met_df$refined_origin == Host | Both)
-# host_only_mets <- met_df %>%
-#   filter(refined_origin == "Host" | refined_origin == "Both") %>%
-#   pull(metabolite)
+### Figure S4B
 
-## remake this plot using only Scleractinian samples and metabolites (regardless of origin)
-## that are only found in Scleractinia (e.g. met_df$)
+## code to make this plot using only Scleractinian samples and metabolites (regardless of origin)
+## that are only found in Scleractinia
 host_only_mets <- met_df %>%
   filter(scler_ubiquity != 0) %>%
   pull(metabolite)
@@ -407,6 +358,9 @@ rf_origin_summary <- rf_plot_data %>%
 
 
 #################### make feature importance plots ###########################
+
+# Figure 5A
+
 p1 <- ggbarplot(xgb_plot_data, x = "metabolite", y = "XGBoost_Importance",
                 fill = "display_class", color = "transparent",
                 xlab = "Metabolite", ylab = "XGBoost Feature Importance") +
@@ -419,6 +373,8 @@ p1 <- ggbarplot(xgb_plot_data, x = "metabolite", y = "XGBoost_Importance",
         legend.position = "none")
 p1
 
+# Figure 5B
+
 p2 <- ggbarplot(rf_plot_data, x = "metabolite", y = "RandomForest_Importance",
                 fill = "display_class", color = "transparent",
                 xlab = "Metabolite", ylab = "RF Feature Importance") +
@@ -430,6 +386,9 @@ p2 <- ggbarplot(rf_plot_data, x = "metabolite", y = "RandomForest_Importance",
         axis.ticks.x = element_blank(),
         legend.position = "none")
 p2
+
+
+# Figure 5C
 
 top_labels <- met_plot_df %>%
   mutate(dist = sqrt(XGBoost_Importance^2 + RandomForest_Importance^2)) %>%
@@ -444,7 +403,6 @@ r2 <- summary(fit)$r.squared
 pval <- summary(fit)$coefficients[2, 4]
 label_text <- paste0("R² = ", round(r2, 3),
                      "\n p = ", signif(pval, 3))
-# 
 # Residuals:
 #   Min         1Q     Median         3Q        Max 
 # -0.0054787 -0.0000555 -0.0000555 -0.0000555  0.0087443 
@@ -503,7 +461,6 @@ p3 <- ggscatter(
     )
   )
 p3
-ggsave(here("misc", "figs", "p3alone.jpg"), p3, width = 12, height = 8, dpi = 300)
 
 #################################################################################
 
@@ -542,6 +499,7 @@ sort(table(met_summary_rf$compound_class), decreasing = TRUE)
 # 119 annotations, 148 unknown
 # 48 TAG, 18 ceramides, 12 glycerophosphocholines, 7 MADAG, everything else 5 or fewer
 
+# Figure 5D
 p_xgb_ubiq_scatter <- ggplot(met_summary_xgb, aes(x = non_scler_ubiquity, y = scler_ubiquity)) +
   geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "gray60") +
   geom_point(
@@ -566,6 +524,8 @@ p_xgb_ubiq_scatter <- ggplot(met_summary_xgb, aes(x = non_scler_ubiquity, y = sc
   )
 p_xgb_ubiq_scatter
 
+
+# Figure 5E
 p_rf_ubiq_scatter <- ggplot(met_summary_rf, aes(x = non_scler_ubiquity, y = scler_ubiquity)) +
   geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "gray60") +
   geom_point(
@@ -594,99 +554,99 @@ p_rf_ubiq_scatter
 
 # ML ubiquity-abundance plot for metabolites with nonzero feature importance of XGBoost and RF
 
-# calculate abundance for scleractinian samples only
-met_presence_long %>%
-  filter(host_order == "Scleractinia") %>%
-  group_by(metabolite) %>%
-  summarise(avg_abundance = mean(value, na.rm = TRUE), .groups = "drop")
-
-met_summary_ml <- met_summary %>%
-  left_join(
-    met_presence_long %>%
-      filter(host_order == "Scleractinia") %>%
-      group_by(metabolite) %>%
-      summarise(avg_abundance = mean(value, na.rm = TRUE), .groups = "drop"),
-    by = "metabolite"
-  ) %>%
-  mutate(category = ifelse(metabolite %in% coral_only, "Coral-only", "Other"))
-
-met_summary_classed_ml <- met_summary_classed %>%
-  left_join(
-    met_plot_df %>% select(metabolite, scler_ubiquity),
-    by = "metabolite"
-  )
-
-# use met_summary_classed 'metabolite'
-# XGBoost: filter to keep only metabolites in 'xgb_plot_data$metabolite'
-# RF: filter to keep only metabolites in rf_plot_data$metabolite
-pa_xgb <- met_summary_classed_ml %>%
-  filter(metabolite %in% xgb_plot_data$metabolite)
-
-ubqabundance_xgb <- ggplot(pa_xgb, aes(x = scler_ubiquity, y = avg_abundance)) +
-  geom_point(
-    aes(color = display_class, shape = refined_origin),
-    size = 3,
-    stroke = 0.8,
-    alpha = 0.85
-  ) +
-  scale_color_manual(values = final_palette) +
-  scale_shape_manual(values = origin_shapes) +
-  scale_y_continuous(labels = label_number(scale_cut = cut_short_scale())) +
-  scale_x_continuous(limits = c(0, 100), breaks = seq(0, 100, by = 20)) +
-  labs(
-    x = "Scleractinian Ubiquity (%)",
-    y = "Average Scleractinian Abundance",
-    color = "Compound Class",
-    shape = "Metabolite Origin"
-  ) +
-  theme_pubr() +
-  theme(
-    plot.background  = element_rect(fill = "white", color = NA),
-    panel.background = element_rect(fill = "white", color = NA),
-    axis.line        = element_line(color = "black"),
-    legend.position  = "right",
-    legend.text      = element_text(size = 9),
-    plot.title       = element_text(hjust = 0.5, face = "bold", size = 16)
-  )
-ubqabundance_xgb
-# compound class outliers in this plot (descending abundance order):
-# LysoPC alkyl, CAEP, and then 2 PE monoalkyl monoacyl
-# same order: x3156_482_36064_2_937, x19279_643_51751_9_054, x26021_752_55957_12_218, x24082_750_54463_11_628
-
-pb_rf <- met_summary_classed_ml %>%
-  filter(metabolite %in% rf_plot_data$metabolite)
-
-ubqabundance_rf <- ggplot(pb_rf, aes(x = scler_ubiquity, y = avg_abundance)) +
-  geom_point(
-    aes(color = display_class, shape = refined_origin),
-    size = 3,
-    stroke = 0.8,
-    alpha = 0.85
-  ) +
-  scale_color_manual(values = final_palette) +
-  scale_shape_manual(values = origin_shapes) +
-  scale_y_continuous(labels = label_number(scale_cut = cut_short_scale())) +
-  scale_x_continuous(limits = c(0, 100), breaks = seq(0, 100, by = 20)) +
-  labs(
-    x = "Scleractinian Ubiquity (%)",
-    y = "Average Scleractinian Abundance",
-    color = "Compound Class",
-    shape = "Metabolite Origin"
-  ) +
-  theme_pubr() +
-  theme(
-    plot.background  = element_rect(fill = "white", color = NA),
-    panel.background = element_rect(fill = "white", color = NA),
-    axis.line        = element_line(color = "black"),
-    legend.position  = "right",
-    legend.text      = element_text(size = 9),
-    plot.title       = element_text(hjust = 0.5, face = "bold", size = 16)
-  )
-ubqabundance_rf
+# # calculate abundance for scleractinian samples only
+# met_presence_long %>%
+#   filter(host_order == "Scleractinia") %>%
+#   group_by(metabolite) %>%
+#   summarise(avg_abundance = mean(value, na.rm = TRUE), .groups = "drop")
+# 
+# met_summary_ml <- met_summary %>%
+#   left_join(
+#     met_presence_long %>%
+#       filter(host_order == "Scleractinia") %>%
+#       group_by(metabolite) %>%
+#       summarise(avg_abundance = mean(value, na.rm = TRUE), .groups = "drop"),
+#     by = "metabolite"
+#   ) %>%
+#   mutate(category = ifelse(metabolite %in% coral_only, "Coral-only", "Other"))
+# 
+# met_summary_classed_ml <- met_summary_classed %>%
+#   left_join(
+#     met_plot_df %>% select(metabolite, scler_ubiquity),
+#     by = "metabolite"
+#   )
+# 
+# # use met_summary_classed 'metabolite'
+# # XGBoost: filter to keep only metabolites in 'xgb_plot_data$metabolite'
+# # RF: filter to keep only metabolites in rf_plot_data$metabolite
+# pa_xgb <- met_summary_classed_ml %>%
+#   filter(metabolite %in% xgb_plot_data$metabolite)
+# 
+# ubqabundance_xgb <- ggplot(pa_xgb, aes(x = scler_ubiquity, y = avg_abundance)) +
+#   geom_point(
+#     aes(color = display_class, shape = refined_origin),
+#     size = 3,
+#     stroke = 0.8,
+#     alpha = 0.85
+#   ) +
+#   scale_color_manual(values = final_palette) +
+#   scale_shape_manual(values = origin_shapes) +
+#   scale_y_continuous(labels = label_number(scale_cut = cut_short_scale())) +
+#   scale_x_continuous(limits = c(0, 100), breaks = seq(0, 100, by = 20)) +
+#   labs(
+#     x = "Scleractinian Ubiquity (%)",
+#     y = "Average Scleractinian Abundance",
+#     color = "Compound Class",
+#     shape = "Metabolite Origin"
+#   ) +
+#   theme_pubr() +
+#   theme(
+#     plot.background  = element_rect(fill = "white", color = NA),
+#     panel.background = element_rect(fill = "white", color = NA),
+#     axis.line        = element_line(color = "black"),
+#     legend.position  = "right",
+#     legend.text      = element_text(size = 9),
+#     plot.title       = element_text(hjust = 0.5, face = "bold", size = 16)
+#   )
+# ubqabundance_xgb
+# # compound class outliers in this plot (descending abundance order):
+# # LysoPC alkyl, CAEP, and then 2 PE monoalkyl monoacyl
+# # same order: x3156_482_36064_2_937, x19279_643_51751_9_054, x26021_752_55957_12_218, x24082_750_54463_11_628
+# 
+# pb_rf <- met_summary_classed_ml %>%
+#   filter(metabolite %in% rf_plot_data$metabolite)
+# 
+# ubqabundance_rf <- ggplot(pb_rf, aes(x = scler_ubiquity, y = avg_abundance)) +
+#   geom_point(
+#     aes(color = display_class, shape = refined_origin),
+#     size = 3,
+#     stroke = 0.8,
+#     alpha = 0.85
+#   ) +
+#   scale_color_manual(values = final_palette) +
+#   scale_shape_manual(values = origin_shapes) +
+#   scale_y_continuous(labels = label_number(scale_cut = cut_short_scale())) +
+#   scale_x_continuous(limits = c(0, 100), breaks = seq(0, 100, by = 20)) +
+#   labs(
+#     x = "Scleractinian Ubiquity (%)",
+#     y = "Average Scleractinian Abundance",
+#     color = "Compound Class",
+#     shape = "Metabolite Origin"
+#   ) +
+#   theme_pubr() +
+#   theme(
+#     plot.background  = element_rect(fill = "white", color = NA),
+#     panel.background = element_rect(fill = "white", color = NA),
+#     axis.line        = element_line(color = "black"),
+#     legend.position  = "right",
+#     legend.text      = element_text(size = 9),
+#     plot.title       = element_text(hjust = 0.5, face = "bold", size = 16)
+#   )
+# ubqabundance_rf
 
 ################################################################################
 
-# volcano
+# volcano plot for Figure S15
 
 comm_long <- df %>%
   pivot_longer(
@@ -758,10 +718,8 @@ make_volcano <- function(df, title = NULL) {
       breaks = classes,
       na.value = "gray60"
     ) +
-    
     ylim(0, 100) +
     xlim(-25, 25) +
-    
     labs(
       x = "log2 Fold Change",
       y = "-log10(adj. p-value)",
@@ -855,7 +813,7 @@ ggsave(
 
 #################################################################################
 
-# combine into single figure 
+# combine 5A-E into single figure 5
 
 levels(met_plot_df$display_class) <- str_wrap(levels(met_plot_df$display_class), width = 20)
 names(final_palette) <- str_wrap(names(final_palette), width = 20)
@@ -895,6 +853,8 @@ legend_dummy <- ggplot(met_plot_df, aes(x = XGBoost_Importance, y = RandomForest
   )
 unified_legend <- get_legend(legend_dummy)
 
+
+####### figure S4
 row_ab_ubqabundance <- plot_grid(pa + theme(legend.position = "none"),
                                  pb + theme(legend.position = "none"), 
                                  labels = c("A", "B"),
@@ -906,10 +866,12 @@ ggsave(
   here("misc", "figs", "fig2_ubqabundance.jpg"),
   row_ab_ubqabundance,
   width = 16,
-  height = 9,
+  height = 10,
   dpi = 300
 )
 
+
+######### figure 5
 row_ab <- plot_grid(
   p1 + theme(legend.position = "none") + labs(subtitle = "XGBoost"), 
   p2 + theme(legend.position = "none") + labs(subtitle = "Random Forest"), 
@@ -923,13 +885,7 @@ row_c <- plot_grid(
   label_size = 18, ncol = 1
 )
 
-# row_de <- plot_grid(
-#   ubqabundance_xgb + theme(legend.position = "none"), 
-#   ubqabundance_rf + theme(legend.position = "none"), 
-#   labels = c("D", "E"), label_size = 18, ncol = 2
-# )
-
-row_fg <- plot_grid(
+row_de <- plot_grid(
   p_xgb_ubiq_scatter + theme(legend.position = "none") + labs(subtitle = "XGBoost"), 
   p_rf_ubiq_scatter 
   + theme(legend.position = "none")
@@ -938,22 +894,11 @@ row_fg <- plot_grid(
   label_size = 18, ncol = 2
 )
 
-# row_cde <- plot_grid(
-#   row_c, row_de,
-#   nrow = 2)
-# row_cde <- plot_grid(
-#   unified_legend, row_c,
-#   nrow = 2, rel_heights = c(0.4,1))
-# 
-# ggsave(here("misc", "figs", "fig5cde_ppt.jpg"), 
-#        row_cde, width = 18, height = 8, dpi = 300)
-
 true_final_figure <- plot_grid(
   unified_legend,
   row_ab,
   row_c,
-  # row_de,
-  row_fg,
+  row_de,
   ncol = 1,
   rel_heights = c(0.6, 1, 1, 1.2, 1) 
 )
@@ -961,95 +906,3 @@ true_final_figure <- plot_grid(
 ggsave(here("misc", "figs", "fig5_new.pdf"), 
        true_final_figure, width = 15, height = 15, dpi = 600, bg = "white")
 
-################################################################################
-
-# ML ubiquity plot with outlined metabolites
-
-# target_mets <- c("x39055_948_80202_15_826", 
-#                  "x15256_518_49365_7_407", 
-#                  "x23838_655_56593_11_538")
-# 
-# p_xgb_ubiq_scatter <- ggplot(met_summary_xgb, aes(x = non_scler_ubiquity, y = scler_ubiquity)) +
-#   geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "gray60") +
-#   geom_point(
-#     aes(color = display_class, shape = refined_origin), 
-#     size = 4, stroke = 1, alpha = 0.9
-#   ) +
-#   geom_text_repel(
-#     data = subset(met_summary_xgb, metabolite %in% target_mets),
-#     aes(label = metabolite),
-#     size = 3.5,
-#     fontface = "bold",
-#     box.padding = 2.5,        # Distance between label and other objects
-#     point.padding = 1.5,      # Distance between label and the data point
-#     force = 50,               # Strength of the repulsion
-#     force_pull = 0.5,         
-#     min.segment.length = 0,   # Always draw the line, no matter how short
-#     segment.color = "grey30",
-#     segment.curvature = -0.1, # Adds a slight curve to the leader lines for better aesthetics
-#     segment.ncp = 3,
-#     arrow = arrow(length = unit(0.02, "npc")) 
-#   ) +
-#   scale_color_manual(values = final_palette) +
-#   scale_shape_manual(values = origin_shapes) + 
-#   scale_y_continuous(limits = c(0, 100), breaks = seq(0, 100, by = 20)) +
-#   scale_x_continuous(limits = c(0, 100), breaks = seq(0, 100, by = 20)) +
-#   labs(
-#     x = "Non-Scleractinian Ubiquity (%)", 
-#     y = "Scleractinian Ubiquity (%)", 
-#     color = "Compound Class",
-#     shape = "Metabolite Origin"
-#   ) +
-#   theme_pubr() +
-#   theme(legend.position = "none", plot.title = element_text(size = 12, face = "bold"))
-# 
-# p_rf_ubiq_scatter <- ggplot(met_summary_rf, aes(x = non_scler_ubiquity, y = scler_ubiquity)) +
-#   geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "gray60") +
-#   geom_point(
-#     aes(color = display_class, shape = refined_origin), 
-#     size = 4, stroke = 1, alpha = 0.9
-#   ) +
-#   geom_text_repel(
-#     data = subset(met_summary_rf, metabolite %in% target_mets),
-#     aes(label = metabolite),
-#     size = 3.5,
-#     fontface = "bold",
-#     box.padding = 2.5,
-#     point.padding = 1.5,
-#     force = 50,
-#     force_pull = 0.5,
-#     min.segment.length = 0,
-#     segment.color = "grey30",
-#     segment.curvature = -0.1,
-#     arrow = arrow(length = unit(0.02, "npc"))
-#   ) +
-#   scale_color_manual(values = final_palette) +
-#   scale_shape_manual(values = origin_shapes) + 
-#   scale_y_continuous(limits = c(0, 100), breaks = seq(0, 100, by = 20)) +
-#   scale_x_continuous(limits = c(0, 100), breaks = seq(0, 100, by = 20)) +
-#   labs(
-#     x = "Non-Scleractinian Ubiquity (%)", 
-#     y = "Scleractinian Ubiquity (%)", 
-#     color = "Compound Class",
-#     shape = "Metabolite Origin"
-#   ) +
-#   theme_pubr() +
-#   theme(legend.position = "none", plot.title = element_text(size = 12, face = "bold"))
-# 
-# print(p_xgb_ubiq_scatter)
-# print(p_rf_ubiq_scatter)
-# 
-# row_hi <- plot_grid(
-#   p_xgb_ubiq_scatter + theme(legend.position = "none") + labs(subtitle = "XGBoost"), 
-#   p_rf_ubiq_scatter 
-#   + theme(legend.position = "none")
-#   + labs(subtitle = "Random Forest"), 
-#   # labels = c("H", "I"), 
-#   label_size = 18, ncol = 2
-# )
-# # row_hi <- plot_grid(
-# #   unified_legend, row_hi,
-# #   nrow = 2, rel_heights = c(0.4,1))
-# 
-# ggsave(here("misc", "figs, "fig5_hi.jpg"), 
-#        row_hi, width = 14, height = 6, dpi = 300, bg = "white")

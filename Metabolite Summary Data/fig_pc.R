@@ -56,7 +56,7 @@ bray_curtis <- vegdist(permanova_numeric_data2, method = "bray")
 meta2 <- df[keep_rows, , drop = FALSE]
 
 # ################################################################################
-# #Scleractinia vs nonScleractinia PERMANOVA
+# #Scleractinia vs nonScleractinia PERMANOVA - Figure 2A
 
 # compute BC dissimilarity
 bray_curtis_scleractinia <- vegdist(permanova_numeric_data2, method = "bray")
@@ -156,7 +156,7 @@ ggsave(here("misc", "figs", "pcoa_scler.jpg"), p, width = 10, height = 8, dpi=30
 
 
 ################################################################################
-#Location + bleaching status PERMANOVA
+#Location + bleaching status PERMANOVA - Figure S6A
 
 # drop NAs for bleaching
 keep_rows <- complete.cases(permanova_numeric_data2) & 
@@ -226,7 +226,7 @@ ggsave(here("misc", "figs", "pcoa_locb.jpg"), p2, width = 8, height = 6, dpi = 3
 
 
 ################################################################################
-## Location by symbiont potential PERMANOVA
+## Location by symbiont potential PERMANOVA - Figure S6B
 
 
 keep_rows <- !is.na(meta2$symbiont.potential)
@@ -352,7 +352,7 @@ ggsave(here("misc", "figs", "pcoa_locsym_annotated.jpg"), p3, width = 8, height 
 
 ################################################################################
 
-## Permanova bleaching by symbiont potential
+## Permanova bleaching by symbiont potential - Figure S6C
 
 keep_rows <- !is.na(meta2$bleaching) & !is.na(meta2$symbiont.potential)
 meta_sub <- meta2[keep_rows, , drop = FALSE]
@@ -428,7 +428,7 @@ ggsave(here("misc", "figs", "pcoa_supp.jpg"),
 ################################################################################
 ################################################################################
 
-## Bleaching status alone PERMANOVA
+## Bleaching status alone PERMANOVA - Table S3
 
 desired_levels <- c("Bleached", "Non-Bleached", "Not Applicable")
 permanova_numeric_data <- df %>% select(starts_with("x"))
@@ -500,7 +500,7 @@ ggsave(here("misc", "figs", "pcoa_bleaching.jpg"), p4, width = 8, height = 6, dp
 
 
 ################################################################################
-## Symbiont potential alone PERMANOVA
+## Symbiont potential alone PERMANOVA - Table S3
 
 desired_levels <- na.omit(unique(as.character(df$symbiont.potential)))
 permanova_numeric_data <- df %>% select(starts_with("x"))
@@ -556,8 +556,8 @@ p5 <- ggplot(pcoa_points, aes(x = PCoA1, y = PCoA2, color = symbiont.potential, 
     "text", 
     x = -Inf, y = -Inf, 
     label = stats_label, 
-    hjust = -0.1, # Shift slightly right from the edge
-    vjust = -1.2, # Shift slightly up from the edge
+    hjust = -0.1, 
+    vjust = -1.2, 
     size = 4, 
     fontface = "italic"
   ) +
@@ -573,7 +573,7 @@ ggsave(here("misc", "figs", "pcoa_symbiont.jpg"),
        p5, width = 8, height = 6, dpi = 300)
 
 ################################################################################
-## Location alone PERMANOVA
+## Location alone PERMANOVA - Table S3
 
 desired_levels <- na.omit(unique(as.character(df$location)))
 permanova_numeric_data <- df %>% select(starts_with("x"))
@@ -649,6 +649,7 @@ ggsave(here("misc", "figs", "pcoa_location.jpg"), p6, width = 8, height = 6, dpi
 
 ################################################################################
 
+# combine PCoA supplemental figures
 plot_grid(p4, p5, p6)
 pcoa_supp <- plot_grid(
   p4, p5, p6, 
@@ -664,12 +665,13 @@ ggsave(here("misc", "figs", "pcoa_supp_2.jpg"),
 
 ################################################################################
 ################################################################################
-# Box plots
+
+# Box plots for Figure 2C-E
 
 metabolite_data <- df %>%
   select(starts_with("x"))
 
-########### abundance
+########### abundance - unused
 avg_abundance <- metabolite_data %>%
   mutate(avg_abundance = rowMeans(., na.rm = TRUE)) %>%
   select(avg_abundance)
@@ -693,38 +695,39 @@ plot_data_clean <- plot_data %>%
   mutate(group = fct_relevel(group, "Scleractinia", "Other"))
 cols_sclero_named <- c("Scleractinia" = "#DE7862FF", "Other" = "#D8AF39FF")
 
-p_abundance <- ggplot(plot_data_clean, aes(x = group, y = avg_abundance, fill = group, color = group)) +
-  geom_jitter(width = 0.2, alpha = 0.5, size = 1.5, show.legend = FALSE) +
-  geom_boxplot(alpha = 0.7, width = 0.6, outlier.shape = NA, color = "black") + 
-  stat_compare_means(
-    method = "wilcox.test", 
-    label = "p.format",
-    label.x = 1.4,
-    symnum.args = list(
-      cutpoints = c(0, 0.0001, 0.001, 0.01, 0.05, 1), 
-      symbols = c("****", "***", "**", "*", "ns")
-    )
-  ) +
-  scale_fill_manual(values = cols_sclero_named) +
-  scale_color_manual(values = cols_sclero_named) +
-  labs(
-    y = "Metabolite Abundance"
-  ) +
-  theme_pubr(base_size = 13) +
-  theme(
-    legend.position = "none",
-    axis.text.x = element_text(size = 16),
-    axis.title.y = element_text(size = 16),
-    axis.title.x = element_blank(),
-    plot.title = element_text(hjust = 0.5, face = "bold")
-  )
-p_abundance <- p_abundance + scale_y_continuous(
-  labels = label_number(scale_cut = cut_short_scale()) # Formats as K, M, etc.
-)
-print(p_abundance)
+# abundance - unused
+# p_abundance <- ggplot(plot_data_clean, aes(x = group, y = avg_abundance, fill = group, color = group)) +
+#   geom_jitter(width = 0.2, alpha = 0.5, size = 1.5, show.legend = FALSE) +
+#   geom_boxplot(alpha = 0.7, width = 0.6, outlier.shape = NA, color = "black") + 
+#   stat_compare_means(
+#     method = "wilcox.test", 
+#     label = "p.format",
+#     label.x = 1.4,
+#     symnum.args = list(
+#       cutpoints = c(0, 0.0001, 0.001, 0.01, 0.05, 1), 
+#       symbols = c("****", "***", "**", "*", "ns")
+#     )
+#   ) +
+#   scale_fill_manual(values = cols_sclero_named) +
+#   scale_color_manual(values = cols_sclero_named) +
+#   labs(
+#     y = "Metabolite Abundance"
+#   ) +
+#   theme_pubr(base_size = 13) +
+#   theme(
+#     legend.position = "none",
+#     axis.text.x = element_text(size = 16),
+#     axis.title.y = element_text(size = 16),
+#     axis.title.x = element_blank(),
+#     plot.title = element_text(hjust = 0.5, face = "bold")
+#   )
+# p_abundance <- p_abundance + scale_y_continuous(
+#   labels = label_number(scale_cut = cut_short_scale()) # Formats as K, M, etc.
+# )
+# print(p_abundance)
 
 
-########### ubiquity
+########### ubiquity - Figure 2E ###################
 
 plot_data_clean <- plot_data %>%
   mutate(group = factor(group)) %>% # Ensure it's a factor first
@@ -768,7 +771,7 @@ p_ubiquity <- ggplot(plot_data_clean, aes(x = group, y = avg_ubiquity, fill = gr
 print(p_ubiquity)
 
 
-########### richness
+########### Richness - figure 2C ################### 
 richness_values <- rowSums(metabolite_data > 0, na.rm = TRUE)
 plot_data_clean$richness <- richness_values
 
@@ -800,7 +803,7 @@ p_richness <- ggplot(plot_data_clean, aes(x = group, y = richness, fill = group,
 print(p_richness)
 
 
-############ shannon
+############ shannon diversity - Figure 2D
 shannon_values <- diversity(metabolite_data, index = "shannon")
 plot_data_clean$shannon  <- shannon_values
 
@@ -834,7 +837,7 @@ print(p_entropy)
 
 ################################################################################
 ################################################################################
-# Dendrograms
+# Dendrograms - Figure 2B
 
 avg_metabolite_values_family <- df |> 
   group_by(host_family) |> 
@@ -1011,6 +1014,7 @@ dend_labels_phylum <- dend_data$labels %>%
     text_color_group = if_else(is_scler == TRUE, "Scleractinia_Color", phylum)
   )
 
+# Save fig 2b dendrogram
 p_dendro <- ggplot() +
   geom_segment(data = dend_segments, 
                aes(x = x, y = y, xend = xend, yend = yend, color = branch_color),
@@ -1049,9 +1053,7 @@ print(p_dendro)
 ggsave(here("misc", "figs", "dendro.jpg"), p_dendro, width=10, height=8, dpi = 600)
 
 ################################################################################
-# combine plots with cowplot
-# row 1: legend, p, p2 
-# row 2: p_dendro, p_abundance, p_ubiquity, p_evenness, p_richness (boxplots should be tight)
+# combine plots with cowplot to make final Figure 2
 
 legend_sclero <- get_legend(
   p + 
@@ -1112,11 +1114,12 @@ ggsave(here("misc", "figs", "fig2.pdf"), final_plot_legend, width = 18, height =
 
 ################################################################################
 ################################################################################
-# 
+# Curacao only - Figure S5
+
 # df_clean <- df %>% 
 #   filter(!is.na(location), complete.cases(select(., starts_with("x"))))
 
-# 2. Filter specifically for Curaçao and non-NA scleractinia
+# Filter specifically for Curaçao and non-NA scleractinia
 df_cur <- df %>% 
   filter(location == "Curaçao", !is.na(scleractinia))
 
@@ -1176,7 +1179,7 @@ p_cur
 ggsave(here("misc", "figs", "pcoa_cur_scler.jpg"), p_cur, width = 8, height = 6, dpi = 300)
 
 
-################################### permanova outputs
+################################### permanova outputs across various runs
 
 tidy_permanova <- function(model_output, model_name) {
   model_output %>%
@@ -1196,14 +1199,11 @@ table_bSym <-  tidy_permanova(bleach_sym_permanova, "Bleaching x Symbiont")
 # table_b <- tidy_permanova(bleaching_permanova_result, "Bleaching")
 table_sym <-  tidy_permanova(symbiont_permanova_result, "Symbiont")
 
-# Combine into one master table
 full_stats_table <- bind_rows(table_sclero, table_locB, table_locS, 
                               table_bSym, table_sym)
-
 full_stats_table <- full_stats_table %>%
   mutate(
     across(c(SumOfSqs, R2, F), ~ round(., 3)),
     `Pr(>F)` = ifelse(`Pr(>F)` <= 0.001, "< 0.001", as.character(`Pr(>F)`))
   )
-
 print(full_stats_table)

@@ -36,7 +36,7 @@ df <- df %>%
     host_phylum = factor(host_phylum)
   )
 
-## defining things
+## defining compound names
 met_df <- read.csv(here("Cleaned data CSVs", "merged_met_plot_df.csv"))
 met_df <- met_df %>%
   mutate(
@@ -80,7 +80,7 @@ ordered_levels <- c(target_classes, "Other")
 
 origin_shapes <- c("Host" = 16, "Symbiont" = 3, "Both" = 17, "Unknown" = 8)
 
-
+# read in nina glycerolipid annotation dataframe
 glycero_df <- read.csv(here("Cleaned data CSVs", "glycerolipids_fa_TyCOTW.csv"))
 
 ################################################################################
@@ -193,6 +193,7 @@ enrichment_results <- list(
   scl90 = fisher(met_df_scler_90, met_df)
 )
 
+# compound class enrichment in different datasets
 significant_xgb_origin <- enrichment_results$xgb_origin %>% 
   filter(p_value < 0.05, odds_ratio > 1)
 significant_rf_origin <- enrichment_results$rf_origin %>% 
@@ -258,6 +259,7 @@ super_core_table_rf <- met_df %>%
   mutate(ubiquity_diff = scler_ubiquity - non_scler_ubiquity) %>%
   arrange(desc(XGBoost_Importance))
 
+# converged core from both RF and XGB
 super_core_table <- rbind(super_core_table_rf, super_core_table_xg)
 super_core_table <- unique(super_core_table)
 
@@ -271,6 +273,7 @@ class_counts <- super_core_table %>%
   )
 class_counts
 
+# save core df
 # write.csv(super_core_table, here("Cleaned data CSVs", "core_df.csv"))
 
 significant_supercore <- fisher(super_core_table, met_df )%>% 
@@ -280,8 +283,8 @@ significant_supercore$dataset <- "supercore"
 # combined dataset of compound classes enriched in Scleractinia across different comparisons
 fishers_csv <- rbind(significant_core, significant_rf, significant_xgb, 
                      significant_scler90, significant_supercore)
+# save fishers test results
 # write.csv(fishers_csv,"Metabolite Summary Data/fishers_results.csv")
-
 
 
 #########################################
@@ -452,182 +455,6 @@ ggsave(here("misc", "figs", "ubqtag.jpg"),
        pa_scler_ubq, width=15, height=7, dpi=300)
 
 
-################################################################################
-
-# subvolcanoes with tag_core highlighted
-
-comm_long <- df %>%
-  pivot_longer(
-    cols = starts_with("x"), 
-    names_to  = "metabolite",
-    values_to = "abundance"
-  )
-
-comm_long <- comm_long %>%
-  mutate(abundance = as.numeric(as.character(abundance)))
-
-stats_data <- comm_long %>%
-  select(-scleractinia) %>%                    
-  left_join(df %>% select(sample, scleractinia), by = "sample") %>%
-  filter(!is.na(scleractinia)) %>%
-  mutate(group = if_else(as.character(scleractinia) == "1", "Scleractinia", "Other"))
-
-# compute L2FC and p-values per metabolite
-volcano_results <- stats_data %>%
-  group_by(metabolite) %>%
-  summarise(
-    mean_scler = mean(abundance[group == "Scleractinia"], na.rm = TRUE),
-    mean_other = mean(abundance[group == "Other"], na.rm = TRUE),
-    p_val_raw = wilcox.test(abundance ~ group)$p.value,
-    .groups = "drop"
-  ) %>%
-  mutate(
-    p_adj = p.adjust(p_val_raw, method = "bonferroni"),
-    log2FC = log2((mean_scler + 1) / (mean_other + 1)),
-    # Use adjusted p-value for the y-axis
-    neg_log_p_adj = -log10(p_adj)
-  )
-
-plot_data_volcano <- volcano_results %>%
-  inner_join(met_df %>% select(metabolite, refined_origin, compound_class, display_class), by = "metabolite")
-
-m <- nrow(volcano_results)   
-sig_threshold <- -log10(0.05 / m)
-
-################################################################################
-
-p_tag <- plot_data_volcano %>%
-  filter(compound_class == "TAG") %>%
-  ggplot(aes(x = log2FC, y = neg_log_p_adj)) +
-  geom_vline(xintercept = c(-2, 2), linetype = "dashed", color = "grey70") +
-  geom_hline(yintercept = sig_threshold, linetype = "dashed", color = "grey70") +
-  geom_point(aes(color = compound_class), size = 3, alpha = 0.8) +
-  geom_text_repel(
-    data = . %>% filter(metabolite %in% tag_core_vec),
-    aes(label = metabolite),
-    box.padding = 0.5, 
-    point.padding = 0.3,
-    size = 3, 
-    max.overlaps = Inf, # Ensures all core metabolites get a label
-    fontface = "bold", 
-    color = "black",
-    segment.color = "grey30"
-  ) +
-  xlim(-25,25) +
-  ylim(0,75) + 
-  scale_color_manual(values = final_palette) +
-  labs(title = "TAG", x = "log2 Fold Change", y = "-log10(adj. p-value)") +
-  theme_pubr() +
-  theme(legend.position = "none", plot.title = element_text(size = 18, face = "bold"))
-
-p_dag <- plot_data_volcano %>%
-  filter(compound_class == "DAG") %>%
-  ggplot(aes(x = log2FC, y = neg_log_p_adj)) +
-  geom_vline(xintercept = c(-2, 2), linetype = "dashed", color = "grey70") +
-  geom_hline(yintercept = sig_threshold, linetype = "dashed", color = "grey70") +
-  geom_point(aes(color = compound_class), size = 3, alpha = 0.8) +
-  geom_text_repel(
-    data = . %>% filter(metabolite %in% tag_core_vec),
-    aes(label = metabolite),
-    box.padding = 0.5, 
-    point.padding = 0.3,
-    size = 3, 
-    max.overlaps = Inf,
-    fontface = "bold", 
-    color = "black",
-    segment.color = "grey30"
-  ) +
-  xlim(-25,25) +
-  ylim(0,75) + 
-  scale_color_manual(values = final_palette) +
-  labs(title = "DAG", x = "log2 Fold Change", y = "-log10(adj. p-value)") +
-  theme_pubr() +
-  theme(legend.position = "none", plot.title = element_text(size = 18, face = "bold"))
-
-p_madag <- plot_data_volcano %>%
-  filter(compound_class == "MADAG") %>%
-  ggplot(aes(x = log2FC, y = neg_log_p_adj)) +
-  geom_vline(xintercept = c(-2, 2), linetype = "dashed", color = "grey70") +
-  geom_hline(yintercept = sig_threshold, linetype = "dashed", color = "grey70") +
-  geom_point(aes(color = compound_class), size = 3, alpha = 0.8) +
-  geom_text_repel(
-    data = . %>% filter(metabolite %in% tag_core_vec),
-    aes(label = metabolite),
-    box.padding = 0.5, 
-    point.padding = 0.3,
-    size = 3, 
-    max.overlaps = Inf,
-    fontface = "bold", 
-    color = "black",
-    segment.color = "grey30"
-  ) +
-  xlim(-25,25) +
-  ylim(0,75) + 
-  scale_color_manual(values = final_palette) +
-  labs(title = "MADAG", x = "log2 Fold Change", y = "-log10(adj. p-value)") +
-  theme_pubr() +
-  theme(legend.position = "none", plot.title = element_text(size = 18, face = "bold"))
-
-subcano <- plot_grid(p_tag, p_dag, p_madag, ncol = 3)
-
-ggsave(here("misc", "figs", "subcano.jpg"), 
-       subcano, width=14, height=7, dpi=300)
-
-
-p_ceramide <- plot_data_volcano %>%
-  filter(compound_class == "Ceramides") %>%
-  ggplot(aes(x = log2FC, y = neg_log_p_adj)) +
-  geom_vline(xintercept = c(-2, 2), linetype = "dashed", color = "grey70") +
-  geom_hline(yintercept = sig_threshold, linetype = "dashed", color = "grey70") +
-  geom_point(aes(color = compound_class), size = 3, alpha = 0.8) +
-  geom_text_repel(
-    data = . %>% filter(metabolite %in% ceramide_core_vec),
-    aes(label = metabolite),
-    box.padding = 0.5, 
-    point.padding = 0.3,
-    size = 3, 
-    max.overlaps = Inf,
-    fontface = "bold", 
-    color = "black",
-    segment.color = "grey30"
-  ) +
-  xlim(-25,25) +
-  ylim(0,75) + 
-  scale_color_manual(values = final_palette) +
-  labs(title = "Ceramides", x = "log2 Fold Change", y = "-log10(adj. p-value)") +
-  theme_pubr() +
-  theme(legend.position = "none", plot.title = element_text(size = 18, face = "bold"))
-p_ceramide
-
-## important ceramide identified by perm importance
-p_ceramide <- plot_data_volcano %>%
-  filter(compound_class == "Ceramides") %>%
-  ggplot(aes(x = log2FC, y = neg_log_p_adj)) +
-  geom_vline(xintercept = c(-2, 2), linetype = "dashed", color = "grey70") +
-  geom_hline(yintercept = sig_threshold, linetype = "dashed", color = "grey70") +
-  geom_point(aes(color = compound_class), size = 3, alpha = 0.8) +
-  geom_text_repel(
-    data = . %>% filter(metabolite == "x31046_620_59826_13_466"),
-    aes(label = metabolite),
-    box.padding = 0.5, 
-    point.padding = 0.3,
-    size = 3, 
-    max.overlaps = Inf,
-    fontface = "bold", 
-    color = "black",
-    segment.color = "grey30"
-  ) +
-  xlim(-25,25) +
-  ylim(0,75) + 
-  scale_color_manual(values = final_palette) +
-  labs(title = "Ceramides", x = "log2 Fold Change", y = "-log10(adj. p-value)") +
-  theme_pubr() +
-  theme(legend.position = "none", plot.title = element_text(size = 18, face = "bold"))
-p_ceramide
-
-
-################################################################################
-
 # glycerolipid df lookup
 glycero_df_core <- glycero_df %>%
   filter(glycero_df$metabolite %in% tag_core_vec)
@@ -713,6 +540,7 @@ fisher_results <- fisher_results %>%
 print(fisher_results)
 
 #########################################
+
 # General function to generate contingency table and run Fisher's test for Fatty acids
 test_fa_length <- function(target_length, core_vec, full_df) {
   
@@ -742,34 +570,31 @@ test_fa_length <- function(target_length, core_vec, full_df) {
   print(tab)
   
   res <- fisher.test(tab)
-  cat("\nFisher's Exact Test p-value:", res$p.value, "\n")
-  cat("Odds Ratio:", res$estimate, "\n")
-  cat("--------------------------------------------\n")
-  
+  cat("\np-value:", res$p.value, "\n")
   return(res)
 }
 test_fa_length(22, tag_core_vec, glycero_df)
 
 ######################################################
 
-# make df for nina
-met_metrics <- met_df %>%
-  select(
-    metabolite, 
-    XGBoost_Importance, 
-    RandomForest_Importance, 
-    scler_ubiquity, 
-    non_scler_ubiquity, 
-    total_ubiquity
-  )
-
-glycero_df_enriched <- glycero_df %>%
-  left_join(met_metrics, by = "metabolite") %>%
-  mutate(
-    is_super_core = metabolite %in% super_core_table$metabolite,
-    ubiquity_diff = scler_ubiquity - non_scler_ubiquity
-  )
-write.csv(glycero_df_enriched, here("Cleaned data CSVs", "glycero_df_Nina.csv"))
+# save importance df for nina
+# met_metrics <- met_df %>%
+#   select(
+#     metabolite, 
+#     XGBoost_Importance, 
+#     RandomForest_Importance, 
+#     scler_ubiquity, 
+#     non_scler_ubiquity, 
+#     total_ubiquity
+#   )
+# 
+# glycero_df_enriched <- glycero_df %>%
+#   left_join(met_metrics, by = "metabolite") %>%
+#   mutate(
+#     is_super_core = metabolite %in% super_core_table$metabolite,
+#     ubiquity_diff = scler_ubiquity - non_scler_ubiquity
+#   )
+# write.csv(glycero_df_enriched, here("Cleaned data CSVs", "glycero_df_Nina.csv"))
 
 
 

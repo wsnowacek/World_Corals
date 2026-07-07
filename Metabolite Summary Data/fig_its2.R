@@ -163,6 +163,8 @@ print(na_breakdown)
 
 ################################################################################
 
+# Figure S7
+
 its2_barplot <- df %>%
   filter(!is.na(ITS2.Letter), ITS2.Letter != "") %>%
   count(ITS2.Letter) %>%
@@ -187,6 +189,8 @@ bar1 <- ggplot(its2_barplot, aes(x = ITS2.Letter, y = n, fill = ITS2.Letter)) +
 bar1
 
 ################################################################################
+
+# Figure 3A
 
 bar2_df <- df %>%
   filter(
@@ -221,6 +225,8 @@ bar2
 
 ################################################################################
 
+# Figure S9A
+
 bar3_df <- df %>%
   filter(
     !is.na(ITS2.Letter), ITS2.Letter != "",
@@ -243,7 +249,7 @@ bar3 <- ggplot(bar3_df, aes(x = bleaching_label, y = prop, fill = ITS2.Letter, a
   scale_fill_manual(values = its2_palette, breaks = its2_levels) +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
   scale_alpha_manual(
-    values = c("Bleached" = 1, "Non-Bleached" = 1)  # adjust names to match your data exactly
+    values = c("Bleached" = 1, "Non-Bleached" = 1)  
   ) +
   labs(
     y = "Proportion of Samples",
@@ -255,6 +261,7 @@ bar3
 
 ################################################################################
 
+# Figure 3B
 # by location
 
 bar4_df <- df %>%
@@ -287,8 +294,9 @@ bar4 <- ggplot(bar4_df, aes(x = loc_label, y = prop, fill = ITS2.Letter)) +
 bar4
 
 ################################################################################
-
+# Figure 3D
 # richness 
+
 metabolite_cols <- grep("^x", names(df), value = TRUE)
 
 richness_df <- df %>%
@@ -343,8 +351,9 @@ richness <- ggplot(richness_df, aes(x = ITS2.Letter, y = MetabolomicRichness, fi
   )
 
 ################################################################################
-
+# Figure 3E
 # Shannon entropy
+
 shannon_index <- function(counts) {
   counts <- counts[counts > 0]   # drop zeros
   total <- sum(counts)
@@ -424,7 +433,7 @@ entropy <- ggplot(entropy_df, aes(x = ITS2.Letter, y = MetabolicEntropy, fill = 
 
 ################################################################################
 
-## pcoas
+## pcoas Figure 3C, S8, S9B
 ## filter to remove "mix" samples
 keep_genera <- c("Symbiodinium", "Breviolum", "Cladocopium", "Durusdinium")
 
@@ -452,6 +461,8 @@ permanova_matrix <- as.matrix(numeric_only_data)
 bray_curtis_4g <- vegdist(permanova_matrix, method = "bray")
 
 ################################################################################
+
+# Figure S8
 # nested permanova
 permanova_result <- adonis2(
   bray_curtis_4g ~ ITS2.Letter / location,
@@ -515,6 +526,8 @@ ggsave(here("misc", "figs", "its2_permanova_location.pdf"),
        p, width = 7, height = 6, dpi = 300)
 ################################################################################
 
+# Figure 3C
+
 its2_permanova_result <- adonis2(
   bray_curtis_4g ~ ITS2.Letter,
   data = meta2,
@@ -573,6 +586,9 @@ p2 <- ggplot(pcoa_points, aes(x = PCoA1, y = PCoA2, color = ITS2.Letter, fill = 
 p2
 
 ################################################################################
+
+#Figure S9B
+
 bleaching_permanova_result <- adonis2(
   bray_curtis_4g ~ ITS2.Letter / bleaching,
   data = meta2,
@@ -660,7 +676,7 @@ full_stats_table <- full_stats_table %>%
 print(full_stats_table)
 
 ################################################################################
-## upset plots
+## upset plots - Figure 3F
 
 # remove Mix
 # upset_input <- df %>%
@@ -803,7 +819,8 @@ ggsave(here("misc", "figs", "upset_its2.pdf"),
        upset_plot, width = 14, height = 10, dpi=300)
 
 ################################################################################
-## combine plots
+
+## combine plots for Figure 3
 
 shared_legend <- get_legend(
   bar2 + 
@@ -814,7 +831,6 @@ shared_legend <- get_legend(
       legend.title = element_text(size = 18))
 )
 
-# Remove individual legends
 p_bar2 <- bar2 + theme(legend.position = "none")
 p_bar4 <- bar4 + theme(legend.position = "none")
 p_pcoa <- p2   + theme(legend.position = "none")
@@ -853,7 +869,6 @@ final_figure <- plot_grid(
   rel_heights = c(0.1, 1.9) 
 )
 
-# Display
 print(final_figure)
 ggsave(
   here("misc", "figs", "ITS2combined.pdf"), 
@@ -865,8 +880,7 @@ ggsave(
 
 ################################################################################
 
-# save bar1, bar3, pcoa by location (p)
-
+# Combine Figure S9
 bar3 <- bar3 + theme(legend.position = "none")
 bleach_its2 <- plot_grid(bar3, p3, labels = c ("A","B"), label_size = 18,ncol = 1)
 ggsave(
@@ -878,8 +892,9 @@ ggsave(
 )
 
 ################################################################################
-
+# Figure S10
 ## compound class analysis - volcano plots
+
 target_genera <- c("Symbiodinium", "Breviolum", "Cladocopium", "Durusdinium")
 genus_pairs <- combn(target_genera, 2, simplify = FALSE)
 
@@ -951,10 +966,8 @@ legend_b <- get_legend(
     guides(color = guide_legend(nrow = 3, override.aes = list(size = 4))) # Makes legend "taller"
 )
 
-# Remove legends from the individual grid plots
 volcano_list_no_legend <- lapply(volcano_list, function(p) p + theme(legend.position = "none"))
 
-# Assemble 2x3 grid
 pairwise_volcano_grid <- plot_grid(
   plotlist = volcano_list_no_legend,
   ncol = 3,
@@ -963,7 +976,6 @@ pairwise_volcano_grid <- plot_grid(
   label_size = 20
 )
 
-# Combine grid and the taller legend
 final_pairwise_plot <- plot_grid(
   pairwise_volcano_grid,
   legend_b,

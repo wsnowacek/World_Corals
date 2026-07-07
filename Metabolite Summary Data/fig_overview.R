@@ -172,13 +172,12 @@ taxa_summary <- out_df %>%
     values_to = "Unique Count"
   )
 print(taxa_summary)
-
 ## number of metabolites = 16368
-
 
 ################################################################################
 
-# Bar plots and table
+# Bar plots and table of compounds by refined origin for Figure S1
+
 class_counts <- met_plot_df %>%
   filter(compound_class != "Unknown") %>%
   count(compound_class, sort = TRUE) %>%
@@ -328,6 +327,7 @@ ordered_classes <- levels(plot_data$display_class)
 ordered_classes <- ordered_classes[ordered_classes %in% plot_data$display_class]
 axis_colors <- final_palette[ordered_classes]
 
+### Figure S1
 compound_bar_plot <- ggplot(plot_data, aes(x = axis_label, fill = refined_origin)) +
   geom_bar(position = "stack", width = 0.7) +
   scale_fill_manual(values = cols_origin) +
@@ -607,15 +607,15 @@ ggsave(here("misc", "figs", "Fig1hostmetabolites.jpg"), p_class_both, width = 10
 
 ################################################################################
 
-p_class <- p_class + (theme(axis.title.x = element_blank()))
-p_class_sym <- p_class_sym + theme(axis.title.x = element_blank(), axis.title.y = element_blank())
-p_class_both <- p_class_both + theme(axis.title.x = element_blank(), axis.title.y = element_blank())
-
-combined <- plot_grid(p_class, p_class_sym, p_class_both,
-                      ncol = 3,
-                      labels = c("A","B","C"),
-                      label_size=30)
-ggsave(here("misc", "figs", "Fig1hostmetabolites.jpg"), combined, width = 24, height = 14, dpi = 300)
+# p_class <- p_class + (theme(axis.title.x = element_blank()))
+# p_class_sym <- p_class_sym + theme(axis.title.x = element_blank(), axis.title.y = element_blank())
+# p_class_both <- p_class_both + theme(axis.title.x = element_blank(), axis.title.y = element_blank())
+# 
+# combined <- plot_grid(p_class, p_class_sym, p_class_both,
+#                       ncol = 3,
+#                       labels = c("A","B","C"),
+#                       label_size=30)
+# ggsave(here("misc", "figs", "Fig1hostmetabolites.jpg"), combined, width = 24, height = 14, dpi = 300)
 
 
 ################################################################################
