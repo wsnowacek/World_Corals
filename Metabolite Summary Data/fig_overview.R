@@ -619,3 +619,8 @@ ggsave(here("misc", "figs", "Fig1hostmetabolites.jpg"), p_class_both, width = 10
 
 
 ################################################################################
+
+### get total annotated
+sum(!is.na(met_df$gnps_compound_name) | 
+      !is.na(met_df$compound_name) | 
+      !is.na(met_df$coraldb_compound_name))
