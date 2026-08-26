@@ -14,7 +14,9 @@ library(forcats)
 library(here)
 
 # read in data
-df <- read.csv(here("Cleaned data CSVs", "qc_data.csv"))
+# df <- read.csv(here("Cleaned data CSVs", "qc_data.csv"))
+df <- read.csv(here("Cleaned data CSVs", "qc_data_PQN.csv"))
+
 met_df <- read.csv(here("Cleaned data CSVs", "merged_met_plot_df.csv"))
 
 cols_bleaching <- c(
@@ -152,7 +154,7 @@ p <- ggplot(pcoa_points, aes(x = PCoA1, y = PCoA2,
   theme(legend.position = "right")
 
 # Save the plot
-ggsave(here("misc", "figs", "pcoa_scler.jpg"), p, width = 10, height = 8, dpi=300)
+ggsave(here("misc", "figs/pqn", "pcoa_scler.jpg"), p, width = 10, height = 8, dpi=300)
 
 
 ################################################################################
@@ -180,9 +182,21 @@ print(locB_permanova_result)
 # ---
 #   Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
-perm_p_val <- max(locB_permanova_result$`Pr(>F)`[1:2])
-perm_r2    <- round(sum(locB_permanova_result$R2[1:2]), 3)
-p_label <- if(perm_p_val == 0.001) "p < 0.001" else paste("p =", perm_p_val)
+perm_p_val <- locB_permanova_result$`Pr(>F)`[1]
+perm_r2    <- round(locB_permanova_result$R2[1], 3)
+
+p_label <- if (perm_p_val <= 0.001) {
+  "p \u2264 0.001"
+} else {
+  paste0("p = ", format(perm_p_val, digits = 3))
+}
+
+permanova_label <- paste0(
+  "PERMANOVA: ",
+  p_label,
+  ", R\u00b2 = ",
+  sprintf("%.3f", perm_r2)
+)
 stats_annotation <- paste0("PERMANOVA: R² = ", perm_r2, ", ", p_label)
 
 shapes_bleaching <- c(
@@ -222,7 +236,7 @@ p2 <- ggplot(pcoa_points2, aes(x = PCoA1, y = PCoA2, color = location)) +
     size = 4) +
     theme(legend.position = "right") +
   theme_cowplot(font_size = 14)
-ggsave(here("misc", "figs", "pcoa_locb.jpg"), p2, width = 8, height = 6, dpi = 300)
+ggsave(here("misc", "figs/pqn", "pcoa_locb.jpg"), p2, width = 8, height = 6, dpi = 300)
 
 
 ################################################################################
@@ -251,8 +265,8 @@ print(locS_permanova_result)
 
 
 # global model stats
-perm_p_val <- max(locS_permanova_result$`Pr(>F)`[1:2])
-perm_r2    <- round(sum(locS_permanova_result$R2[1:2]), 3)
+perm_p_val <- max(locS_permanova_result$`Pr(>F)`[1])
+perm_r2    <- round(sum(locS_permanova_result$R2[1]), 3)
 p_label    <- if(perm_p_val <= 0.001) "p < 0.001" else paste("p =", perm_p_val)
 stats_annotation <- paste0("PERMANOVA: R² = ", perm_r2, ", ", p_label)
 
@@ -292,7 +306,7 @@ p3 <- ggplot(pcoa_points3, aes(x = PCoA1, y = PCoA2, color = location)) +
   theme(legend.position = "right")
 
 # Save
-ggsave(here("misc", "figs", "pcoa_locsym_annotated.jpg"), p3, width = 8, height = 6, dpi = 300)
+ggsave(here("misc", "figs/pqn", "pcoa_locsym_annotated.jpg"), p3, width = 8, height = 6, dpi = 300)
 
 # keep_rows <- !is.na(meta2$symbiont.potential)
 # # subset the metadata and the numeric data simultaneously
@@ -371,8 +385,8 @@ bleach_sym_permanova <- adonis2(
 # Total    529  138.543 1.0000                  
 # ---
 
-perm_p_val <- max(bleach_sym_permanova$`Pr(>F)`[1:2])
-perm_r2    <- round(sum(bleach_sym_permanova$R2[1:2]), 3)
+perm_p_val <- max(bleach_sym_permanova$`Pr(>F)`[1])
+perm_r2    <- round(sum(bleach_sym_permanova$R2[1]), 3)
 p_label    <- if(perm_p_val <= 0.001) "p < 0.001" else paste("p =", perm_p_val)
 stats_annotation <- paste0("PERMANOVA: R² = ", perm_r2, ", ", p_label)
 
@@ -405,7 +419,7 @@ p_bleach_sym <- ggplot(pcoa_pts, aes(x = PCoA1, y = PCoA2, color = bleaching)) +
   theme(legend.position = "right")
 
 # Save the result
-ggsave(here("misc", "figs", "pcoa_bsym.jpg"), p_bleach_sym, width = 8, height = 6, dpi = 300)
+ggsave(here("misc", "figs/pqn", "pcoa_bsym.jpg"), p_bleach_sym, width = 8, height = 6, dpi = 300)
 
 ################################################################################
 pcoa_supp <- plot_grid(
@@ -419,7 +433,7 @@ pcoa_supp <- plot_grid(
   axis = "lr"
 )
 
-ggsave(here("misc", "figs", "pcoa_supp.jpg"), 
+ggsave(here("misc", "figs/pqn", "pcoa_supp.jpg"), 
        pcoa_supp, 
        width = 10, 
        height = 16, 
@@ -496,7 +510,7 @@ p4 <- ggplot(pcoa_points, aes(x = PCoA1, y = PCoA2, color = bleaching, fill = bl
   ) +
   theme_cowplot(font_size = 14) +
   theme(legend.position = "right")
-ggsave(here("misc", "figs", "pcoa_bleaching.jpg"), p4, width = 8, height = 6, dpi = 300)
+ggsave(here("misc", "figs/pqn", "pcoa_bleaching.jpg"), p4, width = 8, height = 6, dpi = 300)
 
 
 ################################################################################
@@ -569,7 +583,7 @@ p5 <- ggplot(pcoa_points, aes(x = PCoA1, y = PCoA2, color = symbiont.potential, 
   ) +
   theme_cowplot(font_size = 14) +
   theme(legend.position = "right")
-ggsave(here("misc", "figs", "pcoa_symbiont.jpg"), 
+ggsave(here("misc", "figs/pqn", "pcoa_symbiont.jpg"), 
        p5, width = 8, height = 6, dpi = 300)
 
 ################################################################################
@@ -645,7 +659,7 @@ p6 <- ggplot(pcoa_points, aes(x = PCoA1, y = PCoA2, color = location, fill = loc
   theme(legend.position = "right")
 
 # save plot
-ggsave(here("misc", "figs", "pcoa_location.jpg"), p6, width = 8, height = 6, dpi = 300)
+ggsave(here("misc", "figs/pqn", "pcoa_location.jpg"), p6, width = 8, height = 6, dpi = 300)
 
 ################################################################################
 
@@ -660,7 +674,7 @@ pcoa_supp <- plot_grid(
   align = "hv",
   axis = "tb" # aligns top and bottom axes
 )
-ggsave(here("misc", "figs", "pcoa_supp_2.jpg"), 
+ggsave(here("misc", "figs/pqn", "pcoa_supp_2.jpg"), 
        pcoa_supp, width = 12, height = 6, dpi = 300, bg = "white")
 
 ################################################################################
@@ -1050,7 +1064,7 @@ p_dendro <- ggplot() +
     override.aes = list(alpha = 1, size = 4, shape = 15)
   ))
 print(p_dendro)
-ggsave(here("misc", "figs", "dendro.jpg"), p_dendro, width=10, height=8, dpi = 600)
+ggsave(here("misc", "figs/pqn", "dendro.jpg"), p_dendro, width=10, height=8, dpi = 600)
 
 ################################################################################
 # combine plots with cowplot to make final Figure 2
@@ -1109,7 +1123,7 @@ final_plot_legend <- plot_grid(
 )
 
 print(final_plot)
-ggsave(here("misc", "figs", "fig2.pdf"), final_plot_legend, width = 18, height = 12, dpi = 300)
+ggsave(here("misc", "figs/pqn", "fig2.pdf"), final_plot_legend, width = 18, height = 12, dpi = 300)
 
 
 ################################################################################
@@ -1176,7 +1190,7 @@ p_cur <- ggplot(df_cur, aes(x = V1, y = V2)) +
   ) +
   theme_cowplot()
 p_cur
-ggsave(here("misc", "figs", "pcoa_cur_scler.jpg"), p_cur, width = 8, height = 6, dpi = 300)
+ggsave(here("misc", "figs/pqn", "pcoa_cur_scler.jpg"), p_cur, width = 8, height = 6, dpi = 300)
 
 
 ################################### permanova outputs across various runs

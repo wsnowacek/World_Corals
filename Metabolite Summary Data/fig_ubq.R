@@ -438,7 +438,7 @@ p3 <- ggscatter(
 ) +
   geom_text_repel(
     data = met_plot_df %>% filter(metabolite %in% top_labels),
-    aes(label = compound_name, color = display_class),
+    aes(label = coraldb_compound_name, color = display_class),
     size = 3,
     fontface = "italic",
     force = 20,            

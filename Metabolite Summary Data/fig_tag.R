@@ -609,6 +609,14 @@ test_fa_length(22, tag_core_vec, glycero_df)
 
 ######################################################
 
+## calc
+met_df_renamed <- met_df %>%
+  filter(
+    str_detect(compound_name, "^(MADAG|TAG|DAG)"),
+    display_class == "Unknown"
+  )
+# 19 glycerolipid compounds with updated labels following nina manual annotation
+
 # save importance df for nina
 # met_metrics <- met_df %>%
 #   select(
@@ -628,56 +636,3 @@ test_fa_length(22, tag_core_vec, glycero_df)
 #   )
 # write.csv(glycero_df_enriched, here("Cleaned data CSVs", "glycero_df_Nina.csv"))
 
-
-#### Make df with non-scleractinia samples containing MADAGs
-madag_metabolites <- met_df %>%
-  filter(compound_class == "MADAG") %>%
-  pull(metabolite)
-
-df_madag_non_scler <- df %>%
-  filter(scleractinia == 0) %>%
-  select(
-    !starts_with("x", ignore.case = TRUE), # Keeps all non-'X' metadata columns
-    any_of(madag_metabolites)              # Keeps MADAG metabolite columns
-  )
-dim(df_madag_non_scler)
-head(df_madag_non_scler)
-
-### make ubiquity abundance plot from this resulting dataset where each dot is a MADAG
-madag_cols <- intersect(madag_metabolites, colnames(df_madag_non_scler))
-
-madag_plot_data <- df_madag_non_scler %>%
-  summarise(across(all_of(madag_cols), list(
-    ubiquity = ~ mean(. > 0, na.rm = TRUE) * 100, # % of non-scler samples where present
-    abundance = ~ mean(., na.rm = TRUE)           # average abundance across samples
-  ))) %>%
-  pivot_longer(
-    cols = everything(),
-    names_to = c("metabolite", ".value"),
-    names_pattern = "(.*)_(ubiquity|abundance)$"
-  ) %>%
-  left_join(
-    met_df %>% select(metabolite, compound_name),
-    by = "metabolite"
-  ) %>%
-  # Fallback to feature ID if compound_name is missing
-  mutate(label_name = coalesce(compound_name, metabolite))
-
-p <- ggplot(madag_plot_data, aes(x = ubiquity, y = abundance)) +
-  geom_point(color = "#FF9896FF", size = 3, alpha = 0.8) +
-  # geom_text_repel(
-  #   aes(label = label_name),
-  #   size = 3.5,
-  #   max.overlaps = 15,
-  #   box.padding = 0.4
-  # ) +
-  theme_pubr(base_size = 12) +
-  labs(
-    x = "Non-Scleractinian Ubiquity",
-    y = "Average Abundance"
-  ) +
-  theme(
-    plot.title = element_text(face = "bold", hjust = 0.5),
-    panel.grid.minor = element_blank()
-  )
-print(p)
