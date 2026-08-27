@@ -24,7 +24,7 @@ library(UpSetR)
 library(here)
 
 # read in data
-df <- read.csv(here("Cleaned data CSVs", "qc_data.csv"))
+df <- read.csv(here("Cleaned data CSVs", "qc_data_PQN.csv"))
 met_df <- read.csv(here("Cleaned data CSVs", "merged_met_plot_df.csv"))
 
 df <- df %>%
@@ -193,7 +193,7 @@ print(p_family_richness)
 # diag(plot_matrix) <- 1
 # 
 # pdf(
-#   file = here("misc", "figs", "family_jaccard_corrplot.pdf"),
+#   file = here("misc", "figs/pqn", "family_jaccard_corrplot.pdf"),
 #   width = 12, 
 #   height = 10
 # )
@@ -245,7 +245,7 @@ p_sampling_depth <- ggplot(scler_df, aes(x = max_intensity, y = richness, color 
   theme(
     legend.position = "right")
 p_sampling_depth
-ggsave(here("misc", "figs", "richness_abundance.jpg"), 
+ggsave(here("misc", "figs/pqn", "richness_abundance.jpg"), 
        p_sampling_depth, width = 8, height = 6, dpi = 300)
 
 
@@ -309,7 +309,7 @@ draw_flower <- function(data, group_var) {
 
 df_scler <- df %>% filter(host_order == "Scleractinia", !is.na(host_family))
 p_flower_family <- draw_flower(df_scler, "host_family")
-ggsave(here("misc", "figs", "flower_plot_family_unique.jpg"), 
+ggsave(here("misc", "figs/pqn", "flower_plot_family_unique.jpg"), 
        p_flower_family, width = 13, height = 9, dpi = 300)
 
 
@@ -523,7 +523,7 @@ p_volcano2 <- ggplot(plot_data_volcano, aes(x = log2FC, y = neg_log_p_adj)) +
     axis.title = element_text(size = 20),
     plot.title = element_text(face = "bold", hjust = 0.5)
   )
-ggsave(here("misc", "figs", "volcano_core.jpg"), p_volcano2, width=14,height=10,dpi=300)
+ggsave(here("misc", "figs/pqn", "volcano_core.jpg"), p_volcano2, width=14,height=10,dpi=300)
 
 ############ combine to make multipanel figure
 row1 <- p_family_richness
@@ -549,7 +549,7 @@ final_multipanel <- plot_grid(
 )
 
 save_plot(
-  filename = here("misc", "figs", "fig4.pdf"),
+  filename = here("misc", "figs/pqn", "fig4.pdf"),
   plot = final_multipanel,
   base_width = 16,
   base_height = 20,
@@ -683,13 +683,13 @@ make_volcano <- function(selected_df, outpath = NULL) {
 ###### Figure s13A
 p_volcano_scler_all <- make_volcano(
   met_df_scler_all,
-  here("misc", "figs", "volcano_scler_all.jpg")
+  here("misc", "figs/pqn", "volcano_scler_all.jpg")
 )
 
 ######### Figure s13B
 p_volcano_non_scler_all <- make_volcano(
   met_df_non_scler_all,
-  here("misc", "figs", "volcano_non_scler_all.jpg")
+  here("misc", "figs/pqn", "volcano_non_scler_all.jpg")
 )
 
 # combine figure s13
@@ -701,7 +701,7 @@ volcano_ubiquitous <- plot_grid(
   label_size = 18,
   rel_heights = c(1, 1)
 )
-ggsave(here("misc", "figs", "volcano_ubq.jpg"), volcano_ubiquitous, width=12,height=14,dpi=300)
+ggsave(here("misc", "figs/pqn", "volcano_ubq.jpg"), volcano_ubiquitous, width=12,height=14,dpi=300)
 
 #######################
 
@@ -818,7 +818,7 @@ ggsave(here("misc", "figs", "volcano_ubq.jpg"), volcano_ubiquitous, width=12,hei
 # )
 # 
 # ggsave(
-#   here("misc", "figs", "combined_ubiquity_plots.jpg"), 
+#   here("misc", "figs/pqn", "combined_ubiquity_plots.jpg"), 
 #   combined_ubiquity_plot, 
 #   width = 16, 
 #   height = 8, 
@@ -881,7 +881,7 @@ ggsave(here("misc", "figs", "volcano_ubq.jpg"), volcano_ubiquitous, width=12,hei
 #     legend.position = "right"
 #   )
 # ggsave(
-#   here("misc", "figs", "ubqplot.jpg"),
+#   here("misc", "figs/pqn", "ubqplot.jpg"),
 #   ps,
 #   width = 12,
 #   height = 8,
@@ -926,7 +926,7 @@ venn_bleach <- draw_venn_comparison(data = df_bleach,
                                     custom_palette = cols_bleaching)
 
 ggsave(
-  here("misc", "figs", "venntest.jpg"),
+  here("misc", "figs/pqn", "venntest.jpg"),
   venn_bleach,
   width = 12,
   height = 8,
@@ -948,7 +948,7 @@ ggsave(
 # )
 # 
 # ggsave(
-#   here("misc", "figs", "vennsym.jpg"),
+#   here("misc", "figs/pqn", "vennsym.jpg"),
 #   venn_sym,
 #   width = 8,
 #   height = 12,
@@ -961,7 +961,7 @@ df_loc <- df %>% filter(!is.na(location)) %>% filter(scleractinia == 1)
 venn_loc <- draw_venn_comparison(df_loc, "location", cols_location)
 
 ggsave(
-  here("misc", "figs", "vennloc.jpg"),
+  here("misc", "figs/pqn", "vennloc.jpg"),
   venn_loc,
   width = 12,
   height = 8,
@@ -1014,7 +1014,7 @@ ggsave(
 # set_cols[is.na(set_cols)] <- "grey25"
 # 
 # png(
-#   filename = "/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/upset_phylum.jpg",
+#   filename = "/Users/henrysun_1/Desktop/Duke/PhD/coral/World_Corals/misc/figs/pqn/upset_phylum.jpg",
 #   width = 16,
 #   height = 9,
 #   units = "in",

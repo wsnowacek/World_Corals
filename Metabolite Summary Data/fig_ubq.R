@@ -16,7 +16,7 @@ library(ggrepel)
 library(here)
 
 # read in data
-df <- read.csv(here("Cleaned data CSVs", "qc_data.csv"))
+df <- read.csv(here("Cleaned data CSVs", "qc_data_PQN.csv"))
 met_df <- read.csv(here("Cleaned data CSVs", "merged_met_plot_df.csv"))
 
 present_metabolites <- df %>% 
@@ -804,7 +804,7 @@ p_combined <- plot_grid(
   rel_heights = c(0.15, 1)
 )
 ggsave(
-  here("misc", "figs", "volcano_ml.jpg"),
+  here("misc", "figs/pqn", "volcano_ml.jpg"),
   p_combined,
   width = 16,
   height = 9,
@@ -863,7 +863,7 @@ row_ab_ubqabundance <- plot_grid(unified_legend,row_ab_ubqabundance,
                                  ncol=1,
                                  rel_heights=c(0.3,1))
 ggsave(
-  here("misc", "figs", "fig2_ubqabundance.jpg"),
+  here("misc", "figs/pqn", "fig2_ubqabundance.jpg"),
   row_ab_ubqabundance,
   width = 16,
   height = 10,
@@ -903,6 +903,6 @@ true_final_figure <- plot_grid(
   rel_heights = c(0.6, 1, 1, 1.2, 1) 
 )
 
-ggsave(here("misc", "figs", "fig5_new.pdf"), 
+ggsave(here("misc", "figs/pqn", "fig5_new.pdf"), 
        true_final_figure, width = 15, height = 15, dpi = 600, bg = "white")
 

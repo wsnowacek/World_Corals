@@ -17,7 +17,7 @@ library(here)
 # library(circlize)
 
 # read in data
-df <- read.csv(here("Cleaned data CSVs", "qc_data.csv"))
+df <- read.csv(here("Cleaned data CSVs", "qc_data_PQN.csv"))
 met_df <- read.csv(here("Cleaned data CSVs", "merged_met_plot_df.csv"))
 
 present_metabolites <- df %>% 
@@ -133,7 +133,7 @@ p_volcano <- ggplot(plot_data_volcano, aes(x = log2FC, y = neg_log_p_adj, color 
     axis.text = element_text(size = 14)
   )
 print(p_volcano)
-ggsave(here("misc", "figs", "volcano_origin.jpg"), p_volcano,width=15,height=12,dpi=300)
+ggsave(here("misc", "figs/pqn", "volcano_origin.jpg"), p_volcano,width=15,height=12,dpi=300)
 ## 110 rows outside plot
 
 ################################################################################
@@ -239,14 +239,14 @@ p_volcano2 <- ggplot(plot_data_volcano, aes(x = log2FC, y = neg_log_p_adj)) +
     axis.title = element_text(size = 20),
     plot.title = element_text(face = "bold", hjust = 0.5)
   )
-ggsave(here("misc", "figs", "volcano.jpg"), p_volcano2, width=14,height=10,dpi=300)
+ggsave(here("misc", "figs/pqn", "volcano.jpg"), p_volcano2, width=14,height=10,dpi=300)
 
 #############################################
 
 combined_volcano <- plot_grid(p_volcano, p_volcano2, ncol = 1, labels = c("A", "B"), label_size = 24, align = "hv")
-ggsave(here("misc", "figs", "combined_volcano.jpg"), combined_volcano, width=14,height=20,dpi=300)
+ggsave(here("misc", "figs/pqn", "combined_volcano.jpg"), combined_volcano, width=14,height=20,dpi=300)
 
-# 
+
 # ################################################################################
 # ## subvolcanos NOT included in current analysis
 # 
@@ -317,7 +317,7 @@ ggsave(here("misc", "figs", "combined_volcano.jpg"), combined_volcano, width=14,
 #   theme(legend.position = "none", plot.title = element_text(size = 18, face = "bold"))
 # 
 # subcano <- plot_grid(p_tag, p_dag, p_madag, ncol = 3)
-# ggsave(here("misc", "figs", "subcano.jpg"), subcano, width=14, height=7, dpi=300)
+# ggsave(here("misc", "figs/pqn", "subcano.jpg"), subcano, width=14, height=7, dpi=300)
 # 
 # ################################################################################
 # 
@@ -364,6 +364,6 @@ ggsave(here("misc", "figs", "combined_volcano.jpg"), combined_volcano, width=14,
 # MADAG
 # 
 # subcano2 <- plot_grid(TAG, DAG, MADAG, ncol = 3)
-# ggsave(here("misc", "figs", "subcano2.jpg"), subcano2, width=14, height=7, dpi=300)
+# ggsave(here("misc", "figs/pqn", "subcano2.jpg"), subcano2, width=14, height=7, dpi=300)
 # 
 

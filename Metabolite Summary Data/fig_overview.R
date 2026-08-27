@@ -17,7 +17,7 @@ library(gt)
 library(here)
 
 # read in data
-df <- read.csv(here("Cleaned data CSVs", "qc_data.csv"))
+df <- read.csv(here("Cleaned data CSVs", "qc_data_PQN.csv"))
 met_df <- read.csv(here("Cleaned data CSVs", "merged_met_plot_df.csv"))
 
 present_metabolites <- df %>% 
@@ -346,7 +346,7 @@ compound_bar_plot <- ggplot(plot_data, aes(x = axis_label, fill = refined_origin
   )
 
 print(compound_bar_plot)
-ggsave(here("misc", "figs", "compound_barplot.jpg"),
+ggsave(here("misc", "figs/pqn", "compound_barplot.jpg"),
        compound_bar_plot,
        width = 10, height = 12, dpi = 300)
 
@@ -412,7 +412,7 @@ p_class <- ggbarplot(
   coord_flip()
 
 p_class
-ggsave(here("misc", "figs", "Fig1hostmetabolites.jpg"), p_class, width = 10, height = 14, dpi = 300)
+ggsave(here("misc", "figs/pqn", "Fig1hostmetabolites.jpg"), p_class, width = 10, height = 14, dpi = 300)
 
 #########################
 # symbiont only metabolites
@@ -511,7 +511,7 @@ p_class_sym <- ggbarplot(
   coord_flip()
 
 p_class_sym
-ggsave(here("misc", "figs", "Fig1hostmetabolites.jpg"), p_class_sym, width = 10, height = 14, dpi = 300)
+ggsave(here("misc", "figs/pqn", "Fig1hostmetabolites.jpg"), p_class_sym, width = 10, height = 14, dpi = 300)
 
 
 #########################
@@ -603,7 +603,7 @@ p_class_both <- ggbarplot(
   ylim(0,350) +
   coord_flip()
 p_class_both
-ggsave(here("misc", "figs", "Fig1hostmetabolites.jpg"), p_class_both, width = 10, height = 14, dpi = 300)
+ggsave(here("misc", "figs/pqn", "Fig1hostmetabolites.jpg"), p_class_both, width = 10, height = 14, dpi = 300)
 
 ################################################################################
 
@@ -615,7 +615,7 @@ ggsave(here("misc", "figs", "Fig1hostmetabolites.jpg"), p_class_both, width = 10
 #                       ncol = 3,
 #                       labels = c("A","B","C"),
 #                       label_size=30)
-# ggsave(here("misc", "figs", "Fig1hostmetabolites.jpg"), combined, width = 24, height = 14, dpi = 300)
+# ggsave(here("misc", "figs/pqn", "Fig1hostmetabolites.jpg"), combined, width = 24, height = 14, dpi = 300)
 
 
 ################################################################################

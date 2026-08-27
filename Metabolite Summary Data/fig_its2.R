@@ -18,10 +18,7 @@ library(cowplot)
 library(here)
 
 # read data
-df <- read.csv(here("Cleaned data CSVs", "ITS2full.csv"))
-df <- df %>%
-  select(-X.1, -X, -X.Location...as.character.Location..)
-
+df <- read.csv(here("Cleaned data CSVs", "ITS2full_PQN.csv"))
 met_df <- read.csv(here("Cleaned data CSVs", "merged_met_plot_df.csv"))
 
 # define color palettes
@@ -522,7 +519,7 @@ p <- ggplot(pcoa_points, aes(x = PCoA1, y = PCoA2, color = ITS2.Letter, fill = I
   theme_pubr() +
   theme(legend.position = "right")
 p
-ggsave(here("misc", "figs", "its2_permanova_location.pdf"), 
+ggsave(here("misc", "figs/pqn", "its2_permanova_location.pdf"), 
        p, width = 7, height = 6, dpi = 300)
 ################################################################################
 
@@ -815,7 +812,7 @@ upset_plot <- ComplexUpset::upset(
 
 print(upset_plot)
 
-ggsave(here("misc", "figs", "upset_its2.pdf"), 
+ggsave(here("misc", "figs/pqn", "upset_its2.pdf"), 
        upset_plot, width = 14, height = 10, dpi=300)
 
 ################################################################################
@@ -871,7 +868,7 @@ final_figure <- plot_grid(
 
 print(final_figure)
 ggsave(
-  here("misc", "figs", "ITS2combined.pdf"), 
+  here("misc", "figs/pqn", "ITS2combined.pdf"), 
   plot = final_figure, 
   width = 18, 
   height = 12, 
@@ -884,7 +881,7 @@ ggsave(
 bar3 <- bar3 + theme(legend.position = "none")
 bleach_its2 <- plot_grid(bar3, p3, labels = c ("A","B"), label_size = 18,ncol = 1)
 ggsave(
-  here("misc", "figs", "ITS2bleaching.pdf"), 
+  here("misc", "figs/pqn", "ITS2bleaching.pdf"), 
   plot = bleach_its2, 
   width = 7, 
   height = 8, 
@@ -983,5 +980,5 @@ final_pairwise_plot <- plot_grid(
   rel_heights = c(1, 0.15) 
 )
 
-ggsave(here("misc", "figs", "its2_volcano.pdf"), 
+ggsave(here("misc", "figs/pqn", "its2_volcano.pdf"), 
        final_pairwise_plot, width = 18, height = 14, dpi = 300)

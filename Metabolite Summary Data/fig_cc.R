@@ -11,7 +11,7 @@ library(forcats)
 library(here)
 
 # read in data
-df <- read.csv(here("Cleaned data CSVs", "qc_data.csv"))
+df <- read.csv(here("Cleaned data CSVs", "qc_data_PQN.csv"))
 met_df <- read.csv(here("Cleaned data CSVs", "merged_met_plot_df.csv"))
 
 ## Collectors Curves - figure S2
@@ -441,7 +441,7 @@ final_plot <- plot_grid(
   ncol = 1, 
   rel_heights = c(1, 1) 
 )
-ggsave(here("misc", "figs", "fig3_ITS2.jpg"), 
+ggsave(here("misc", "figs/pqn", "fig3_ITS2.jpg"), 
        final_plot, width=14,height=10,dpi=300) 
 
 

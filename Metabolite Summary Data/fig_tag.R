@@ -13,7 +13,7 @@ library(ggrepel)
 library(ggforce)
 library(here)
 
-df <- read.csv(here("Cleaned data CSVs", "qc_data.csv"))
+df <- read.csv(here("Cleaned data CSVs", "qc_data_PQN.csv"))
 
 ## round all numeric columns to 3 decimal points
 
@@ -393,7 +393,7 @@ pa_scler_ubq <- ggplot(met_plot_comparison, aes(x = scler_ubiquity, y = avg_abun
   theme(legend.position = "right")
 pa_scler_ubq
 
-ggsave(here("misc", "figs", "ubqtag.jpg"), 
+ggsave(here("misc", "figs/pqn", "ubqtag.jpg"), 
        pa_scler_ubq, width=15, height=7, dpi=300)
 
 # pa_total_ubq <- ggplot(met_plot_comparison, aes(x = total_ubiquity, y = avg_abundance)) +
@@ -451,8 +451,8 @@ pb_scler_ubq <- ggplot(met_plot_comparison_2, aes(x = scler_ubiquity, y = avg_ab
   theme(legend.position = "right")
 pb_scler_ubq
 
-ggsave(here("misc", "figs", "ubqtag.jpg"), 
-       pa_scler_ubq, width=15, height=7, dpi=300)
+ggsave(here("misc", "figs/pqn", "ubqtagb.jpg"), 
+       pb_scler_ubq, width=15, height=7, dpi=300)
 
 
 # glycerolipid df lookup
