@@ -25,6 +25,7 @@ library(here)
 
 # read in data
 df <- read.csv(here("Cleaned data CSVs", "qc_data_PQN.csv"))
+df$X <- NULL
 met_df <- read.csv(here("Cleaned data CSVs", "merged_met_plot_df.csv"))
 
 df <- df %>%
@@ -226,27 +227,27 @@ print(p_family_richness)
 # heatmap_grob <- grid::grid.grabExpr(draw_corrplot())
 
 ### scatterplot of richness by abundance - Nina qc check
-scler_df <- scler_df %>%
-  rowwise() %>%
-  mutate(max_intensity = max(c_across(starts_with("x")), na.rm = TRUE)) %>%
-  ungroup()
-
-p_sampling_depth <- ggplot(scler_df, aes(x = max_intensity, y = richness, color = host_family)) +
-  geom_point(alpha = 0.6, size = 3) +
-  # geom_smooth(method = "lm", color = "gray60", linetype = "dashed", se = TRUE) +
-  scale_color_manual(values = family_palette) +
-  # scale_x_log10(labels = scales::label_scientific()) + 
-  labs(
-    x = "Abundance",
-    y = "Richness",
-    color = "Host Family"
-  ) +
-  theme_pubr(base_size = 14) +
-  theme(
-    legend.position = "right")
-p_sampling_depth
-ggsave(here("misc", "figs/pqn", "richness_abundance.jpg"), 
-       p_sampling_depth, width = 8, height = 6, dpi = 300)
+# scler_df <- scler_df %>%
+#   rowwise() %>%
+#   mutate(max_intensity = max(c_across(starts_with("x")), na.rm = TRUE)) %>%
+#   ungroup()
+# 
+# p_sampling_depth <- ggplot(scler_df, aes(x = max_intensity, y = richness, color = host_family)) +
+#   geom_point(alpha = 0.6, size = 3) +
+#   # geom_smooth(method = "lm", color = "gray60", linetype = "dashed", se = TRUE) +
+#   scale_color_manual(values = family_palette) +
+#   # scale_x_log10(labels = scales::label_scientific()) + 
+#   labs(
+#     x = "Abundance",
+#     y = "Richness",
+#     color = "Host Family"
+#   ) +
+#   theme_pubr(base_size = 14) +
+#   theme(
+#     legend.position = "right")
+# p_sampling_depth
+# ggsave(here("misc", "figs/pqn", "richness_abundance.jpg"), 
+#        p_sampling_depth, width = 8, height = 6, dpi = 300)
 
 
 ################################################################################
@@ -926,7 +927,7 @@ venn_bleach <- draw_venn_comparison(data = df_bleach,
                                     custom_palette = cols_bleaching)
 
 ggsave(
-  here("misc", "figs/pqn", "venntest.jpg"),
+  here("misc", "figs/pqn", "vennbleach.jpg"),
   venn_bleach,
   width = 12,
   height = 8,

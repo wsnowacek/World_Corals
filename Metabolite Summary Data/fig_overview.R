@@ -18,6 +18,8 @@ library(here)
 
 # read in data
 df <- read.csv(here("Cleaned data CSVs", "qc_data_PQN.csv"))
+df$X <- NULL
+
 met_df <- read.csv(here("Cleaned data CSVs", "merged_met_plot_df.csv"))
 
 present_metabolites <- df %>% 
@@ -617,12 +619,11 @@ ggsave(here("misc", "figs/pqn", "Fig1hostmetabolites.jpg"), p_class_both, width 
 #                       label_size=30)
 # ggsave(here("misc", "figs/pqn", "Fig1hostmetabolites.jpg"), combined, width = 24, height = 14, dpi = 300)
 
-
 ################################################################################
 
 ### get total annotated
 sum(!is.na(met_df$gnps_compound_name) | 
       !is.na(met_df$compound_name) | 
       !is.na(met_df$coraldb_compound_name))
-
+# 1400
 

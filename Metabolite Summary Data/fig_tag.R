@@ -14,6 +14,7 @@ library(ggforce)
 library(here)
 
 df <- read.csv(here("Cleaned data CSVs", "qc_data_PQN.csv"))
+df$X <- NULL
 
 ## round all numeric columns to 3 decimal points
 
@@ -133,21 +134,21 @@ core_df <- met_df %>%
   filter(metabolite %in% core_metabolite_ids)
 
 # define perm importance df
-perm_df <- read.csv(here("machine_learning/perm_importance", "perm_importance_results_kbest.csv"))
-important_metabolites_joined <- perm_df %>%
-  # Keep only features that contributed positively to the model
-  filter(importance_mean > 0) %>%
-  left_join(met_df, by = "metabolite")
-
-feature_set_list <- important_metabolites_joined %>%
-  group_split(feature_set) %>%
-  set_names(map_chr(., ~ first(.x$feature_set)))
-
-all_kbest_df <- feature_set_list[["All_KBest"]] %>%
-  select(-X.x)
-
-host_kbest_df <- feature_set_list[["Host_KBest"]] %>%
-  select(-X.x)
+# perm_df <- read.csv(here("machine_learning/perm_importance", "perm_importance_results_kbest.csv"))
+# important_metabolites_joined <- perm_df %>%
+#   # Keep only features that contributed positively to the model
+#   filter(importance_mean > 0) %>%
+#   left_join(met_df, by = "metabolite")
+# 
+# feature_set_list <- important_metabolites_joined %>%
+#   group_split(feature_set) %>%
+#   set_names(map_chr(., ~ first(.x$feature_set)))
+# 
+# all_kbest_df <- feature_set_list[["All_KBest"]] %>%
+#   select(-X.x)
+# 
+# host_kbest_df <- feature_set_list[["Host_KBest"]] %>%
+#   select(-X.x)
 ## x31046_620_59826_13_466 --> perm importance 18.3
 
 ################################################################################
@@ -393,8 +394,8 @@ pa_scler_ubq <- ggplot(met_plot_comparison, aes(x = scler_ubiquity, y = avg_abun
   theme(legend.position = "right")
 pa_scler_ubq
 
-ggsave(here("misc", "figs/pqn", "ubqtag.jpg"), 
-       pa_scler_ubq, width=15, height=7, dpi=300)
+# ggsave(here("misc", "figs/pqn", "ubqtag.jpg"), 
+#        pa_scler_ubq, width=15, height=7, dpi=300)
 
 # pa_total_ubq <- ggplot(met_plot_comparison, aes(x = total_ubiquity, y = avg_abundance)) +
 #   geom_point(
@@ -451,8 +452,8 @@ pb_scler_ubq <- ggplot(met_plot_comparison_2, aes(x = scler_ubiquity, y = avg_ab
   theme(legend.position = "right")
 pb_scler_ubq
 
-ggsave(here("misc", "figs/pqn", "ubqtagb.jpg"), 
-       pb_scler_ubq, width=15, height=7, dpi=300)
+# ggsave(here("misc", "figs/pqn", "ubqtagb.jpg"), 
+#        pb_scler_ubq, width=15, height=7, dpi=300)
 
 
 # glycerolipid df lookup

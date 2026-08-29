@@ -18,6 +18,8 @@ library(here)
 
 # read in data
 df <- read.csv(here("Cleaned data CSVs", "qc_data_PQN.csv"))
+df$X <- NULL
+
 met_df <- read.csv(here("Cleaned data CSVs", "merged_met_plot_df.csv"))
 
 present_metabolites <- df %>% 
@@ -133,7 +135,7 @@ p_volcano <- ggplot(plot_data_volcano, aes(x = log2FC, y = neg_log_p_adj, color 
     axis.text = element_text(size = 14)
   )
 print(p_volcano)
-ggsave(here("misc", "figs/pqn", "volcano_origin.jpg"), p_volcano,width=15,height=12,dpi=300)
+# ggsave(here("misc", "figs/pqn", "volcano_origin.jpg"), p_volcano,width=15,height=12,dpi=300)
 ## 110 rows outside plot
 
 ################################################################################
@@ -239,7 +241,7 @@ p_volcano2 <- ggplot(plot_data_volcano, aes(x = log2FC, y = neg_log_p_adj)) +
     axis.title = element_text(size = 20),
     plot.title = element_text(face = "bold", hjust = 0.5)
   )
-ggsave(here("misc", "figs/pqn", "volcano.jpg"), p_volcano2, width=14,height=10,dpi=300)
+# ggsave(here("misc", "figs/pqn", "volcano.jpg"), p_volcano2, width=14,height=10,dpi=300)
 
 #############################################
 

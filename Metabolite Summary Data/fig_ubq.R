@@ -17,6 +17,8 @@ library(here)
 
 # read in data
 df <- read.csv(here("Cleaned data CSVs", "qc_data_PQN.csv"))
+df$X <- NULL
+
 met_df <- read.csv(here("Cleaned data CSVs", "merged_met_plot_df.csv"))
 
 present_metabolites <- df %>% 
@@ -863,7 +865,7 @@ row_ab_ubqabundance <- plot_grid(unified_legend,row_ab_ubqabundance,
                                  ncol=1,
                                  rel_heights=c(0.3,1))
 ggsave(
-  here("misc", "figs/pqn", "fig2_ubqabundance.jpg"),
+  here("misc", "figs/pqn", "figs4_ubqabundance.jpg"),
   row_ab_ubqabundance,
   width = 16,
   height = 10,

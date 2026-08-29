@@ -15,6 +15,7 @@ library(here)
 
 # read in data
 df <- read.csv(here("Cleaned data CSVs", "qc_data_PQN.csv"))
+df$X <- NULL
 met_df <- read.csv(here("Cleaned data CSVs", "merged_met_plot_df.csv"))
 
 cols_bleaching <- c(
@@ -662,18 +663,18 @@ ggsave(here("misc", "figs/pqn", "pcoa_location.jpg"), p6, width = 8, height = 6,
 ################################################################################
 
 # combine PCoA supplemental figures
-plot_grid(p4, p5, p6)
-pcoa_supp <- plot_grid(
-  p4, p5, p6, 
-  labels = c("A", "B", "C"), 
-  label_size = 16,
-  ncol = 2,
-  nrow = 2,
-  align = "hv",
-  axis = "tb" # aligns top and bottom axes
-)
-ggsave(here("misc", "figs/pqn", "pcoa_supp_2.jpg"), 
-       pcoa_supp, width = 12, height = 6, dpi = 300, bg = "white")
+# plot_grid(p4, p5, p6)
+# pcoa_supp <- plot_grid(
+#   p4, p5, p6, 
+#   labels = c("A", "B", "C"), 
+#   label_size = 16,
+#   ncol = 2,
+#   nrow = 2,
+#   align = "hv",
+#   axis = "tb" # aligns top and bottom axes
+# )
+# ggsave(here("misc", "figs/pqn", "pcoa_supp_2.jpg"), 
+#        pcoa_supp, width = 12, height = 6, dpi = 300, bg = "white")
 
 ################################################################################
 ################################################################################
@@ -1219,3 +1220,4 @@ full_stats_table <- full_stats_table %>%
     `Pr(>F)` = ifelse(`Pr(>F)` <= 0.001, "< 0.001", as.character(`Pr(>F)`))
   )
 print(full_stats_table)
+write.csv(full_stats_table, here("misc", "PERMANOVA_pqn_results.csv"))
