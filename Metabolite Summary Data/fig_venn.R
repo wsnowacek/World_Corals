@@ -310,8 +310,8 @@ draw_flower <- function(data, group_var) {
 
 df_scler <- df %>% filter(host_order == "Scleractinia", !is.na(host_family))
 p_flower_family <- draw_flower(df_scler, "host_family")
-ggsave(here("misc", "figs/pqn", "flower_plot_family_unique.jpg"), 
-       p_flower_family, width = 13, height = 9, dpi = 300)
+# ggsave(here("misc", "figs/pqn", "flower_plot_family_unique.jpg"), 
+#        p_flower_family, width = 13, height = 9, dpi = 300)
 
 
 ################################################################################
@@ -524,7 +524,7 @@ p_volcano2 <- ggplot(plot_data_volcano, aes(x = log2FC, y = neg_log_p_adj)) +
     axis.title = element_text(size = 20),
     plot.title = element_text(face = "bold", hjust = 0.5)
   )
-ggsave(here("misc", "figs/pqn", "volcano_core.jpg"), p_volcano2, width=14,height=10,dpi=300)
+# ggsave(here("misc", "figs/pqn", "volcano_core.jpg"), p_volcano2, width=14,height=10,dpi=300)
 
 ############ combine to make multipanel figure
 row1 <- p_family_richness
@@ -702,7 +702,7 @@ volcano_ubiquitous <- plot_grid(
   label_size = 18,
   rel_heights = c(1, 1)
 )
-ggsave(here("misc", "figs/pqn", "volcano_ubq.jpg"), volcano_ubiquitous, width=12,height=14,dpi=300)
+ggsave(here("misc", "figs/pqn", "volcano_ubq.pdf"), volcano_ubiquitous, width=12,height=14,dpi=300)
 
 #######################
 

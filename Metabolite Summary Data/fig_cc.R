@@ -443,7 +443,7 @@ final_plot <- plot_grid(
   ncol = 1, 
   rel_heights = c(1, 1) 
 )
-ggsave(here("misc", "figs/pqn", "figS2cc.jpg"), 
+ggsave(here("misc", "figs/pqn", "figS2cc.pdf"), 
        final_plot, width=14,height=10,dpi=300) 
 
 

@@ -153,7 +153,7 @@ p <- ggplot(pcoa_points, aes(x = PCoA1, y = PCoA2,
   theme(legend.position = "right")
 
 # Save the plot
-ggsave(here("misc", "figs/pqn", "pcoa_scler.jpg"), p, width = 10, height = 8, dpi=300)
+# ggsave(here("misc", "figs/pqn", "pcoa_scler.jpg"), p, width = 10, height = 8, dpi=300)
 
 
 ################################################################################
@@ -235,7 +235,7 @@ p2 <- ggplot(pcoa_points2, aes(x = PCoA1, y = PCoA2, color = location)) +
     size = 4) +
     theme(legend.position = "right") +
   theme_cowplot(font_size = 14)
-ggsave(here("misc", "figs/pqn", "pcoa_locb.jpg"), p2, width = 8, height = 6, dpi = 300)
+# ggsave(here("misc", "figs/pqn", "pcoa_locb.jpg"), p2, width = 8, height = 6, dpi = 300)
 
 
 ################################################################################
@@ -305,7 +305,7 @@ p3 <- ggplot(pcoa_points3, aes(x = PCoA1, y = PCoA2, color = location)) +
   theme(legend.position = "right")
 
 # Save
-ggsave(here("misc", "figs/pqn", "pcoa_locsym_annotated.jpg"), p3, width = 8, height = 6, dpi = 300)
+# ggsave(here("misc", "figs/pqn", "pcoa_locsym_annotated.jpg"), p3, width = 8, height = 6, dpi = 300)
 
 # keep_rows <- !is.na(meta2$symbiont.potential)
 # # subset the metadata and the numeric data simultaneously
@@ -416,9 +416,7 @@ p_bleach_sym <- ggplot(pcoa_pts, aes(x = PCoA1, y = PCoA2, color = bleaching)) +
   ) +
   theme_cowplot(font_size = 14) +
   theme(legend.position = "right")
-
-# Save the result
-ggsave(here("misc", "figs/pqn", "pcoa_bsym.jpg"), p_bleach_sym, width = 8, height = 6, dpi = 300)
+# ggsave(here("misc", "figs/pqn", "pcoa_bsym.jpg"), p_bleach_sym, width = 8, height = 6, dpi = 300)
 
 ################################################################################
 pcoa_supp <- plot_grid(
@@ -582,8 +580,8 @@ p5 <- ggplot(pcoa_points, aes(x = PCoA1, y = PCoA2, color = symbiont.potential, 
   ) +
   theme_cowplot(font_size = 14) +
   theme(legend.position = "right")
-ggsave(here("misc", "figs/pqn", "pcoa_symbiont.jpg"), 
-       p5, width = 8, height = 6, dpi = 300)
+# ggsave(here("misc", "figs/pqn", "pcoa_symbiont.jpg"), 
+#        p5, width = 8, height = 6, dpi = 300)
 
 ################################################################################
 ## Location alone PERMANOVA - Table S3
@@ -658,7 +656,7 @@ p6 <- ggplot(pcoa_points, aes(x = PCoA1, y = PCoA2, color = location, fill = loc
   theme(legend.position = "right")
 
 # save plot
-ggsave(here("misc", "figs/pqn", "pcoa_location.jpg"), p6, width = 8, height = 6, dpi = 300)
+# ggsave(here("misc", "figs/pqn", "pcoa_location.jpg"), p6, width = 8, height = 6, dpi = 300)
 
 ################################################################################
 
@@ -1063,7 +1061,7 @@ p_dendro <- ggplot() +
     override.aes = list(alpha = 1, size = 4, shape = 15)
   ))
 print(p_dendro)
-ggsave(here("misc", "figs/pqn", "dendro.jpg"), p_dendro, width=10, height=8, dpi = 600)
+# ggsave(here("misc", "figs/pqn", "dendro.jpg"), p_dendro, width=10, height=8, dpi = 600)
 
 ################################################################################
 # combine plots with cowplot to make final Figure 2
@@ -1184,7 +1182,7 @@ p_cur <- ggplot(df_cur, aes(x = V1, y = V2)) +
   annotate(
     "text", x = Inf, y = -Inf, 
     label = stats_cur, 
-    hjust = 1.05, vjust = -1.2, 
+    hjust =2.55, vjust = -1.2, 
     size = 3.5, fontface = "italic"
   ) +
   theme_cowplot()
@@ -1205,15 +1203,16 @@ tidy_permanova <- function(model_output, model_name) {
 }
 
 table_sclero <- tidy_permanova(scleractinia_permanova_result, "Scleractinia")
+table_cur <- tidy_permanova(perm_cur, "Scleractinia - Curacao")
 table_locB   <- tidy_permanova(locB_permanova_result, "Location x Bleaching")
 table_locS   <- tidy_permanova(locS_permanova_result, "Location x Symbiont")
 table_bSym <-  tidy_permanova(bleach_sym_permanova, "Bleaching x Symbiont")
-# table_loc <- tidy_permanova(location_permanova_result, "Location")
-# table_b <- tidy_permanova(bleaching_permanova_result, "Bleaching")
+table_loc <- tidy_permanova(location_permanova_result, "Location")
+table_b <- tidy_permanova(bleaching_permanova_result, "Bleaching")
 table_sym <-  tidy_permanova(symbiont_permanova_result, "Symbiont")
 
-full_stats_table <- bind_rows(table_sclero, table_locB, table_locS, 
-                              table_bSym, table_sym)
+full_stats_table <- bind_rows(table_sclero, table_cur, table_locB, table_locS, 
+                              table_bSym, table_sym, table_loc, table_b)
 full_stats_table <- full_stats_table %>%
   mutate(
     across(c(SumOfSqs, R2, F), ~ round(., 3)),
