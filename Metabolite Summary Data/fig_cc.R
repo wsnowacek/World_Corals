@@ -313,10 +313,10 @@ print(p4)
 ################################################################################
 
 ##  plot saturation of different symbiont genera
-its2_df <- read.csv(here("Cleaned data CSVs", "ITS2Full.csv")) 
+its2_df <- read.csv(here("Cleaned data CSVs", "ITS2Full_PQN.csv")) 
 its2_df <- its2_df %>%
   filter(ITS2.Letter != "Mix" & ITS2.Letter != "No Seq" ) %>%
-  select(-X.1, -X, -X.Location...as.character.Location..)
+  select(-X)
 
 nrow(its2_df)
 
