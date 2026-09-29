@@ -313,7 +313,7 @@ print(p4)
 ################################################################################
 
 ##  plot saturation of different symbiont genera
-its2_df <- read.csv(here("Cleaned data CSVs", "ITS2Full_PQN.csv")) 
+its2_df <- read.csv(here("Cleaned data CSVs", "ITS2_PQN_Sep28.csv")) 
 its2_df <- its2_df %>%
   filter(ITS2.Letter != "Mix" & ITS2.Letter != "No Seq" ) %>%
   select(-X)
@@ -443,7 +443,7 @@ final_plot <- plot_grid(
   ncol = 1, 
   rel_heights = c(1, 1) 
 )
-ggsave(here("misc", "figs/pqn", "figS2cc.pdf"), 
+ggsave(here("misc", "figs/pqn/its2dedup", "figS1cc.pdf"), 
        final_plot, width=14,height=10,dpi=300) 
 
 
@@ -533,3 +533,5 @@ ggsave(here("misc", "figs/pqn", "figS2cc.pdf"),
 #     legend.title = element_text()
 #   )
 # p5
+
+# cur_df <- df %>% filter(scleractinia == 1 & bleaching == "Bleached")
